@@ -1,32 +1,35 @@
-// app/_layout.tsx
-import React from "react";
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { LogBox } from "react-native";
-import { Colors } from "../../constants/theme";
-import { useColorScheme } from "../../hooks/use-color-scheme";
+import { Tabs } from 'expo-router';
+import React from 'react';
 
-export default function RootLayout() {
-  const scheme = useColorScheme() ?? "light";
-  const theme = Colors[scheme];
-  React.useEffect(() => {
-    // optional: silence a noisy warning from navigation state
-    LogBox.ignoreLogs(["Non-serializable values were found in the navigation state"]);
-  }, []);
+import { HapticTab } from '@/components/haptic-tab';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+export default function TabLayout() {
+  const colorScheme = useColorScheme();
 
   return (
-    <React.Fragment>
-      {/* StatusBar for the app */}
-      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-
-      {/* Expo Router stack. contentStyle sets the default screen background */}
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: theme.background },
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        headerShown: false,
+        tabBarButton: HapticTab,
+      }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
-    </React.Fragment>
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: 'Explore',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+      />
+    </Tabs>
   );
 }
-
