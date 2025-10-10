@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 import 'react-native-reanimated';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: 'business-listings',
 };
 
 export default function RootLayout() {
@@ -22,6 +22,7 @@ export default function RootLayout() {
         <Stack.Screen name="potential-buyers" options={{ headerShown: false }} />
         <Stack.Screen name="matches" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ headerShown: false }} />
+        <Stack.Screen name="sign-in" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

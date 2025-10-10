@@ -134,12 +134,12 @@ export default function BuyerOnboardingScreen() {
 
   const renderStep2 = () => (
     <ScrollView style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>What You're Looking For</Text>
+      <Text style={styles.stepTitle}>What You are Looking For</Text>
       <Text style={styles.stepDescription}>Help us find the perfect business for you</Text>
       
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Target Industries</Text>
-        <Text style={styles.checkboxLabel}>Select industries you're interested in:</Text>
+        <Text style={styles.checkboxLabel}>Select industries you are interested in:</Text>
         {industries.map((industry) => (
           <TouchableOpacity
             key={industry}

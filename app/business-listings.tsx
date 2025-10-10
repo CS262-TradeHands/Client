@@ -1,6 +1,6 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface BusinessListing {
   id: string;
@@ -71,6 +71,17 @@ export default function BusinessListingsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndustry, setSelectedIndustry] = useState('All');
   const [sortBy, setSortBy] = useState('name');
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const params = useLocalSearchParams();
+
+  useEffect(() => {
+    // read signedIn from query params when coming back from sign-in screen
+    if (params.signedIn === 'true') {
+      setSignedIn(true);
+    }
+  }, [params]);
+  const profileBtnRef = useRef(null);
 
   const industries = ['All', 'Tech', 'Retail', 'Service', 'Manufacturing', 'Healthcare', 'Finance', 'Education', 'Food & Beverage'];
 
@@ -104,11 +115,78 @@ export default function BusinessListingsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Business Listings</Text>
-        <Text style={styles.subtitle}>Find your perfect business opportunity</Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.title}>Business Listings</Text>
+            <Text style={styles.subtitle}>Find your perfect business opportunity</Text>
+          </View>
+
+          {/* Profile button in top-right */}
+          <View style={styles.profileContainer} ref={profileBtnRef as any}>
+            <Pressable
+              onPress={() => setProfileMenuVisible((v) => !v)}
+              style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
+              accessibilityLabel="Profile menu"
+            >
+              <Text style={styles.profileInitial}>{signedIn ? 'U' : '?'}</Text>
+            </Pressable>
+
+            {profileMenuVisible && (
+              <View style={styles.profileMenu}>
+                {!signedIn ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setProfileMenuVisible(false);
+                      // navigate to sign-in screen
+                      router.push('/sign-in' as any);
+                    }}
+                    style={styles.menuItem}
+                  >
+                    <Text style={styles.menuItemText}>Sign in</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setProfileMenuVisible(false);
+                      setSignedIn(false);
+                      // sign out by navigating to the same screen without signedIn param
+                      router.replace('/business-listings' as any);
+                    }}
+                    style={styles.menuItem}
+                  >
+                    <Text style={styles.menuItemText}>Sign out</Text>
+                  </TouchableOpacity>
+                )}
+
+                {signedIn && (
+                  <>
+                    <View style={styles.menuDivider} />
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setProfileMenuVisible(false);
+                        router.push('/owner' as any);
+                      }}
+                      style={styles.menuItem}
+                    >
+                      <Text style={styles.menuItemText}>Onboarding: Owner</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setProfileMenuVisible(false);
+                        router.push('/buyer' as any);
+                      }}
+                      style={styles.menuItem}
+                    >
+                      <Text style={styles.menuItemText}>Onboarding: Buyer</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
       </View>
 
       {/* Search and Filter Bar */}
@@ -432,5 +510,57 @@ const styles = StyleSheet.create({
   noResultsSubtext: {
     fontSize: 14,
     color: '#999',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  profileContainer: {
+    position: 'relative',
+  },
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e9ecef',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileButtonPressed: {
+    opacity: 0.8,
+  },
+  profileInitial: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+  profileMenu: {
+    position: 'absolute',
+    right: 0,
+    top: 48,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingVertical: 6,
+    minWidth: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 6,
+    zIndex: 10,
+  },
+  menuItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  menuItemText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 6,
   },
 });
