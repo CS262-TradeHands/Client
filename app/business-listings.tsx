@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface BusinessListing {
   id: string;
@@ -68,9 +68,7 @@ const mockBusinessListings: BusinessListing[] = [
 
 export default function BusinessListingsScreen() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedIndustry, setSelectedIndustry] = useState('All');
-  const [sortBy, setSortBy] = useState('name');
+  // removed filter/search/sort state per user request
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const params = useLocalSearchParams();
@@ -83,30 +81,8 @@ export default function BusinessListingsScreen() {
   }, [params]);
   const profileBtnRef = useRef(null);
 
-  const industries = ['All', 'Tech', 'Retail', 'Service', 'Manufacturing', 'Healthcare', 'Finance', 'Education', 'Food & Beverage'];
-
-  const filteredListings = mockBusinessListings
-    .filter(listing => {
-      const matchesSearch = listing.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           listing.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesIndustry = selectedIndustry === 'All' || listing.industry === selectedIndustry;
-      return matchesSearch && matchesIndustry;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'price':
-          // Simple price comparison (extract first number)
-          const priceA = parseInt(a.askingPrice.replace(/[^0-9]/g, ''));
-          const priceB = parseInt(b.askingPrice.replace(/[^0-9]/g, ''));
-          return priceA - priceB;
-        case 'employees':
-          return a.employees - b.employees;
-        default:
-          return 0;
-      }
-    });
+  // No filtering or sorting — show all listings
+  const filteredListings = mockBusinessListings;
 
   const handleViewDetails = (listing: BusinessListing) => {
     router.push('/business-detail');
@@ -189,66 +165,7 @@ export default function BusinessListingsScreen() {
         </View>
       </View>
 
-      {/* Search and Filter Bar */}
-      <View style={styles.filterContainer}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search businesses..."
-            placeholderTextColor="#999"
-          />
-        </View>
-        
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.industryFilter}>
-          {industries.map((industry) => (
-            <TouchableOpacity
-              key={industry}
-              style={[
-                styles.industryButton,
-                selectedIndustry === industry && styles.industryButtonSelected
-              ]}
-              onPress={() => setSelectedIndustry(industry)}
-            >
-              <Text style={[
-                styles.industryButtonText,
-                selectedIndustry === industry && styles.industryButtonTextSelected
-              ]}>
-                {industry}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <View style={styles.sortContainer}>
-          <Text style={styles.sortLabel}>Sort by:</Text>
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'name' && styles.sortButtonSelected]}
-            onPress={() => setSortBy('name')}
-          >
-            <Text style={[styles.sortButtonText, sortBy === 'name' && styles.sortButtonTextSelected]}>
-              Name
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'price' && styles.sortButtonSelected]}
-            onPress={() => setSortBy('price')}
-          >
-            <Text style={[styles.sortButtonText, sortBy === 'price' && styles.sortButtonTextSelected]}>
-              Price
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'employees' && styles.sortButtonSelected]}
-            onPress={() => setSortBy('employees')}
-          >
-            <Text style={[styles.sortButtonText, sortBy === 'employees' && styles.sortButtonTextSelected]}>
-              Size
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Filter/search removed per request */}
 
       {/* Business Listings */}
       <ScrollView style={styles.listingsContainer} showsVerticalScrollIndicator={false}>
@@ -334,79 +251,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  filterContainer: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-  },
-  searchContainer: {
-    marginBottom: 15,
-  },
-  searchInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
-  industryFilter: {
-    marginBottom: 15,
-  },
-  industryButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f8f9fa',
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  industryButtonSelected: {
-    backgroundColor: '#007BFF',
-    borderColor: '#007BFF',
-  },
-  industryButtonText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  industryButtonTextSelected: {
-    color: '#fff',
-  },
-  sortContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sortLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginRight: 10,
-  },
-  sortButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    backgroundColor: '#f8f9fa',
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  sortButtonSelected: {
-    backgroundColor: '#007BFF',
-    borderColor: '#007BFF',
-  },
-  sortButtonText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-  },
-  sortButtonTextSelected: {
-    color: '#fff',
-  },
+  /* filter/search styles removed */
   listingsContainer: {
     flex: 1,
     paddingHorizontal: 20,
