@@ -2,10 +2,10 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { ResizeMode, Video } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, View, TouchableWithoutFeedback } from 'react-native';
 import 'react-native-reanimated';
 
 // Prevent splash screen from auto-hiding
@@ -21,11 +21,11 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [showVideoSplash, setShowVideoSplash] = useState(true);
   const [appReady, setAppReady] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function prepare() {
       try {
-        // Hide the native splash screen
         await SplashScreen.hideAsync();
         setAppReady(true);
       } catch (e) {
@@ -35,6 +35,12 @@ export default function RootLayout() {
 
     prepare();
   }, []);
+
+  useEffect(() => {
+    if (appReady && !showVideoSplash) {
+      router.replace('/business-listings');
+    }
+  }, [appReady, showVideoSplash, router]);
 
   if (!appReady || showVideoSplash) {
     return <VideoSplashScreen onFinish={() => setShowVideoSplash(false)} />;
@@ -68,45 +74,49 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
     }
   }, [videoFinished, onFinish]);
 
+  const handleSkip = () => {
+    onFinish();
+  };
+
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#000000', '#0A1929', '#000000']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <LinearGradient
-        colors={['#000000', '#0A1929', '#000000']}
-        start={{ x: 1, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={styles.videoWrapper}>
-        <Video
-          source={require('../assets/images/Firefly-logo.mp4')}
-          style={styles.video}
-          resizeMode={ResizeMode.COVER}
-          shouldPlay
-          isLooping={false}
-          onPlaybackStatusUpdate={(status) => {
-            if (status.isLoaded && status.didJustFinish) {
-              setVideoFinished(true);
-            }
-          }}
-        />
-        {/* Vignette overlay - fades from center to edges */}
+    <TouchableWithoutFeedback onPress={handleSkip}>
+      <View style={styles.container}>
         <LinearGradient
-          colors={['transparent', 'rgba(10, 25, 41, 0.3)', 'rgba(10, 25, 41, 0.6)', '#0A1929']}
-          locations={[0, 0.3, 0.7, 1]}
-          style={styles.vignette}
-          pointerEvents="none"
+          colors={['#000000', '#0A1929', '#000000']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFillObject}
         />
+        <LinearGradient
+          colors={['#000000', '#0A1929', '#000000']}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={styles.videoWrapper} pointerEvents="none">
+          <Video
+            source={require('../assets/images/Firefly-logo.mp4')}
+            style={styles.video}
+            resizeMode={ResizeMode.COVER}
+            shouldPlay
+            isLooping={false}
+            onPlaybackStatusUpdate={(status) => {
+              if (status.isLoaded && status.didJustFinish) {
+                setVideoFinished(true);
+              }
+            }}
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(10, 25, 41, 0.3)', 'rgba(10, 25, 41, 0.6)', '#0A1929']}
+            locations={[0, 0.3, 0.7, 1]}
+            style={styles.vignette}
+          />
+        </View>
+        <Text style={styles.welcomeText} pointerEvents="none">Welcome to TradeHands!</Text>
       </View>
-      <Text style={styles.welcomeText}>Welcome to TradeHands!</Text>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
