@@ -1,11 +1,11 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { ResizeMode, Video } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View, TouchableWithoutFeedback } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import 'react-native-reanimated';
 
 // Prevent splash screen from auto-hiding
@@ -56,8 +56,6 @@ export default function RootLayout() {
         <Stack.Screen name="business-detail" options={{ headerShown: false }} />
         <Stack.Screen name="owner-dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="potential-buyers" options={{ headerShown: false }} />
-        <Stack.Screen name="matches" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ headerShown: false }} />
         <Stack.Screen name="sign-in" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
@@ -78,6 +76,23 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
     onFinish();
   };
 
+  // Prepare expo-video player at top-level (hooks must be called unconditionally)
+  const videoSource = require('../assets/images/Firefly-logo.mp4');
+  const player = useVideoPlayer(videoSource, (p) => {
+    try {
+      (p as any)?.play?.();
+      if ((p as any)?.onPlaybackStatusUpdate) {
+        (p as any).onPlaybackStatusUpdate((status: any) => {
+          if (status?.didJustFinish) {
+            setVideoFinished(true);
+          }
+        });
+      }
+    } catch {
+      // ignore; API may differ across platforms
+    }
+  });
+
   return (
     <TouchableWithoutFeedback onPress={handleSkip}>
       <View style={styles.container}>
@@ -96,18 +111,7 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
           style={StyleSheet.absoluteFillObject}
         />
         <View style={styles.videoWrapper} pointerEvents="none">
-          <Video
-            source={require('../assets/images/Firefly-logo.mp4')}
-            style={styles.video}
-            resizeMode={ResizeMode.COVER}
-            shouldPlay
-            isLooping={false}
-            onPlaybackStatusUpdate={(status) => {
-              if (status.isLoaded && status.didJustFinish) {
-                setVideoFinished(true);
-              }
-            }}
-          />
+          <VideoView style={styles.video} player={player} />
           <LinearGradient
             colors={['transparent', 'rgba(10, 25, 41, 0.3)', 'rgba(10, 25, 41, 0.6)', '#0A1929']}
             locations={[0, 0.3, 0.7, 1]}
