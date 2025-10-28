@@ -4,12 +4,12 @@
     "slug": "BizBridge",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "../assets/images/icon.png",
+  "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "../assets/images/splash-icon.png",
+  "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
@@ -19,7 +19,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "../assets/images/firefly-logo.png",
+  "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#000000"
       },
       "package": "com.yourcompany.bizbridge"
@@ -27,10 +27,11 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "../assets/images/firefly-logo.png"
+  "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true
