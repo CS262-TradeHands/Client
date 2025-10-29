@@ -110,6 +110,7 @@ export default function BusinessListingsScreen() {
             {profileMenuVisible && (
               <View style={styles.profileMenu}>
                 {!signedIn ? (
+                  <>
                   <TouchableOpacity
                     onPress={() => {
                       setProfileMenuVisible(false);
@@ -120,6 +121,16 @@ export default function BusinessListingsScreen() {
                   >
                     <Text style={styles.menuItemText}>Sign in</Text>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                      onPress={() => {
+                        setProfileMenuVisible(false);
+                        router.push('/create-account' as any);
+                      }}
+                      style={styles.menuItem}
+                    >
+                      <Text style={styles.menuItemText}>Create Account</Text>
+                    </TouchableOpacity>
+                  </>
                 ) : (
                   <TouchableOpacity
                     onPress={() => {
