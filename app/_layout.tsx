@@ -50,12 +50,8 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="buyer" options={{ headerShown: false }} />
-        <Stack.Screen name="owner" options={{ headerShown: false }} />
         <Stack.Screen name="business-listings" options={{ headerShown: false }} />
         <Stack.Screen name="business-detail" options={{ headerShown: false }} />
-        <Stack.Screen name="owner-dashboard" options={{ headerShown: false }} />
-        <Stack.Screen name="potential-buyers" options={{ headerShown: false }} />
         <Stack.Screen name="sign-in" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
@@ -64,6 +60,9 @@ export default function RootLayout() {
 
 export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
   const [videoFinished, setVideoFinished] = useState(false);
+
+  // scale factor for the video
+  const VIDEO_SCALE = 2;
 
   useEffect(() => {
     if (videoFinished) {
@@ -93,6 +92,16 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
     }
   });
 
+  // ensure splash finishes even if player events aren't reported.
+  useEffect(() => {
+    if (videoFinished) return;
+    const FALLBACK_MS = 5000; // fallback after 5s to avoid stalling startup
+    const id = setTimeout(() => {
+      setVideoFinished(true);
+    }, FALLBACK_MS);
+    return () => clearTimeout(id);
+  }, [videoFinished]);
+
   return (
     <TouchableWithoutFeedback onPress={handleSkip}>
       <View style={styles.container}>
@@ -111,7 +120,10 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
           style={StyleSheet.absoluteFillObject}
         />
         <View style={styles.videoWrapper} pointerEvents="none">
-          <VideoView style={styles.video} player={player} />
+          <VideoView
+            style={[styles.video, { transform: [{ scale: VIDEO_SCALE }] }]}
+            player={player}
+          />
           <LinearGradient
             colors={['transparent', 'rgba(10, 25, 41, 0.3)', 'rgba(10, 25, 41, 0.6)', '#0A1929']}
             locations={[0, 0.3, 0.7, 1]}
