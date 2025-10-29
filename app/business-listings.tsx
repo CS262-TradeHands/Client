@@ -133,39 +133,11 @@ export default function BusinessListingsScreen() {
                     <Text style={styles.menuItemText}>Sign out</Text>
                   </TouchableOpacity>
                 )}
-
-                {signedIn && (
-                  <>
-                    <View style={styles.menuDivider} />
-
-                    <TouchableOpacity
-                      onPress={() => {
-                        setProfileMenuVisible(false);
-                        router.push('/owner' as any);
-                      }}
-                      style={styles.menuItem}
-                    >
-                      <Text style={styles.menuItemText}>Onboarding: Owner</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() => {
-                        setProfileMenuVisible(false);
-                        router.push('/buyer' as any);
-                      }}
-                      style={styles.menuItem}
-                    >
-                      <Text style={styles.menuItemText}>Onboarding: Buyer</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
               </View>
             )}
           </View>
         </View>
       </View>
-
-      {/* Filter/search removed per request */}
 
       {/* Business Listings */}
       <ScrollView style={styles.listingsContainer} showsVerticalScrollIndicator={false}>
