@@ -2,16 +2,19 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../components/AuthContext';
 
 export default function SignInScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { signIn } = useAuth();
 
   const handleSignIn = () => {
     // Placeholder: validate credentials or call auth API
-    // On success, navigate back to business listings and indicate signedIn via query param
-    router.replace('/business-listings?signedIn=true' as any);
+    // On success, mark user signed in via AuthContext and navigate to business listings
+    signIn();
+    router.replace('/business-listings' as any);
   };
 
   return (
