@@ -2,20 +2,31 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SignInScreen() {
   const router = useRouter();
+  const { signIn } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState('');
 
-  const handleSignIn = () => {
-    // Placeholder: validate credentials or call auth API
-    // On success, navigate back to business listings and indicate signedIn via query param
-    router.replace('/business-listings?signedIn=true' as any);
+  const handleCreateAccount = () => {
+    // Mock user data - replace with actual API call
+    const userData = {
+      id: '1',
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      phone: phone,
+    };
+    
+    signIn(userData);
+    router.replace('/(tabs)/profile');
   };
 
   return (
@@ -83,7 +94,16 @@ export default function SignInScreen() {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+        <TextInput
+          style={styles.input}
+          placeholder="Phone"
+          placeholderTextColor="#777"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
+
+        <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
           <Text style={styles.buttonText}>Create account</Text>
         </TouchableOpacity>
       </View>

@@ -1,7 +1,7 @@
+import { useAuth } from '@/context/AuthContext'; // Change this line
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useAuth } from '../../components/AuthContext';
 import ProtectedInfo from '../../components/protected-info';
 
 interface Buyer {
@@ -27,8 +27,8 @@ export default function BuyerScreen() {
   const profileBtnRef = useRef(null);
   const [query, setQuery] = useState('');
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
-  const { signedIn, signOut } = useAuth();
-
+  const { isAuthenticated, signOut } = useAuth();
+  
   const filteredBuyers = mockBuyers.filter((b) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
@@ -53,7 +53,7 @@ export default function BuyerScreen() {
               onPress={() => setProfileMenuVisible((v) => !v)}
               style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
             >
-              {signedIn ? (
+              {isAuthenticated ? (
                 <Text style={styles.profileInitial}>U</Text>
               ) : (
                 <Text style={styles.profileInitial}>?</Text>
@@ -62,28 +62,16 @@ export default function BuyerScreen() {
 
             {profileMenuVisible && (
               <View style={styles.profileMenu}>
-                {!signedIn ? (
-                  <>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setProfileMenuVisible(false);
-                        router.push('/sign-in' as any);
-                      }}
-                      style={styles.menuItem}
-                    >
-                      <Text style={styles.menuItemText}>Sign in</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() => {
-                        setProfileMenuVisible(false);
-                        router.push('/create-account' as any);
-                      }}
-                      style={styles.menuItem}
-                    >
-                      <Text style={styles.menuItemText}>Create Account</Text>
-                    </TouchableOpacity>
-                  </>
+                {!isAuthenticated ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setProfileMenuVisible(false);
+                      router.push('/sign-in' as any);
+                    }}
+                    style={styles.menuItem}
+                  >
+                    <Text style={styles.menuItemText}>Sign in</Text>
+                  </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
                     onPress={() => {
@@ -126,10 +114,10 @@ export default function BuyerScreen() {
 
               <View style={styles.cardBody}>
                 <Text style={styles.buyerName}>{b.name}</Text>
-                <ProtectedInfo signedIn={signedIn} onPress={() => setAuthPromptVisible(true)}>
+                <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
                   <Text style={styles.buyerCity}>{b.city}</Text>
                 </ProtectedInfo>
-                <ProtectedInfo signedIn={signedIn} onPress={() => setAuthPromptVisible(true)}>
+                <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
                   <Text style={styles.buyerInterests}>{b.title}</Text>
                 </ProtectedInfo>
               </View>
@@ -138,7 +126,7 @@ export default function BuyerScreen() {
                 style={styles.moreBtn}
                 onPress={() => {
                   // Require sign-in to view details
-                  if (signedIn) {
+                  if (isAuthenticated) {
                     router.push('/business-detail');
                   } else {
                     setAuthPromptVisible(true);
