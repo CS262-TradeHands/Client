@@ -63,15 +63,27 @@ export default function BuyerScreen() {
             {profileMenuVisible && (
               <View style={styles.profileMenu}>
                 {!signedIn ? (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setProfileMenuVisible(false);
-                      router.push('/sign-in' as any);
-                    }}
-                    style={styles.menuItem}
-                  >
-                    <Text style={styles.menuItemText}>Sign in</Text>
-                  </TouchableOpacity>
+                  <>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setProfileMenuVisible(false);
+                        router.push('/sign-in' as any);
+                      }}
+                      style={styles.menuItem}
+                    >
+                      <Text style={styles.menuItemText}>Sign in</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setProfileMenuVisible(false);
+                        router.push('/create-account' as any);
+                      }}
+                      style={styles.menuItem}
+                    >
+                      <Text style={styles.menuItemText}>Create Account</Text>
+                    </TouchableOpacity>
+                  </>
                 ) : (
                   <TouchableOpacity
                     onPress={() => {
