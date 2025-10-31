@@ -2,18 +2,45 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { user, isAuthenticated, signOut } = useAuth();
 
-  const handleSignOut = () => {
-    // Navigate back to business listings without signedIn param
-    router.replace('/business-listings');
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/(tabs)/business-listings');
   };
 
   const handleEditProfile = () => {
     router.push('/edit-profile');
   };
+
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.notAuthenticatedContainer}>
+          <Text style={styles.notAuthenticatedTitle}>Not Signed In</Text>
+          <Text style={styles.notAuthenticatedText}>
+            Please sign in to view your profile
+          </Text>
+          <TouchableOpacity 
+            style={styles.signInButton} 
+            onPress={() => router.push('/sign-in')}
+          >
+            <Text style={styles.signInButtonText}>Sign In</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.createAccountButton} 
+            onPress={() => router.push('/create-account')}
+          >
+            <Text style={styles.createAccountButtonText}>Create Account</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -22,11 +49,15 @@ export default function ProfileScreen() {
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>U</Text>
+              <Text style={styles.avatarText}>
+                {user?.firstName?.[0]?.toUpperCase() || 'U'}
+              </Text>
             </View>
           </View>
-          <Text style={styles.userName}>User Name</Text>
-          <Text style={styles.userEmail}>user@example.com</Text>
+          <Text style={styles.userName}>
+            {user?.firstName} {user?.lastName}
+          </Text>
+          <Text style={styles.userEmail}>{user?.email}</Text>
           <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>
@@ -38,39 +69,27 @@ export default function ProfileScreen() {
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>First Name</Text>
-              <Text style={styles.infoValue}>John</Text>
+              <Text style={styles.infoValue}>{user?.firstName}</Text>
             </View>
             <View style={styles.infoDivider} />
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Last Name</Text>
-              <Text style={styles.infoValue}>Doe</Text>
+              <Text style={styles.infoValue}>{user?.lastName}</Text>
             </View>
             <View style={styles.infoDivider} />
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>user@example.com</Text>
+              <Text style={styles.infoValue}>{user?.email}</Text>
             </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Phone</Text>
-              <Text style={styles.infoValue}>+1 (555) 123-4567</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Saved Listings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Saved Listings</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.placeholderText}>No saved listings yet</Text>
-          </View>
-        </View>
-
-        {/* Interested Businesses */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Interested Businesses</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.placeholderText}>No expressed interests yet</Text>
+            {user?.phone && (
+              <>
+                <View style={styles.infoDivider} />
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Phone</Text>
+                  <Text style={styles.infoValue}>{user.phone}</Text>
+                </View>
+              </>
+            )}
           </View>
         </View>
 
@@ -224,5 +243,46 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  notAuthenticatedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  notAuthenticatedTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  notAuthenticatedText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  signInButton: {
+    backgroundColor: '#007BFF',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  signInButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  createAccountButton: {
+    backgroundColor: '#28a745',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  createAccountButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
