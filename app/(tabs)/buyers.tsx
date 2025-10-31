@@ -13,12 +13,12 @@ interface Buyer {
 }
 
 const mockBuyers: Buyer[] = [
-  { id: '1', name: 'Khaled', city: 'San Francisco, CA', title: 'Investor / Entrepreneur', avatar: require('../../assets/images/react-logo.png') },
-  { id: '2', name: 'Miriam', city: 'Austin, TX', title: 'Retail Buyer', avatar: require('../../assets/images/react-logo.png') },
-  { id: '3', name: 'Bobby', city: 'Denver, CO', title: 'Service Business Investor', avatar: require('../../assets/images/react-logo.png') },
-  { id: '4', name: 'Mickey', city: 'Portland, OR', title: 'Brewery Enthusiast', avatar: require('../../assets/images/handshake-logo.png') },
-  { id: '5', name: 'Sandra', city: 'Miami, FL', title: 'Healthcare Investor', avatar: require('../../assets/images/partial-react-logo.png') },
-  { id: '6', name: 'Alex', city: 'Seattle, WA', title: 'Tech Acquirer', avatar: require('../../assets/images/react-logo.png') },
+  { id: '1', name: 'Khaled', city: 'San Francisco, CA', title: 'Investor / Entrepreneur', avatar: require('../../assets/images/mii/buyer1.png') },
+  { id: '2', name: 'Miriam', city: 'Austin, TX', title: 'Retail Buyer', avatar: require('../../assets/images/mii/buyer2.png') },
+  { id: '3', name: 'Bobby', city: 'Denver, CO', title: 'Service Business Investor', avatar: require('../../assets/images/mii/buyer3.png') },
+  { id: '4', name: 'Mickey', city: 'Portland, OR', title: 'Brewery Enthusiast', avatar: require('../../assets/images/mii/buyer4.png') },
+  { id: '5', name: 'Sandra', city: 'Miami, FL', title: 'Healthcare Investor', avatar: require('../../assets/images/mii/buyer5.png') },
+  { id: '6', name: 'Alex', city: 'Seattle, WA', title: 'Tech Acquirer', avatar: require('../../assets/images/mii/buyer6.png') },
 ];
 
 export default function BuyerScreen() {
