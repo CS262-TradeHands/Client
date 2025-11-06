@@ -322,7 +322,7 @@ export default function BuyerScreen() {
                 style={[styles.modalButton, styles.modalSecondary]}
                 onPress={() => {
                   setAuthPromptVisible(false);
-                  router.push('/sign-in?signup=true');
+                  router.push('/create-account');
                 }}
               >
                 <Text style={styles.modalSecondaryText}>Create an account</Text>
