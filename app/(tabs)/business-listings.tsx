@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedInfo from '../../components/protected-info';
@@ -70,10 +71,8 @@ const mockBusinessListings: BusinessListing[] = [
 
 export default function BusinessListingsScreen() {
   const router = useRouter();
-  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
-  const { isAuthenticated, signOut } = useAuth(); // Changed from signedIn
-  const profileBtnRef = useRef(null);
+  const { isAuthenticated } = useAuth();
 
   // search state and filtering
   const [query, setQuery] = useState('');
@@ -108,54 +107,25 @@ export default function BusinessListingsScreen() {
             <Text style={styles.subtitle}>Find your perfect business opportunity</Text>
           </View>
 
-          {/* Profile button in top-right */}
-          <View style={styles.profileContainer} ref={profileBtnRef as any}>
-            <Pressable
-              onPress={() => setProfileMenuVisible((v) => !v)}
-              style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
-              accessibilityLabel="Profile menu"
-            >
-              <Text style={styles.profileInitial}>{isAuthenticated ? 'U' : '?'}</Text>
-            </Pressable>
-
-            {profileMenuVisible && (
-              <View style={styles.profileMenu}>
-                {!isAuthenticated ? (
-                  <>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setProfileMenuVisible(false);
-                        router.push('/sign-in' as any);
-                      }}
-                      style={styles.menuItem}
-                    >
-                      <Text style={styles.menuItemText}>Sign in</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setProfileMenuVisible(false);
-                        router.push('/create-account' as any);
-                      }}
-                      style={styles.menuItem}
-                    >
-                      <Text style={styles.menuItemText}>Create Account</Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setProfileMenuVisible(false);
-                      signOut();
-                      router.replace('/business-listings' as any);
-                    }}
-                    style={styles.menuItem}
-                  >
-                    <Text style={styles.menuItemText}>Sign out</Text>
-                  </TouchableOpacity>
-                )}
+          {/* Inbox icon (top-right). If not signed in, prompt to sign in. When signed-in, open inbox. */}
+          <Pressable
+            onPress={() => {
+              if (isAuthenticated) {
+                router.push('/inbox');
+              } else {
+                setAuthPromptVisible(true);
+              }
+            }}
+            style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
+            accessibilityLabel={isAuthenticated ? 'Open inbox' : 'Sign in to view inbox'}
+          >
+            <Ionicons name="mail-outline" size={20} color="#333" />
+            {isAuthenticated && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>2</Text>
               </View>
             )}
-          </View>
+          </Pressable>
         </View>
 
         {/* Search input in header */}
@@ -450,6 +420,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#e9ecef',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ff3b30',
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   profileButtonPressed: {
     opacity: 0.8,

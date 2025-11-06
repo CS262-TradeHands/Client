@@ -1,6 +1,6 @@
 import { useAuth } from '@/context/AuthContext'; // Change this line
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ProtectedInfo from '../../components/protected-info';
@@ -95,11 +95,9 @@ const mockBuyers: Buyer[] = [
 
 export default function BuyerScreen() {
   const router = useRouter();
-  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
-  const profileBtnRef = useRef(null);
   const [query, setQuery] = useState('');
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
-  const { isAuthenticated, signOut } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
 
   const filteredBuyers = mockBuyers.filter((b) => {
@@ -121,45 +119,25 @@ export default function BuyerScreen() {
             <Text style={styles.subtitle}>Search for buyers</Text>
           </View>
 
-          <View style={styles.profileContainer} ref={profileBtnRef as any}>
-            <Pressable
-              onPress={() => setProfileMenuVisible((v) => !v)}
-              style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
-            >
-              {isAuthenticated ? (
-                <Text style={styles.profileInitial}>U</Text>
-              ) : (
-                <Text style={styles.profileInitial}>?</Text>
-              )}
-            </Pressable>
-
-            {profileMenuVisible && (
-              <View style={styles.profileMenu}>
-                {!isAuthenticated ? (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setProfileMenuVisible(false);
-                      router.push('/sign-in' as any);
-                    }}
-                    style={styles.menuItem}
-                  >
-                    <Text style={styles.menuItemText}>Sign in</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setProfileMenuVisible(false);
-                      signOut();
-                      router.replace('/buyers' as any);
-                    }}
-                    style={styles.menuItem}
-                  >
-                    <Text style={styles.menuItemText}>Sign out</Text>
-                  </TouchableOpacity>
-                )}
+          {/* Inbox icon (top-right). If not signed in, prompt to sign in. When signed-in, open inbox. */}
+          <Pressable
+            onPress={() => {
+              if (isAuthenticated) {
+                router.push('/inbox');
+              } else {
+                setAuthPromptVisible(true);
+              }
+            }}
+            style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
+            accessibilityLabel={isAuthenticated ? 'Open inbox' : 'Sign in to view inbox'}
+          >
+            <Ionicons name="mail-outline" size={20} color="#333" />
+            {isAuthenticated && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>2</Text>
               </View>
             )}
-          </View>
+          </Pressable>
         </View>
             {/* Search input in header (single search bar) */}
             <View style={styles.searchRow}>
@@ -373,6 +351,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#e9ecef',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ff3b30',
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   profileButtonPressed: { opacity: 0.8 },
   profileInitial: { fontSize: 18, fontWeight: '700', color: '#333' },

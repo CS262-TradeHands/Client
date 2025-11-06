@@ -54,6 +54,10 @@ export default function SignInScreen() {
         <TouchableOpacity style={styles.button} onPress={handleSignIn}>
           <Text style={styles.buttonText}>Sign in</Text>
         </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.createAccountButton} onPress={() => router.push('/create-account')}>
+          <Text style={styles.createAccountText}>Create account</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -63,6 +67,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
     backgroundColor: '#fff',
   },
@@ -83,6 +88,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fbfbfb',
     fontSize: 16,
     color: '#111',
+    textAlign: 'center',
   },
   headerRow: {
     width: '100%',
@@ -113,7 +119,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    width: '25%',
+    width: '75%',
     backgroundColor: '#007BFF',
     paddingVertical: 12,
     borderRadius: 8,
@@ -121,6 +127,18 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  createAccountButton: {
+    marginTop: 12,
+    width: '75%',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  createAccountText: {
+    color: '#007BFF',
     fontWeight: '700',
     fontSize: 16,
   },
