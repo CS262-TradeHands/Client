@@ -59,6 +59,7 @@ export default function RootLayout() {
           <Stack.Screen name="create-account" options={{ headerShown: false }} />
           <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
           <Stack.Screen name="add-buyer" options={{ headerShown: false }} />
+          <Stack.Screen name="inbox" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </AuthProvider>
