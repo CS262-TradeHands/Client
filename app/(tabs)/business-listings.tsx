@@ -255,7 +255,7 @@ export default function BusinessListingsScreen() {
                 style={[styles.modalButton, styles.modalSecondary]}
                 onPress={() => {
                   closeAuthPrompt();
-                  router.push('/sign-in?signup=true');
+                  router.push('/create-account');
                 }}
               >
                 <Text style={styles.modalSecondaryText}>Create an account</Text>
