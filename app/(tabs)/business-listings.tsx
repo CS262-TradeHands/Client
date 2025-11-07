@@ -1,9 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useAuth } from '@/context/AuthContext';
 import ProtectedInfo from '../../components/protected-info';
+import { useAuth } from '../../context/AuthContext';
 
 interface BusinessListing {
   id: string;
@@ -90,6 +90,14 @@ export default function BusinessListingsScreen() {
     // Require sign-in to view details
     if (isAuthenticated) {
       router.push('/business-detail');
+    } else {
+      setAuthPromptVisible(true);
+    }
+  };
+
+  const handleAddBusiness = () => {
+    if (isAuthenticated) {
+      router.push('/add-business' as any);
     } else {
       setAuthPromptVisible(true);
     }
@@ -199,7 +207,7 @@ export default function BusinessListingsScreen() {
         )}
 
         <View style={styles.addRow}>
-          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-business' as any)}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
             <Text style={styles.addButtonText}>+ Add a business listing</Text>
           </TouchableOpacity>
         </View>
@@ -210,7 +218,7 @@ export default function BusinessListingsScreen() {
         <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={closeAuthPrompt}>
           <Pressable style={styles.modalOverlay} onPress={closeAuthPrompt}>
             <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
-              <Text style={styles.modalTitle}>Log in to view details</Text>
+              <Text style={styles.modalTitle}>Log in to continue</Text>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalPrimary]}
                 onPress={() => {
