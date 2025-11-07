@@ -1,4 +1,4 @@
-import { useAuth } from '@/context/AuthContext'; // Change this line
+import { useAuth } from '../../context/AuthContext'; // Adjusted the path
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -157,6 +157,12 @@ export default function BuyerScreen() {
             <Text style={styles.resultsCount}>{filteredBuyers.length} buyers found</Text>
           </View>
 
+          <View style={styles.addRow}>
+            <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-buyer' as any)}>
+              <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.row}>
           {filteredBuyers.map((b) => (
             <View key={b.id} style={styles.card}>
@@ -187,12 +193,6 @@ export default function BuyerScreen() {
               </TouchableOpacity>
             </View>
           ))}
-        </View>
-
-        <View style={styles.addRow}>
-          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-buyer' as any)}>
-            <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -475,7 +475,12 @@ const styles = StyleSheet.create({
   moreBtn: { marginTop: 8 },
   moreBtnText: { color: '#333', textDecorationLine: 'underline' },
 
-  addRow: { width: '100%', alignItems: 'center', marginTop: 6 },
+  addRow: { 
+    width: '100%', 
+    alignItems: 'center', 
+    marginTop: 6,
+    marginBottom: 24
+  },
   addButton: {
     width: '92%',
     backgroundColor: '#1b2438',

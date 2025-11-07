@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -153,7 +153,6 @@ export default function EditProfileScreen() {
           onPress: () => router.back(),
         },
       ]);
-    } catch (error) {
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     } finally {
       setIsLoading(false);
