@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useAuth } from '../../components/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import ProtectedInfo from '../../components/protected-info';
 
 interface BusinessListing {
@@ -70,10 +71,8 @@ const mockBusinessListings: BusinessListing[] = [
 
 export default function BusinessListingsScreen() {
   const router = useRouter();
-  // removed filter/search/sort state per user request
-  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
-  const { signedIn, signOut } = useAuth();
-  const profileBtnRef = useRef(null);
+  const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // search state and filtering
   const [query, setQuery] = useState('');
@@ -89,14 +88,13 @@ export default function BusinessListingsScreen() {
 
   const handleViewDetails = (listing: BusinessListing) => {
     // Require sign-in to view details
-    if (signedIn) {
+    if (isAuthenticated) {
       router.push('/business-detail');
     } else {
       setAuthPromptVisible(true);
     }
   };
 
-  const [authPromptVisible, setAuthPromptVisible] = useState(false);
   const openAuthPrompt = () => setAuthPromptVisible(true);
   const closeAuthPrompt = () => setAuthPromptVisible(false);
 
@@ -109,59 +107,28 @@ export default function BusinessListingsScreen() {
             <Text style={styles.subtitle}>Find your perfect business opportunity</Text>
           </View>
 
-          {/* Profile button in top-right */}
-          <View style={styles.profileContainer} ref={profileBtnRef as any}>
-            <Pressable
-              onPress={() => setProfileMenuVisible((v) => !v)}
-              style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
-              accessibilityLabel="Profile menu"
-            >
-              <Text style={styles.profileInitial}>{signedIn ? 'U' : '?'}</Text>
-            </Pressable>
-
-            {profileMenuVisible && (
-              <View style={styles.profileMenu}>
-                {!signedIn ? (
-                  <>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setProfileMenuVisible(false);
-                      // navigate to sign-in screen
-                      router.push('/sign-in' as any);
-                    }}
-                    style={styles.menuItem}
-                  >
-                    <Text style={styles.menuItemText}>Sign in</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                      onPress={() => {
-                        setProfileMenuVisible(false);
-                        router.push('/create-account' as any);
-                      }}
-                      style={styles.menuItem}
-                    >
-                      <Text style={styles.menuItemText}>Create Account</Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setProfileMenuVisible(false);
-                      signOut();
-                      // navigate to same route so UI refreshes
-                      router.replace('/business-listings' as any);
-                    }}
-                    style={styles.menuItem}
-                  >
-                    <Text style={styles.menuItemText}>Sign out</Text>
-                  </TouchableOpacity>
-                )}
+          {/* Inbox icon (top-right). If not signed in, prompt to sign in. When signed-in, open inbox. */}
+          <Pressable
+            onPress={() => {
+              if (isAuthenticated) {
+                router.push('/inbox' as any);
+              } else {
+                setAuthPromptVisible(true);
+              }
+            }}
+            style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
+            accessibilityLabel={isAuthenticated ? 'Open inbox' : 'Sign in to view inbox'}
+          >
+            <Ionicons name="mail-outline" size={20} color="#333" />
+            {isAuthenticated && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>2</Text>
               </View>
             )}
-          </View>
+          </Pressable>
         </View>
 
-        {/* Search input in header (single source of truth) */}
+        {/* Search input in header */}
         <View style={styles.searchRow}>
           <TextInput
             placeholder="Search for businesses"
@@ -191,7 +158,7 @@ export default function BusinessListingsScreen() {
               </View>
             </View>
             
-            <ProtectedInfo signedIn={signedIn} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
+            <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
               <Text style={styles.businessLocation}>{listing.location}</Text>
             </ProtectedInfo>
             <Text style={styles.businessDescription}>{listing.description}</Text>
@@ -199,13 +166,13 @@ export default function BusinessListingsScreen() {
             <View style={styles.businessDetails}>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Asking Price</Text>
-                <ProtectedInfo signedIn={signedIn} onPress={openAuthPrompt}>
+                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
                   <Text style={styles.detailValue}>{listing.askingPrice}</Text>
                 </ProtectedInfo>
               </View>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Employees</Text>
-                <ProtectedInfo signedIn={signedIn} onPress={openAuthPrompt}>
+                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
                   <Text style={styles.detailValue}>{listing.employees}</Text>
                 </ProtectedInfo>
               </View>
@@ -236,35 +203,37 @@ export default function BusinessListingsScreen() {
             <Text style={styles.addButtonText}>+ Add a business listing</Text>
           </TouchableOpacity>
         </View>
-        {authPromptVisible && (
-          <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={closeAuthPrompt}>
-            <Pressable style={styles.modalOverlay} onPress={closeAuthPrompt}>
-              <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
-                <Text style={styles.modalTitle}>Log in to view details</Text>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalPrimary]}
-                  onPress={() => {
-                    closeAuthPrompt();
-                    router.push('/sign-in');
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>Returning user login</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalSecondary]}
-                  onPress={() => {
-                    closeAuthPrompt();
-                    router.push('/sign-in?signup=true');
-                  }}
-                >
-                  <Text style={styles.modalSecondaryText}>Create an account</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          </Modal>
-        )}
       </ScrollView>
+
+      {/* Modal moved outside ScrollView */}
+      {authPromptVisible && (
+        <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={closeAuthPrompt}>
+          <Pressable style={styles.modalOverlay} onPress={closeAuthPrompt}>
+            <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
+              <Text style={styles.modalTitle}>Log in to view details</Text>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalPrimary]}
+                onPress={() => {
+                  closeAuthPrompt();
+                  router.push('/sign-in');
+                }}
+              >
+                <Text style={styles.modalButtonText}>Returning user login</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalSecondary]}
+                onPress={() => {
+                  closeAuthPrompt();
+                  router.push('/create-account');
+                }}
+              >
+                <Text style={styles.modalSecondaryText}>Create an account</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -316,7 +285,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   searchText: { color: '#666' },
-  /* filter/search styles removed */
   listingsContainer: {
     paddingHorizontal: 16,
     paddingBottom: 24,
@@ -452,6 +420,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#e9ecef',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ff3b30',
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   profileButtonPressed: {
     opacity: 0.8,
