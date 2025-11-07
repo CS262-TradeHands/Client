@@ -123,7 +123,7 @@ export default function BuyerScreen() {
           <Pressable
             onPress={() => {
               if (isAuthenticated) {
-                router.push('/inbox');
+                router.push('/inbox' as any);
               } else {
                 setAuthPromptVisible(true);
               }

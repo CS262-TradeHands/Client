@@ -111,7 +111,7 @@ export default function BusinessListingsScreen() {
           <Pressable
             onPress={() => {
               if (isAuthenticated) {
-                router.push('/inbox');
+                router.push('/inbox' as any);
               } else {
                 setAuthPromptVisible(true);
               }
