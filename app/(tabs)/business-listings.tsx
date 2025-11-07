@@ -156,6 +156,12 @@ export default function BusinessListingsScreen() {
             {filteredListings.length} business{filteredListings.length !== 1 ? 'es' : ''} found
           </Text>
         </View>
+
+        <View style={styles.addRow}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
+            <Text style={styles.addButtonText}>+ Add a business listing</Text>
+          </TouchableOpacity>
+        </View>
         
         {filteredListings.map((listing) => (
           <View key={listing.id} style={styles.businessCard}>
@@ -205,12 +211,6 @@ export default function BusinessListingsScreen() {
             <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
           </View>
         )}
-
-        <View style={styles.addRow}>
-          <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
-            <Text style={styles.addButtonText}>+ Add a business listing</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
 
       {/* Modal moved outside ScrollView */}
@@ -482,14 +482,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     marginVertical: 6,
   },
-  addRow: { width: '100%', alignItems: 'center', marginTop: 6 },
+  addRow: { 
+    width: '100%', 
+    alignItems: 'center', 
+    marginTop: 0,
+    marginBottom: 16
+  },
   addButton: {
     width: '92%',
     backgroundColor: '#1b2438',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
-    marginVertical: 12,
   },
   addButtonText: { color: '#fff', fontWeight: '700' },
   modalOverlay: {
