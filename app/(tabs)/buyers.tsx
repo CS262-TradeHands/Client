@@ -1,9 +1,9 @@
-import { useAuth } from '../../context/AuthContext'; // Adjusted the path
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import ProtectedInfo from '../../components/protected-info';
+import { useAuth } from '../../context/AuthContext'; // Adjusted the path
 
 interface Buyer {
   id: string;
@@ -154,12 +154,15 @@ export default function BuyerScreen() {
                 returnKeyType="search"
               />
             </View>
-            </View>
+
+        {/* Results count directly below search */}
+        <View style={styles.resultsRowHeader}>
+          <Text style={styles.resultsCount}>{filteredBuyers.length} buyer{filteredBuyers.length !== 1 ? 's' : ''} found</Text>
+        </View>
+
+        </View>
 
         <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-          <View style={styles.resultsRow}>
-            <Text style={styles.resultsCount}>{filteredBuyers.length} buyers found</Text>
-          </View>
 
           <View style={styles.addRow}>
             <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-buyer' as any)}>
@@ -411,11 +414,14 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
   },
+  resultsRowHeader: {
+    paddingHorizontal: 12,
+  },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 15,
+    marginVertical: 11,
     width: '100%',
     paddingHorizontal: 4,
   },
@@ -425,7 +431,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     width: '100%',
     paddingHorizontal: 4,
-    marginVertical: 8,
   },
   searchBox: {
     backgroundColor: '#e9ecef',
@@ -438,7 +443,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#f0f0f0',
     fontWeight: '500',
-    marginVertical: 15,
   },
   searchInput: {
     backgroundColor: '#fff',
@@ -491,8 +495,8 @@ const styles = StyleSheet.create({
   addRow: { 
     width: '100%', 
     alignItems: 'center', 
-    marginTop: 6,
-    marginBottom: 24
+    marginTop: 4,
+    marginBottom: 16
   },
   addButton: {
     width: '92%',

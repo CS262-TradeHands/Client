@@ -5,69 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpa
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
 
-interface BusinessListing {
-  id: string;
-  name: string;
-  industry: string;
-  askingPrice: string;
-  location: string;
-  description: string;
-  employees: number;
-  yearsInOperation: number;
-}
-
-const mockBusinessListings: BusinessListing[] = [
-  {
-    id: '1',
-    name: 'TechStart Solutions',
-    industry: 'Tech',
-    askingPrice: '$250,000 - $300,000',
-    location: 'San Francisco, CA',
-    description: 'Profitable SaaS company with recurring revenue and growing customer base.',
-    employees: 8,
-    yearsInOperation: 5
-  },
-  {
-    id: '2',
-    name: 'Bella\'s Boutique',
-    industry: 'Retail',
-    askingPrice: '$150,000 - $200,000',
-    location: 'Austin, TX',
-    description: 'Established women\'s clothing boutique in prime downtown location with loyal customer base.',
-    employees: 3,
-    yearsInOperation: 7
-  },
-  {
-    id: '3',
-    name: 'Green Clean Services',
-    industry: 'Service',
-    askingPrice: '$80,000 - $120,000',
-    location: 'Denver, CO',
-    description: 'Eco-friendly cleaning service with commercial and residential clients.',
-    employees: 12,
-    yearsInOperation: 4
-  },
-  {
-    id: '4',
-    name: 'Craft Brewery Co.',
-    industry: 'Food & Beverage',
-    askingPrice: '$400,000 - $500,000',
-    location: 'Portland, OR',
-    description: 'Popular local brewery with taproom and distribution network.',
-    employees: 15,
-    yearsInOperation: 6
-  },
-  {
-    id: '5',
-    name: 'MediCare Plus',
-    industry: 'Healthcare',
-    askingPrice: '$600,000 - $750,000',
-    location: 'Miami, FL',
-    description: 'Well-established medical practice with multiple locations.',
-    employees: 25,
-    yearsInOperation: 12
-  }
-];
+import { Business as BusinessListing, mockBusinesses } from '../../constants/mockBusinesses';
 
 export default function BusinessListingsScreen() {
   const router = useRouter();
@@ -76,7 +14,7 @@ export default function BusinessListingsScreen() {
 
   // search state and filtering
   const [query, setQuery] = useState('');
-  const filteredListings = mockBusinessListings.filter((l) => {
+  const filteredListings = mockBusinesses.filter((l) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -89,7 +27,7 @@ export default function BusinessListingsScreen() {
   const handleViewDetails = (listing: BusinessListing) => {
     // Require sign-in to view details
     if (isAuthenticated) {
-      router.push('/business-detail');
+      router.push(`/business-detail?id=${listing.id}`);
     } else {
       setAuthPromptVisible(true);
     }
@@ -109,15 +47,15 @@ export default function BusinessListingsScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, isAuthenticated && styles.headerAuthenticated]}>
-  <View style={styles.headerRow}>
-    <View>
-      <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
-        {isAuthenticated ? 'YOUR Business Dashboard' : 'Welcome to TradeHands'}
-      </Text>
-      <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
-        {isAuthenticated ? 'Browse your listings and manage YOUR connections' : 'Find your perfect business opportunity'}
-      </Text>
-    </View>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
+            {isAuthenticated ? 'YOUR Business Dashboard' : 'Welcome to TradeHands'}
+          </Text>
+          <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
+            {isAuthenticated ? 'Browse YOUR listings and manage connections' : 'Find your perfect business opportunity'}
+          </Text>
+        </View>
 
           {/* Inbox icon (top-right). If not signed in, prompt to sign in. When signed-in, open inbox. */}
           <Pressable
@@ -151,15 +89,17 @@ export default function BusinessListingsScreen() {
             returnKeyType="search"
           />
         </View>
-      </View>
 
-      {/* Business Listings */}
-      <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.resultsRow}>
+        {/* Results count directly below search */}
+        <View style={styles.resultsRowHeader}>
           <Text style={styles.resultsCount}>
             {filteredListings.length} business{filteredListings.length !== 1 ? 'es' : ''} found
           </Text>
         </View>
+      </View>
+
+      {/* Business Listings */}
+      <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
 
         <View style={styles.addRow}>
           <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
@@ -313,8 +253,10 @@ const styles = StyleSheet.create({
   resultsCount: {
     fontSize: 14,
     color: '#f0f0f0',
-    marginVertical: 15,
     fontWeight: '500',
+  },
+  resultsRowHeader: {
+    paddingHorizontal: 12,
   },
   resultsRow: {
     flexDirection: 'row',
@@ -498,7 +440,7 @@ const styles = StyleSheet.create({
   addRow: { 
     width: '100%', 
     alignItems: 'center', 
-    marginTop: 0,
+    marginTop: 14,
     marginBottom: 16
   },
   addButton: {
