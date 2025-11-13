@@ -112,12 +112,16 @@ export default function BuyerScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Buyers</Text>
-            <Text style={styles.subtitle}>Search for buyers</Text>
-          </View>
+      <View style={[styles.header, isAuthenticated && styles.headerAuthenticated]}>
+  <View style={styles.headerRow}>
+    <View>
+      <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
+        {isAuthenticated ? 'Connect with YOUR Buyers' : 'Buyers'}
+      </Text>
+      <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
+        {isAuthenticated ? 'View detailed buyer profiles and reach out' : 'Sign in to view buyer details'}
+      </Text>
+    </View>
 
           {/* Inbox icon (top-right). If not signed in, prompt to sign in. When signed-in, open inbox. */}
           <Pressable
@@ -325,6 +329,15 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  headerAuthenticated: {
+    backgroundColor: '#5A7A8C', // primary
+  },
+  titleAuthenticated: {
+    color: '#F5F1ED', // warm-neutral
+  },
+  subtitleAuthenticated: {
+    color: '#E8E3DC', // soft-beige
   },
   headerRow: {
     flexDirection: 'row',
