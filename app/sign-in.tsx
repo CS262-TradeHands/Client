@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   backButtonText: {
-    color: '#007BFF',
+    color: '#5A7A8C',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '75%',
-    backgroundColor: '#007BFF',
+    backgroundColor: '#5A7A8C',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   createAccountText: {
-    color: '#007BFF',
+    color: '#5A7A8C',
     fontWeight: '700',
     fontSize: 16,
   },

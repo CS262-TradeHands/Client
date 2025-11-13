@@ -108,12 +108,16 @@ export default function BusinessListingsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Welcome to TradeHands</Text>
-            <Text style={styles.subtitle}>Find your perfect business opportunity</Text>
-          </View>
+      <View style={[styles.header, isAuthenticated && styles.headerAuthenticated]}>
+  <View style={styles.headerRow}>
+    <View>
+      <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
+        {isAuthenticated ? 'YOUR Business Dashboard' : 'Welcome to TradeHands'}
+      </Text>
+      <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
+        {isAuthenticated ? 'Browse your listings and manage YOUR connections' : 'Find your perfect business opportunity'}
+      </Text>
+    </View>
 
           {/* Inbox icon (top-right). If not signed in, prompt to sign in. When signed-in, open inbox. */}
           <Pressable
@@ -249,22 +253,31 @@ export default function BusinessListingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0d2569ff',
+    backgroundColor: '#2D2A27',
   },
   header: {
-    backgroundColor: '#0f42cfff',
+    backgroundColor: '#2B4450',
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
+  headerAuthenticated: {
+    backgroundColor: '#5A7A8C', // primary
+  },
+  titleAuthenticated: {
+    color: '#F5F1ED', // warm-neutral
+  },
+  subtitleAuthenticated: {
+    color: '#E8E3DC', // soft-beige
+  },
   backButton: {
     marginBottom: 10,
   },
   backButtonText: {
     fontSize: 16,
-    color: '#007BFF',
+    color: '#5A7A8C',
     fontWeight: '600',
   },
   title: {
@@ -346,14 +359,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   industryBadge: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#E8E3DC',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   industryBadgeText: {
     fontSize: 12,
-    color: '#1976d2',
+    color: '#5A7A8C',
     fontWeight: '600',
   },
   businessLocation: {
@@ -389,7 +402,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   viewDetailsButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#5A7A8C',
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -490,7 +503,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     width: '92%',
-    backgroundColor: '#1b2438',
+    backgroundColor: '#2B4450',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -522,7 +535,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   modalPrimary: {
-    backgroundColor: '#1b2438',
+    backgroundColor: '#2B4450',
   },
   modalSecondary: {
     backgroundColor: '#e9ecef',

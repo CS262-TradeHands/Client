@@ -30,7 +30,7 @@ export default function InboxScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
-          <Ionicons name="arrow-back" size={20} color="#007AFF" />
+          <Ionicons name="arrow-back" size={20} color="#5A7A8C" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.title} pointerEvents="none">Matches</Text>
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   backButton: { flexDirection: 'row', alignItems: 'center', padding: 6, marginRight: 8, zIndex: 2 },
   headerRight: { width: 32 },
   title: { position: 'absolute', left: 0, right: 0, fontSize: 20, fontWeight: '700', textAlign: 'center' },
-  backButtonText: { color: '#007AFF', fontSize: 16, fontWeight: '600', marginLeft: 6 },
+  backButtonText: { color: '#5A7A8C', fontSize: 16, fontWeight: '600', marginLeft: 6 },
   list: { padding: 12 },
   item: { padding: 14, borderRadius: 10, backgroundColor: '#f8f9fa', marginBottom: 10 },
   itemTitle: { fontSize: 16, fontWeight: '700' },
