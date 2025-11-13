@@ -1,172 +1,106 @@
-import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StatusBar as RNStatusBar, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { getBusinessById, mockBusinesses } from '../constants/mockBusinesses';
 
-interface BusinessDetail {
-  id: string;
-  name: string;
-  industry: string;
-  askingPrice: string;
-  location: string;
-  description: string;
-  employees: number;
-  yearsInOperation: number;
-  annualRevenue: string;
-  monthlyRevenue: string;
-  profitMargin: string;
-  ownerName: string;
-  ownerEmail: string;
-  ownerPhone: string;
-  reasonForSelling: string;
-  keyAssets: string[];
-  growthOpportunities: string[];
-  financialHighlights: {
-    revenue: string;
-    profit: string;
-    growth: string;
-  };
-  businessHours: string;
-  website: string;
-  socialMedia: string[];
-}
-
-const mockBusinessDetail: BusinessDetail = {
-  id: '1',
-  name: 'TechStart Solutions',
-  industry: 'Tech',
-  askingPrice: '$250,000 - $300,000',
-  location: 'San Francisco, CA',
-  description: 'TechStart Solutions is a profitable SaaS company specializing in project management tools for small to medium businesses. With a strong recurring revenue model and growing customer base, this business offers excellent growth potential for an experienced entrepreneur.',
-  employees: 8,
-  yearsInOperation: 5,
-  annualRevenue: '$500,000',
-  monthlyRevenue: '$42,000',
-  profitMargin: '35%',
-  ownerName: 'David Chen',
-  ownerEmail: 'david@techstartsolutions.com',
-  ownerPhone: '(555) 123-4567',
-  reasonForSelling: 'Retiring after 25 years in tech industry. Looking to spend more time with family and travel.',
-  keyAssets: [
-    'Proprietary software platform',
-    'Established customer base (200+ clients)',
-    'Recurring revenue model',
-    'Strong brand recognition',
-    'Experienced development team'
-  ],
-  growthOpportunities: [
-    'Expand to enterprise market',
-    'Add mobile app development',
-    'International market expansion',
-    'AI/ML feature integration',
-    'Partnership with larger tech companies'
-  ],
-  financialHighlights: {
-    revenue: '$500K annual revenue',
-    profit: '$175K annual profit',
-    growth: '25% YoY growth'
-  },
-  businessHours: 'Monday - Friday: 9:00 AM - 6:00 PM PST',
-  website: 'www.techstartsolutions.com',
-  socialMedia: ['LinkedIn', 'Twitter', 'GitHub']
-};
 
 export default function BusinessDetailScreen() {
   const router = useRouter();
-  const [isInterested, setIsInterested] = useState(false);
-  const [showContactInfo, setShowContactInfo] = useState(false);
+  const params = useLocalSearchParams();
+  const id = (params as any).id as string | undefined;
+  const business = id ? getBusinessById(id) : mockBusinesses[0];
+  const [liked, setLiked] = useState(false);
 
-  const handleExpressInterest = () => {
-    setIsInterested(true);
-    Alert.alert(
-      'Interest Expressed!',
-      'Your interest has been sent to the business owner. They will contact you within 24-48 hours.',
-      [
-        { text: 'OK', onPress: () => setShowContactInfo(true) }
-      ]
-    );
+  const imageMap: Record<string, any> = {
+    '1': require('../assets/images/businesses/TechStart.jpg'),
+    '2': require('../assets/images/businesses/boutique.jpg'),
+    '3': require('../assets/images/businesses/cleaning-service.jpg'),
+    '4': require('../assets/images/businesses/brewery.jpg'),
+    '5': require('../assets/images/businesses/medical_practice.jpg'),
   };
 
-  const handleContactOwner = () => {
-    Alert.alert(
-      'Contact Owner',
-      `Would you like to contact ${mockBusinessDetail.ownerName}?\n\nEmail: ${mockBusinessDetail.ownerEmail}\nPhone: ${mockBusinessDetail.ownerPhone}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Send Email', onPress: () => Alert.alert('Feature Coming Soon', 'Email functionality will be available soon!') },
-        { text: 'Call', onPress: () => Alert.alert('Feature Coming Soon', 'Calling functionality will be available soon!') }
-      ]
-    );
-  };
-
-  const handleSaveListing = () => {
-    Alert.alert('Saved!', 'This listing has been saved to your favorites.');
-  };
-
-  const handleShareListing = () => {
-    Alert.alert('Share', 'Share this listing with your network or advisors.');
+  // Like toggle
+  const toggleLike = () => {
+    setLiked((v) => !v);
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>← Back</Text>
+    <SafeAreaView style={styles.container}>
+      <RNStatusBar barStyle="dark-content" translucent={false} />
+
+      {/* Static header (business name → meta → asking price) — kept outside the ScrollView so it remains fixed */}
+      <View style={styles.businessHeaderStatic}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <Ionicons name="close" size={24} color="#333" />
         </TouchableOpacity>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerActionButton} onPress={handleSaveListing}>
-            <Text style={styles.headerActionText}>💾</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerActionButton} onPress={handleShareListing}>
-            <Text style={styles.headerActionText}>📤</Text>
-          </TouchableOpacity>
+  <Text style={styles.businessName}>{business?.name ?? 'Business'}</Text>
+        <View style={styles.businessMeta}>
+          <View style={styles.industryBadge}>
+              <Text style={styles.industryBadgeText}>{business?.industry}</Text>
+          </View>
+            <Text style={styles.location}>{business?.location}</Text>
+        </View>
+        <View style={styles.askingRow}>
+          <Text style={styles.askingLabel}>Asking Price</Text>
+            <Text style={styles.askingPrice}>{business?.askingPrice}</Text>
         </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Business Header */}
-        <View style={styles.businessHeader}>
-          <Text style={styles.businessName}>{mockBusinessDetail.name}</Text>
-          <View style={styles.businessMeta}>
-            <View style={styles.industryBadge}>
-              <Text style={styles.industryBadgeText}>{mockBusinessDetail.industry}</Text>
+
+        {/* Owner info box (below asking price) */}
+        <View style={styles.ownerInline}>
+          <View style={styles.ownerTopRow}>
+            <View>
+              <Text style={styles.ownerLabel}>Owner</Text>
+                <Text style={styles.ownerName}>{business?.ownerName}</Text>
             </View>
-            <Text style={styles.location}>{mockBusinessDetail.location}</Text>
+            <TouchableOpacity style={styles.likeButtonInline} onPress={toggleLike}>
+              <Ionicons name={liked ? 'thumbs-up' : 'thumbs-up-outline'} size={18} color={liked ? '#7FA084' : '#333'} />
+              <Text style={[styles.likeLabel, liked && { color: '#7FA084' }]}>{liked ? 'Liked' : 'Like'}</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.askingPrice}>{mockBusinessDetail.askingPrice}</Text>
+          <View style={styles.ownerContactRow}>
+            <Text style={styles.contactLabel}>Email:</Text>
+            {liked ? (
+                <Text style={styles.ownerEmail}>{business?.ownerEmail}</Text>
+            ) : (
+              <Text style={styles.maskedContact}>•••••••••••</Text>
+            )}
+          </View>
+          <View style={styles.ownerContactRow}>
+            <Text style={styles.contactLabel}>Phone:</Text>
+            {liked ? (
+                <Text style={styles.ownerPhone}>{business?.ownerPhone}</Text>
+            ) : (
+              <Text style={styles.maskedContact}>•••••••••••</Text>
+            )}
+          </View>
+          {!liked && <Text style={styles.likePrompt}>Like this business to contact the owner</Text>}
         </View>
 
-        {/* Business Image Placeholder */}
+        {/* Business Image */}
         <View style={styles.imageContainer}>
-          <View style={styles.imagePlaceholder}>
-            <Text style={styles.imagePlaceholderText}>📸</Text>
-            <Text style={styles.imagePlaceholderSubtext}>Business Photos</Text>
-          </View>
-        </View>
-
-        {/* Quick Stats */}
-        <View style={styles.quickStats}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{mockBusinessDetail.annualRevenue}</Text>
-            <Text style={styles.statLabel}>Annual Revenue</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{mockBusinessDetail.profitMargin}</Text>
-            <Text style={styles.statLabel}>Profit Margin</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{mockBusinessDetail.employees}</Text>
-            <Text style={styles.statLabel}>Employees</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{mockBusinessDetail.yearsInOperation}</Text>
-            <Text style={styles.statLabel}>Years Operating</Text>
-          </View>
+          {business ? (
+            <Image
+              source={imageMap[business.id] ?? require('../assets/images/businesses/TechStart.jpg')}
+              style={styles.businessImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Text style={styles.imagePlaceholderText}>📸</Text>
+              <Text style={styles.imagePlaceholderSubtext}>Business Photos</Text>
+            </View>
+          )}
         </View>
 
         {/* Description */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Business Description</Text>
-          <Text style={styles.sectionContent}>{mockBusinessDetail.description}</Text>
+          <Text style={styles.sectionContent}>{business?.description}</Text>
         </View>
 
         {/* Financial Highlights */}
@@ -175,96 +109,47 @@ export default function BusinessDetailScreen() {
           <View style={styles.financialGrid}>
             <View style={styles.financialItem}>
               <Text style={styles.financialLabel}>Annual Revenue</Text>
-              <Text style={styles.financialValue}>{mockBusinessDetail.financialHighlights.revenue}</Text>
+              <Text style={styles.financialValue}>{business?.financialHighlights.revenue}</Text>
             </View>
             <View style={styles.financialItem}>
               <Text style={styles.financialLabel}>Annual Profit</Text>
-              <Text style={styles.financialValue}>{mockBusinessDetail.financialHighlights.profit}</Text>
+              <Text style={styles.financialValue}>{business?.financialHighlights.profit}</Text>
             </View>
             <View style={styles.financialItem}>
               <Text style={styles.financialLabel}>Growth Rate</Text>
-              <Text style={styles.financialValue}>{mockBusinessDetail.financialHighlights.growth}</Text>
+              <Text style={styles.financialValue}>{business?.financialHighlights.growth}</Text>
             </View>
             <View style={styles.financialItem}>
               <Text style={styles.financialLabel}>Monthly Revenue</Text>
-              <Text style={styles.financialValue}>{mockBusinessDetail.monthlyRevenue}</Text>
+              <Text style={styles.financialValue}>{business?.monthlyRevenue}</Text>
             </View>
           </View>
         </View>
 
-        {/* Key Assets */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Key Assets</Text>
-          {mockBusinessDetail.keyAssets.map((asset, index) => (
-            <View key={index} style={styles.listItem}>
-              <Text style={styles.listBullet}>•</Text>
-              <Text style={styles.listText}>{asset}</Text>
-            </View>
-          ))}
-        </View>
+        {/* Removed Key Assets, Growth Opportunities, Reason for Selling sections per request. */}
 
-        {/* Growth Opportunities */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Growth Opportunities</Text>
-          {mockBusinessDetail.growthOpportunities.map((opportunity, index) => (
-            <View key={index} style={styles.listItem}>
-              <Text style={styles.listBullet}>•</Text>
-              <Text style={styles.listText}>{opportunity}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Reason for Selling */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Reason for Selling</Text>
-          <Text style={styles.sectionContent}>{mockBusinessDetail.reasonForSelling}</Text>
-        </View>
-
-        {/* Business Information */}
+        {/* Business Information (non-sticky) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Business Information</Text>
           <View style={styles.infoGrid}>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Business Hours</Text>
-              <Text style={styles.infoValue}>{mockBusinessDetail.businessHours}</Text>
+              <Text style={styles.infoValue}>{business?.businessHours}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Website</Text>
-              <Text style={styles.infoValue}>{mockBusinessDetail.website}</Text>
+              <Text style={styles.infoValue}>{business?.website}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Social Media</Text>
-              <Text style={styles.infoValue}>{mockBusinessDetail.socialMedia.join(', ')}</Text>
+              <Text style={styles.infoValue}>{business?.socialMedia.join(', ')}</Text>
             </View>
           </View>
         </View>
-
-        {/* Owner Information */}
-        {showContactInfo && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Owner Information</Text>
-            <View style={styles.ownerCard}>
-              <Text style={styles.ownerName}>{mockBusinessDetail.ownerName}</Text>
-              <Text style={styles.ownerEmail}>{mockBusinessDetail.ownerEmail}</Text>
-              <Text style={styles.ownerPhone}>{mockBusinessDetail.ownerPhone}</Text>
-            </View>
-          </View>
-        )}
       </ScrollView>
 
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        {!isInterested ? (
-          <TouchableOpacity style={styles.primaryButton} onPress={handleExpressInterest}>
-            <Text style={styles.primaryButtonText}>Express Interest</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.contactButton} onPress={handleContactOwner}>
-            <Text style={styles.contactButtonText}>Contact Owner</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
+      {/* Footer and action buttons removed: contact is shown inline below the location and is gated by the Like state. */}
+    </SafeAreaView>
   );
 }
 
@@ -308,6 +193,14 @@ const styles = StyleSheet.create({
   businessHeader: {
     backgroundColor: '#fff',
     padding: 20,
+    paddingTop: 32,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  businessHeaderStatic: {
+    backgroundColor: '#fff',
+    padding: 20,
+    paddingTop: 32,
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
   },
@@ -343,6 +236,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#7FA084',
   },
+  askingRow: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  askingLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 6,
+    fontWeight: '600',
+  },
   imageContainer: {
     backgroundColor: '#fff',
     padding: 20,
@@ -366,6 +269,12 @@ const styles = StyleSheet.create({
   imagePlaceholderSubtext: {
     fontSize: 16,
     color: '#666',
+  },
+  businessImage: {
+    width: '100%',
+    height: 220,
+    borderRadius: 12,
+    backgroundColor: '#f0f0f0',
   },
   quickStats: {
     flexDirection: 'row',
@@ -482,12 +391,71 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  actionButtons: {
+  ownerInline: {
+    marginTop: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    borderRadius: 8,
     backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
+  },
+  ownerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  likeButtonInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 22,
+    right: 16,
+    padding: 6,
+    zIndex: 10,
+  },
+  ownerContactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  contactLabel: {
+    fontSize: 14,
+    color: '#666',
+    width: 70,
+  },
+  maskedContact: {
+    fontSize: 16,
+    color: '#999',
+  },
+  likePrompt: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  ownerLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 6,
+    fontWeight: '600',
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  likeLabel: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 6,
+    fontWeight: '600',
   },
   primaryButton: {
     backgroundColor: '#5A7A8C',
