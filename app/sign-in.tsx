@@ -137,9 +137,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  createAccountText: {
-    color: '#5A7A8C',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-});
+    createAccountText: {
+      color: '#5A7A8C',
+    }
+  });

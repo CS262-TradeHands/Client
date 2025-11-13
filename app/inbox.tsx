@@ -1,22 +1,97 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, FlatList, Image, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 
 const mockMatches = [
-  { id: 'm1', title: "Buyer: Khaled", subtitle: 'Interested in SaaS businesses' },
-  { id: 'm2', title: "Buyer: Miriam", subtitle: 'Looking for retail stores' },
-  // Businesses that have expressed interest in you as a buyer
-  { id: 'b1', title: "Business: Green Clean Services", subtitle: 'Interested in partnering with you' },
-  { id: 'b2', title: "Business: TechStart Solutions", subtitle: 'Interested in you — exploring strategic acquisition talks' },
-  { id: 'b3', title: "Business: Craft Brewery Co.", subtitle: 'Looking for investor-operators' },
+  // Buyer interested in your business -> goes to buyer profile (buyer-detail)
+  {
+    id: 'm1',
+    title: 'buyer',
+    name: 'Khaled',
+    message: 'is interested in your business',
+    primaryAction: 'View buyer profile',
+    avatar: require('../assets/images/mii/buyer1.png'),
+    route: '/buyer-detail?id=1',
+    email: 'khaled@example.com',
+    phone: '+1 (555) 123-4567',
+  },
+
+  // Someone interested in you as a buyer -> goes to business listing
+  {
+    id: 'm2',
+    title: 'business',
+    name: 'TechStart Solutions',
+    message: 'is interested in you as a buyer',
+    primaryAction: 'View business listing',
+    avatar: require('../assets/images/businesses/TechStart.jpg'),
+    route: '/business-detail?id=1',
+  },
+
+  // Approved contact request -> only show "View contact" which navigates to buyer detail
+  {
+    id: 'm3',
+    title: 'approved',
+    name: 'Miriam',
+    message: 'approved your contact request',
+    primaryAction: 'View contact',
+    avatar: require('../assets/images/mii/buyer2.png'),
+    route: '/buyer-detail?id=2',
+    simpleContact: true,
+    email: 'miriam@example.com',
+    phone: '+1 (555) 234-5678',
+  },
+
+  // Another buyer
+  {
+    id: 'm4',
+    title: 'buyer',
+    name: 'Bobby',
+    message: 'is interested in your business',
+    primaryAction: 'View buyer profile',
+    avatar: require('../assets/images/mii/buyer3.png'),
+    route: '/buyer-detail?id=3',
+    email: 'bobby@example.com',
+    phone: '+1 (555) 345-6789',
+  },
+  // additional entries
+  {
+    id: 'm5',
+    title: 'business',
+    name: 'Green Clean Services',
+    message: 'is interested in partnering with you',
+    primaryAction: 'View business listing',
+    avatar: require('../assets/images/businesses/cleaning-service.jpg'),
+    route: '/business-detail?id=3',
+  },
+  {
+    id: 'm6',
+    title: 'business',
+    name: 'Craft Brewery Co.',
+    message: 'Looking for investor-operators',
+    primaryAction: 'View business listing',
+    avatar: require('../assets/images/businesses/brewery.jpg'),
+    route: '/business-detail?id=4',
+  },
+  {
+    id: 'm7',
+    title: 'business',
+    name: "Bella's Boutique",
+    message: 'Interested in you — exploring strategic acquisition talks',
+    primaryAction: 'View business listing',
+    avatar: require('../assets/images/businesses/boutique.jpg'),
+    route: '/business-detail?id=2',
+  },
 ];
 
 export default function InboxScreen() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const [contactModalVisible, setContactModalVisible] = useState(false);
+  const [contactInfo, setContactInfo] = useState<{ name?: string; email?: string; phone?: string } | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -30,10 +105,10 @@ export default function InboxScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
-          <Ionicons name="arrow-back" size={20} color="#5A7A8C" />
+          <Ionicons name="arrow-back" size={20} color={Colors.light.tint} />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title} pointerEvents="none">Matches</Text>
+        <Text style={styles.title} pointerEvents="none">Notifications</Text>
         <View style={styles.headerRight} />
       </View>
 
@@ -42,25 +117,98 @@ export default function InboxScreen() {
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.item} onPress={() => { /* future: open match detail */ }}>
-            <Text style={styles.itemTitle}>{item.title}</Text>
-            <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
-          </TouchableOpacity>
+          <View style={styles.item}>
+            <View style={styles.row}>
+              <Image source={item.avatar} style={styles.avatar} />
+              <View style={styles.itemBody}>
+                <Text style={styles.notificationText}>
+                  <Text style={styles.name}>{item.name} </Text>
+                  <Text>{item.message}</Text>
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={() => {
+                    // If this is a 'view contact' action (approved contact), show popup
+                    if (item.simpleContact || item.primaryAction?.toLowerCase().includes('view contact')) {
+                      setContactInfo({ name: item.name, email: item.email, phone: item.phone });
+                      setContactModalVisible(true);
+                      return;
+                    }
+                    if (item?.route) router.push(item.route as any);
+                  }}
+                >
+                  <Text style={styles.primaryButtonText}>{item.primaryAction}</Text>
+                </TouchableOpacity>
+
+                {!item.simpleContact && (
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity style={styles.pillButton} onPress={() => Alert.alert('Approved')}>
+                      <Text style={styles.pillText}>Approve contact request</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.pillButton, styles.pillSecondary]} onPress={() => Alert.alert('Denied')}>
+                      <Text style={styles.pillText}>Deny contact request</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
         )}
       />
+
+      {/* Contact popup modal (callout) */}
+      <Modal visible={contactModalVisible} transparent animationType="fade">
+        <Pressable style={styles.modalOverlay} onPress={() => setContactModalVisible(false)}>
+          <View style={styles.calloutContainer}>
+            <Text style={styles.calloutName}>{contactInfo?.name}</Text>
+            {contactInfo?.email ? <Text style={styles.calloutText}>{contactInfo.email}</Text> : null}
+            {contactInfo?.phone ? <Text style={styles.calloutText}>{contactInfo.phone}</Text> : null}
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { padding: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  container: { flex: 1, backgroundColor: Colors.light.background },
+  header: {
+    padding: 12,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.light.background,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   backButton: { flexDirection: 'row', alignItems: 'center', padding: 6, marginRight: 8, zIndex: 2 },
   headerRight: { width: 32 },
-  title: { position: 'absolute', left: 0, right: 0, fontSize: 20, fontWeight: '700', textAlign: 'center' },
-  backButtonText: { color: '#5A7A8C', fontSize: 16, fontWeight: '600', marginLeft: 6 },
-  list: { padding: 12 },
-  item: { padding: 14, borderRadius: 10, backgroundColor: '#f8f9fa', marginBottom: 10 },
-  itemTitle: { fontSize: 16, fontWeight: '700' },
-  itemSubtitle: { fontSize: 13, color: '#555', marginTop: 4 },
+  title: { position: 'absolute', left: 0, right: 0, fontSize: 20, fontWeight: '700', textAlign: 'center', color: Colors.light.text },
+  backButtonText: { color: Colors.light.tint, fontSize: 16, fontWeight: '600', marginLeft: 6 },
+  list: { padding: 12, paddingBottom: 20 },
+  item: { padding: 14, borderRadius: 10, backgroundColor: '#f8f9fa', marginBottom: 10, minHeight: 110 },
+
+  /* new styles for inbox cards */
+  row: { flexDirection: 'row', alignItems: 'flex-start' },
+  avatar: { width: 64, height: 64, borderRadius: 8, backgroundColor: '#ccc' },
+  itemBody: { flex: 1, marginLeft: 12 },
+  notificationText: { fontSize: 15, color: Colors.light.text, marginBottom: 8 },
+  name: { fontWeight: '700', color: Colors.light.text },
+
+  primaryButton: { alignSelf: 'flex-start', backgroundColor: Colors.light.tint, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, marginBottom: 8 },
+  primaryButtonText: { color: '#fff', fontWeight: '600' },
+
+  actionRow: { flexDirection: 'row', marginTop: 6, flexWrap: 'wrap', alignItems: 'center' },
+  pillButton: { backgroundColor: '#eaf2fb', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, marginRight: 8, flexShrink: 1, maxWidth: '65%' },
+  pillSecondary: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e6e6e6' },
+  pillText: { color: Colors.light.tint, fontWeight: '600', fontSize: 13 },
+  /* removed footer band per request */
+
+  /* contact callout modal styles */
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' },
+  calloutContainer: { backgroundColor: Colors.light.tint, paddingVertical: 18, paddingHorizontal: 22, borderRadius: 28, alignItems: 'center', minWidth: 240 },
+  calloutName: { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 6 },
+  calloutText: { color: '#fff', fontSize: 15 },
 });
