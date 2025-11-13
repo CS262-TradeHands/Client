@@ -27,7 +27,7 @@ const mockMatches = [
     name: 'TechStart Solutions',
     message: 'is interested in you as a buyer',
     primaryAction: 'View business listing',
-    avatar: require('../assets/images/react-logo.png'),
+    avatar: require('../assets/images/businesses/TechStart.jpg'),
     route: '/business-detail?id=1',
   },
 
@@ -64,7 +64,7 @@ const mockMatches = [
     name: 'Green Clean Services',
     message: 'is interested in partnering with you',
     primaryAction: 'View business listing',
-    avatar: require('../assets/images/react-logo.png'),
+    avatar: require('../assets/images/businesses/cleaning-service.jpg'),
     route: '/business-detail?id=3',
   },
   {
@@ -73,7 +73,7 @@ const mockMatches = [
     name: 'Craft Brewery Co.',
     message: 'Looking for investor-operators',
     primaryAction: 'View business listing',
-    avatar: require('../assets/images/react-logo.png'),
+    avatar: require('../assets/images/businesses/brewery.jpg'),
     route: '/business-detail?id=4',
   },
   {
@@ -82,7 +82,7 @@ const mockMatches = [
     name: "Bella's Boutique",
     message: 'Interested in you — exploring strategic acquisition talks',
     primaryAction: 'View business listing',
-    avatar: require('../assets/images/react-logo.png'),
+    avatar: require('../assets/images/businesses/boutique.jpg'),
     route: '/business-detail?id=2',
   },
 ];

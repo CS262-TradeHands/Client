@@ -7,7 +7,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import 'react-native-reanimated';
-import { AuthProvider } from '../components/AuthContext';
+import { AuthProvider } from '../context/AuthContext';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -54,8 +54,13 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="business-detail" options={{ headerShown: false }} />
+          <Stack.Screen name="buyer-detail" options={{ headerShown: false }} />
           <Stack.Screen name="sign-in" options={{ headerShown: false }} />
           <Stack.Screen name="create-account" options={{ headerShown: false }} />
+          <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
+          <Stack.Screen name="add-buyer" options={{ headerShown: false }} />
+          <Stack.Screen name="add-business" options={{ headerShown: false }} />
+          <Stack.Screen name="inbox" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </AuthProvider>
@@ -139,6 +144,7 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
     </TouchableWithoutFeedback>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

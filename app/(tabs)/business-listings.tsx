@@ -1,83 +1,20 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useAuth } from '../../components/AuthContext';
 import ProtectedInfo from '../../components/protected-info';
+import { useAuth } from '../../context/AuthContext';
 
-interface BusinessListing {
-  id: string;
-  name: string;
-  industry: string;
-  askingPrice: string;
-  location: string;
-  description: string;
-  employees: number;
-  yearsInOperation: number;
-}
-
-const mockBusinessListings: BusinessListing[] = [
-  {
-    id: '1',
-    name: 'TechStart Solutions',
-    industry: 'Tech',
-    askingPrice: '$250,000 - $300,000',
-    location: 'San Francisco, CA',
-    description: 'Profitable SaaS company with recurring revenue and growing customer base.',
-    employees: 8,
-    yearsInOperation: 5
-  },
-  {
-    id: '2',
-    name: 'Bella\'s Boutique',
-    industry: 'Retail',
-    askingPrice: '$150,000 - $200,000',
-    location: 'Austin, TX',
-    description: 'Established women\'s clothing boutique in prime downtown location with loyal customer base.',
-    employees: 3,
-    yearsInOperation: 7
-  },
-  {
-    id: '3',
-    name: 'Green Clean Services',
-    industry: 'Service',
-    askingPrice: '$80,000 - $120,000',
-    location: 'Denver, CO',
-    description: 'Eco-friendly cleaning service with commercial and residential clients.',
-    employees: 12,
-    yearsInOperation: 4
-  },
-  {
-    id: '4',
-    name: 'Craft Brewery Co.',
-    industry: 'Food & Beverage',
-    askingPrice: '$400,000 - $500,000',
-    location: 'Portland, OR',
-    description: 'Popular local brewery with taproom and distribution network.',
-    employees: 15,
-    yearsInOperation: 6
-  },
-  {
-    id: '5',
-    name: 'MediCare Plus',
-    industry: 'Healthcare',
-    askingPrice: '$600,000 - $750,000',
-    location: 'Miami, FL',
-    description: 'Well-established medical practice with multiple locations.',
-    employees: 25,
-    yearsInOperation: 12
-  }
-];
+import { Business as BusinessListing, mockBusinesses } from '../../constants/mockBusinesses';
 
 export default function BusinessListingsScreen() {
   const router = useRouter();
-  // removed filter/search/sort state per user request
-  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
-  const { signedIn, signOut } = useAuth();
-  const profileBtnRef = useRef(null);
+  const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // search state and filtering
   const [query, setQuery] = useState('');
-  const filteredListings = mockBusinessListings.filter((l) => {
+  const filteredListings = mockBusinesses.filter((l) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -89,68 +26,59 @@ export default function BusinessListingsScreen() {
 
   const handleViewDetails = (listing: BusinessListing) => {
     // Require sign-in to view details
-    if (signedIn) {
-      router.push('/business-detail');
+    if (isAuthenticated) {
+      router.push(`/business-detail?id=${listing.id}`);
     } else {
       setAuthPromptVisible(true);
     }
   };
 
-  const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  const handleAddBusiness = () => {
+    if (isAuthenticated) {
+      router.push('/add-business' as any);
+    } else {
+      setAuthPromptVisible(true);
+    }
+  };
+
   const openAuthPrompt = () => setAuthPromptVisible(true);
   const closeAuthPrompt = () => setAuthPromptVisible(false);
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Welcome to TradeHands</Text>
-            <Text style={styles.subtitle}>Find your perfect business opportunity</Text>
-          </View>
-
-          {/* Profile button in top-right */}
-          <View style={styles.profileContainer} ref={profileBtnRef as any}>
-            <Pressable
-              onPress={() => setProfileMenuVisible((v) => !v)}
-              style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
-              accessibilityLabel="Profile menu"
-            >
-              <Text style={styles.profileInitial}>{signedIn ? 'U' : '?'}</Text>
-            </Pressable>
-
-            {profileMenuVisible && (
-              <View style={styles.profileMenu}>
-                {!signedIn ? (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setProfileMenuVisible(false);
-                      // navigate to sign-in screen
-                      router.push('/sign-in' as any);
-                    }}
-                    style={styles.menuItem}
-                  >
-                    <Text style={styles.menuItemText}>Sign in</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setProfileMenuVisible(false);
-                      signOut();
-                      // navigate to same route so UI refreshes
-                      router.replace('/business-listings' as any);
-                    }}
-                    style={styles.menuItem}
-                  >
-                    <Text style={styles.menuItemText}>Sign out</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
-          </View>
+      <View style={[styles.header, isAuthenticated && styles.headerAuthenticated]}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
+            {isAuthenticated ? 'YOUR Business Dashboard' : 'Welcome to TradeHands'}
+          </Text>
+          <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
+            {isAuthenticated ? 'Browse YOUR listings and manage connections' : 'Find your perfect business opportunity'}
+          </Text>
         </View>
 
-        {/* Search input in header (single source of truth) */}
+          {/* Inbox icon (top-right). If not signed in, prompt to sign in. When signed-in, open inbox. */}
+          <Pressable
+            onPress={() => {
+              if (isAuthenticated) {
+                router.push('/inbox' as any);
+              } else {
+                setAuthPromptVisible(true);
+              }
+            }}
+            style={({ pressed }) => [styles.profileButton, pressed && styles.profileButtonPressed]}
+            accessibilityLabel={isAuthenticated ? 'Open inbox' : 'Sign in to view inbox'}
+          >
+            <Ionicons name="mail-outline" size={20} color="#333" />
+            {isAuthenticated && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>2</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+
+        {/* Search input in header */}
         <View style={styles.searchRow}>
           <TextInput
             placeholder="Search for businesses"
@@ -161,14 +89,22 @@ export default function BusinessListingsScreen() {
             returnKeyType="search"
           />
         </View>
+
+        {/* Results count directly below search */}
+        <View style={styles.resultsRowHeader}>
+          <Text style={styles.resultsCount}>
+            {filteredListings.length} business{filteredListings.length !== 1 ? 'es' : ''} found
+          </Text>
+        </View>
       </View>
 
       {/* Business Listings */}
       <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.resultsRow}>
-          <Text style={styles.resultsCount}>
-            {filteredListings.length} business{filteredListings.length !== 1 ? 'es' : ''} found
-          </Text>
+
+        <View style={styles.addRow}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
+            <Text style={styles.addButtonText}>+ Add a business listing</Text>
+          </TouchableOpacity>
         </View>
         
         {filteredListings.map((listing) => (
@@ -180,7 +116,7 @@ export default function BusinessListingsScreen() {
               </View>
             </View>
             
-            <ProtectedInfo signedIn={signedIn} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
+            <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
               <Text style={styles.businessLocation}>{listing.location}</Text>
             </ProtectedInfo>
             <Text style={styles.businessDescription}>{listing.description}</Text>
@@ -188,13 +124,13 @@ export default function BusinessListingsScreen() {
             <View style={styles.businessDetails}>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Asking Price</Text>
-                <ProtectedInfo signedIn={signedIn} onPress={openAuthPrompt}>
+                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
                   <Text style={styles.detailValue}>{listing.askingPrice}</Text>
                 </ProtectedInfo>
               </View>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Employees</Text>
-                <ProtectedInfo signedIn={signedIn} onPress={openAuthPrompt}>
+                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
                   <Text style={styles.detailValue}>{listing.employees}</Text>
                 </ProtectedInfo>
               </View>
@@ -219,41 +155,37 @@ export default function BusinessListingsScreen() {
             <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
           </View>
         )}
-
-        <View style={styles.addRow}>
-          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-business' as any)}>
-            <Text style={styles.addButtonText}>+ Add a business listing</Text>
-          </TouchableOpacity>
-        </View>
-        {authPromptVisible && (
-          <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={closeAuthPrompt}>
-            <Pressable style={styles.modalOverlay} onPress={closeAuthPrompt}>
-              <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
-                <Text style={styles.modalTitle}>Log in to view details</Text>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalPrimary]}
-                  onPress={() => {
-                    closeAuthPrompt();
-                    router.push('/sign-in');
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>Returning user login</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalSecondary]}
-                  onPress={() => {
-                    closeAuthPrompt();
-                    router.push('/sign-in?signup=true');
-                  }}
-                >
-                  <Text style={styles.modalSecondaryText}>Create an account</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          </Modal>
-        )}
       </ScrollView>
+
+      {/* Modal moved outside ScrollView */}
+      {authPromptVisible && (
+        <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={closeAuthPrompt}>
+          <Pressable style={styles.modalOverlay} onPress={closeAuthPrompt}>
+            <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
+              <Text style={styles.modalTitle}>Log in to continue</Text>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalPrimary]}
+                onPress={() => {
+                  closeAuthPrompt();
+                  router.push('/sign-in');
+                }}
+              >
+                <Text style={styles.modalButtonText}>Returning user login</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalSecondary]}
+                onPress={() => {
+                  closeAuthPrompt();
+                  router.push('/create-account');
+                }}
+              >
+                <Text style={styles.modalSecondaryText}>Create an account</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -261,22 +193,31 @@ export default function BusinessListingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0d2569ff',
+    backgroundColor: '#2D2A27',
   },
   header: {
-    backgroundColor: '#0f42cfff',
+    backgroundColor: '#2B4450',
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
+  headerAuthenticated: {
+    backgroundColor: '#5A7A8C', // primary
+  },
+  titleAuthenticated: {
+    color: '#F5F1ED', // warm-neutral
+  },
+  subtitleAuthenticated: {
+    color: '#E8E3DC', // soft-beige
+  },
   backButton: {
     marginBottom: 10,
   },
   backButtonText: {
     fontSize: 16,
-    color: '#007BFF',
+    color: '#5A7A8C',
     fontWeight: '600',
   },
   title: {
@@ -305,7 +246,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   searchText: { color: '#666' },
-  /* filter/search styles removed */
   listingsContainer: {
     paddingHorizontal: 16,
     paddingBottom: 24,
@@ -313,8 +253,10 @@ const styles = StyleSheet.create({
   resultsCount: {
     fontSize: 14,
     color: '#f0f0f0',
-    marginVertical: 15,
     fontWeight: '500',
+  },
+  resultsRowHeader: {
+    paddingHorizontal: 12,
   },
   resultsRow: {
     flexDirection: 'row',
@@ -359,14 +301,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   industryBadge: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#E8E3DC',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   industryBadgeText: {
     fontSize: 12,
-    color: '#1976d2',
+    color: '#5A7A8C',
     fontWeight: '600',
   },
   businessLocation: {
@@ -402,7 +344,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   viewDetailsButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#5A7A8C',
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -442,6 +384,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ff3b30',
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
   profileButtonPressed: {
     opacity: 0.8,
   },
@@ -478,14 +437,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     marginVertical: 6,
   },
-  addRow: { width: '100%', alignItems: 'center', marginTop: 6 },
+  addRow: { 
+    width: '100%', 
+    alignItems: 'center', 
+    marginTop: 14,
+    marginBottom: 16
+  },
   addButton: {
     width: '92%',
-    backgroundColor: '#1b2438',
+    backgroundColor: '#2B4450',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
-    marginVertical: 12,
   },
   addButtonText: { color: '#fff', fontWeight: '700' },
   modalOverlay: {
@@ -514,7 +477,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   modalPrimary: {
-    backgroundColor: '#1b2438',
+    backgroundColor: '#2B4450',
   },
   modalSecondary: {
     backgroundColor: '#e9ecef',

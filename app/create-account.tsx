@@ -6,17 +6,23 @@ import { useAuth } from '../context/AuthContext';
 
 export default function SignInScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const { signIn } = useAuth();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [confirmEmail, setConfirmEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState('');
 
-  const handleSignIn = () => {
+  const handleCreateAccount = () => {
     // Mock user data - replace with actual API call
     const userData = {
       id: '1',
       email: email,
-      firstName: 'John',
-      lastName: 'Doe',
+      firstName: firstName,
+      lastName: lastName,
+      phone: phone,
     };
     
     signIn(userData);
@@ -29,15 +35,43 @@ export default function SignInScreen() {
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
 
-      <Text style={styles.title}>Sign in</Text>
+      <Text style={styles.title}>Create a new account</Text>
 
       <View style={styles.formContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="First Name"
+          placeholderTextColor="#777"
+          value={firstName}
+          onChangeText={setFirstName}
+          autoCapitalize="words"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Last Name"
+          placeholderTextColor="#777"
+          value={lastName}
+          onChangeText={setLastName}
+          autoCapitalize="words"
+        />
+
         <TextInput
           style={styles.input}
           placeholder="Email"
           placeholderTextColor="#777"
           value={email}
           onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm Email"
+          placeholderTextColor="#777"
+          value={confirmEmail}
+          onChangeText={setConfirmEmail}
           keyboardType="email-address"
           autoCapitalize="none"
         />
@@ -51,12 +85,26 @@ export default function SignInScreen() {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-          <Text style={styles.buttonText}>Sign in</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.createAccountButton} onPress={() => router.push('/create-account')}>
-          <Text style={styles.createAccountText}>Create account</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm Password"
+          placeholderTextColor="#777"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Phone"
+          placeholderTextColor="#777"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
+
+        <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
+          <Text style={styles.buttonText}>Create account</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -67,7 +115,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
     backgroundColor: '#fff',
   },
@@ -88,7 +135,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fbfbfb',
     fontSize: 16,
     color: '#111',
-    textAlign: 'center',
   },
   headerRow: {
     width: '100%',
@@ -123,6 +169,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#5A7A8C',
     paddingVertical: 12,
     borderRadius: 8,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   buttonText: {
@@ -130,14 +177,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 16,
   },
-  createAccountButton: {
-    marginTop: 12,
-    width: '75%',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-    createAccountText: {
-      color: '#5A7A8C',
-    }
-  });
+});
