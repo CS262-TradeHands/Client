@@ -246,21 +246,21 @@ export default function BuyerScreen() {
                     <Text style={styles.buyerModalSectionTitle}>Investment Details</Text>
                     <View style={styles.buyerModalDetails}>
                       <View style={styles.buyerModalDetailRow}>
-                        <Ionicons name="cash-outline" size={20} color="#007AFF" />
+                        <Ionicons name="cash-outline" size={20} color="#5A7A8C" />
                         <View style={styles.buyerModalDetailContent}>
                           <Text style={styles.buyerModalDetailLabel}>Budget Range</Text>
                           <Text style={styles.buyerModalDetailValue}>{selectedBuyer.budget}</Text>
                         </View>
                       </View>
                       <View style={styles.buyerModalDetailRow}>
-                        <Ionicons name="briefcase-outline" size={20} color="#007AFF" />
+                        <Ionicons name="briefcase-outline" size={20} color="#5A7A8C" />
                         <View style={styles.buyerModalDetailContent}>
                           <Text style={styles.buyerModalDetailLabel}>Experience</Text>
                           <Text style={styles.buyerModalDetailValue}>{selectedBuyer.experience}</Text>
                         </View>
                       </View>
                       <View style={styles.buyerModalDetailRow}>
-                        <Ionicons name="time-outline" size={20} color="#007AFF" />
+                        <Ionicons name="time-outline" size={20} color="#5A7A8C" />
                         <View style={styles.buyerModalDetailContent}>
                           <Text style={styles.buyerModalDetailLabel}>Timeline</Text>
                           <Text style={styles.buyerModalDetailValue}>{selectedBuyer.timeline}</Text>
@@ -316,10 +316,10 @@ export default function BuyerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0d2569ff',
+    backgroundColor: '#2D2A27',
   },
   header: {
-    backgroundColor: '#0f42cfff',
+    backgroundColor: '#2B4450',
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     width: '92%',
-    backgroundColor: '#1b2438',
+    backgroundColor: '#2B4450',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -516,15 +516,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   modalPrimary: {
-    backgroundColor: '#2858f2',
+    backgroundColor: '#5A7A8C',
   },
   modalSecondary: {
-    backgroundColor: '#eef2ff',
+    backgroundColor: '#E8E3DC',
     borderWidth: 1,
-    borderColor: '#c6d2ff',
+    borderColor: '#9B8F82',
   },
   modalButtonText: { color: '#fff', fontWeight: '700' },
-  modalSecondaryText: { color: '#2858f2', fontWeight: '700' },
+  modalSecondaryText: { color: '#5A7A8C', fontWeight: '700' },
 
   // Buyer Detail Modal Styles
   buyerModalOverlay: {
@@ -613,10 +613,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#5A7A8C',
   },
   buyerModalTagText: {
-    color: '#007AFF',
+    color: '#5A7A8C',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   buyerModalContactButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#5A7A8C',
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 25,

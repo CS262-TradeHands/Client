@@ -249,10 +249,10 @@ export default function BusinessListingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0d2569ff',
+    backgroundColor: '#2D2A27',
   },
   header: {
-    backgroundColor: '#0f42cfff',
+    backgroundColor: '#2B4450',
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: '#007BFF',
+    color: '#5A7A8C',
     fontWeight: '600',
   },
   title: {
@@ -346,14 +346,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   industryBadge: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#E8E3DC',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   industryBadgeText: {
     fontSize: 12,
-    color: '#1976d2',
+    color: '#5A7A8C',
     fontWeight: '600',
   },
   businessLocation: {
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   viewDetailsButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#5A7A8C',
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     width: '92%',
-    backgroundColor: '#1b2438',
+    backgroundColor: '#2B4450',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   modalPrimary: {
-    backgroundColor: '#1b2438',
+    backgroundColor: '#2B4450',
   },
   modalSecondary: {
     backgroundColor: '#e9ecef',

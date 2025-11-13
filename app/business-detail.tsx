@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: '#007BFF',
+    color: '#5A7A8C',
     fontWeight: '600',
   },
   headerActions: {
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   industryBadge: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#E8E3DC',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   industryBadgeText: {
     fontSize: 14,
-    color: '#1976d2',
+    color: '#5A7A8C',
     fontWeight: '600',
   },
   location: {
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   askingPrice: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#28a745',
+    color: '#7FA084',
   },
   imageContainer: {
     backgroundColor: '#fff',
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   },
   listBullet: {
     fontSize: 16,
-    color: '#007BFF',
+    color: '#5A7A8C',
     marginRight: 10,
     marginTop: 2,
   },
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#e9ecef',
   },
   primaryButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#5A7A8C',
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   contactButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#7FA084',
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',

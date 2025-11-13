@@ -315,7 +315,7 @@ export default function AddBuyerScreen() {
           <Ionicons 
             name={formData.proofOfFunds ? 'checkbox' : 'square-outline'} 
             size={24} 
-            color={formData.proofOfFunds ? '#007AFF' : '#666'} 
+            color={formData.proofOfFunds ? '#5A7A8C' : '#666'} 
           />
           <Text style={styles.checkboxText}>I can provide proof of funds when requested</Text>
         </TouchableOpacity>
@@ -518,7 +518,7 @@ export default function AddBuyerScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.authPrompt}>
-          <Ionicons name="lock-closed-outline" size={48} color="#007AFF" />
+          <Ionicons name="lock-closed-outline" size={48} color="#5A7A8C" />
           <Text style={styles.authPromptTitle}>Sign In Required</Text>
           <Text style={styles.authPromptText}>Please sign in to create a buyer profile.</Text>
           <TouchableOpacity
@@ -541,7 +541,7 @@ export default function AddBuyerScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#007AFF" />
+            <Ionicons name="arrow-back" size={24} color="#5A7A8C" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Create Buyer Profile</Text>
           <View style={styles.placeholder} />
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   stepDotActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#5A7A8C',
   },
   stepDotInactive: {
     backgroundColor: '#d0d0d0',
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   radioOptionSelected: {
-    borderColor: '#007AFF',
+    borderColor: '#5A7A8C',
     backgroundColor: '#f0f8ff',
   },
   radioOptionText: {
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   radioOptionTextSelected: {
-    color: '#007AFF',
+    color: '#5A7A8C',
     fontWeight: '500',
   },
   multiSelectContainer: {
@@ -699,8 +699,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   multiSelectOptionSelected: {
-    borderColor: '#007AFF',
-    backgroundColor: '#007AFF',
+    borderColor: '#5A7A8C',
+    backgroundColor: '#5A7A8C',
   },
   multiSelectOptionText: {
     fontSize: 14,
@@ -738,12 +738,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   navButtonPrimary: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#5A7A8C',
   },
   navButtonSecondary: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#5A7A8C',
   },
   navButtonText: {
     color: '#fff',
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   navButtonTextSecondary: {
-    color: '#007AFF',
+    color: '#5A7A8C',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   authPromptButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#5A7A8C',
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,

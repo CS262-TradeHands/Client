@@ -171,7 +171,7 @@ export default function BuyerDetailScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#007AFF" />
+            <Ionicons name="arrow-back" size={24} color="#5A7A8C" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Buyer Profile</Text>
           <View style={styles.placeholder} />
@@ -217,7 +217,7 @@ export default function BuyerDetailScreen() {
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
               <View style={styles.detailIcon}>
-                <Ionicons name="cash-outline" size={20} color="#007AFF" />
+                <Ionicons name="cash-outline" size={20} color="#5A7A8C" />
               </View>
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Budget Range</Text>
@@ -229,7 +229,7 @@ export default function BuyerDetailScreen() {
 
             <View style={styles.detailRow}>
               <View style={styles.detailIcon}>
-                <Ionicons name="briefcase-outline" size={20} color="#007AFF" />
+                <Ionicons name="briefcase-outline" size={20} color="#5A7A8C" />
               </View>
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Experience</Text>
@@ -239,7 +239,7 @@ export default function BuyerDetailScreen() {
 
             <View style={styles.detailRow}>
               <View style={styles.detailIcon}>
-                <Ionicons name="time-outline" size={20} color="#007AFF" />
+                <Ionicons name="time-outline" size={20} color="#5A7A8C" />
               </View>
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Timeline</Text>
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   },
   buyerTitle: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#5A7A8C',
     marginBottom: 10,
   },
   locationRow: {
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   contactButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#5A7A8C',
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 25,
@@ -398,15 +398,15 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   tag: {
-    backgroundColor: '#e7f3ff',
+    backgroundColor: '#E8E3DC',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#5A7A8C',
   },
   tagText: {
-    color: '#007AFF',
+    color: '#5A7A8C',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   modalButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#5A7A8C',
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalButtonTextSecondary: {
-    color: '#007AFF',
+    color: '#5A7A8C',
     fontSize: 16,
   },
   protectedContainer: {

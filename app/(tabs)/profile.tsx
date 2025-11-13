@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#007BFF',
+    backgroundColor: '#5A7A8C',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   editButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#5A7A8C',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   signInButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#5A7A8C',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   createAccountButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#7FA084',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,

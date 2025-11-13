@@ -168,7 +168,7 @@ export default function EditProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#007BFF" />
+            <Ionicons name="arrow-back" size={24} color="#5A7A8C" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Profile</Text>
           <TouchableOpacity
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#007BFF',
+    color: '#5A7A8C',
   },
   saveButtonDisabled: {
     color: '#999',
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#007BFF',
+    backgroundColor: '#5A7A8C',
     width: 36,
     height: 36,
     borderRadius: 18,
