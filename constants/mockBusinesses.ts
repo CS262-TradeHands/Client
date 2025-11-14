@@ -21,6 +21,26 @@ export interface Business {
 
 export const mockBusinesses: Business[] = [
   {
+    id: '6',
+    name: 'Bäckerei Wörner',
+    industry: 'Food & Beverage',
+    askingPrice: '$750,000 - $1,000,000',
+    location: 'Jettingen, Germany',
+    description: 'The cutest bakery ever!',
+    employees: 10,
+    yearsInOperation: 250,
+    annualRevenue: '$1,200,000',
+    monthlyRevenue: '$100,000',
+    profitMargin: '25%',
+    ownerName: 'Marc Wörner',
+    ownerEmail: 'marc@bakery.com',
+    ownerPhone: '+49 152 34567890',
+    financialHighlights: { revenue: '$1.2M', profit: '$300K', growth: '2% YoY' },
+    businessHours: 'Mon-Sat 6am-6pm',
+    website: 'www.backerei-worner.de',
+    socialMedia: ['Instagram', 'Facebook']
+  },
+  {
     id: '1',
     name: 'TechStart Solutions',
     industry: 'Tech',
@@ -124,4 +144,32 @@ export const mockBusinesses: Business[] = [
 
 export function getBusinessById(id: string) {
   return mockBusinesses.find((b) => b.id === id) || null;
+}
+
+// Bakery visibility flag: hidden by default
+let bakeryRevealed = false;
+
+export function isBakeryRevealed() {
+  return bakeryRevealed;
+}
+
+// Reveal the bakery listing and ensure it is at the front of the list
+export function revealBakery() {
+  bakeryRevealed = true;
+  const idx = mockBusinesses.findIndex((b) => b.id === '6');
+  if (idx > 0) {
+    const [bakery] = mockBusinesses.splice(idx, 1);
+    mockBusinesses.unshift(bakery);
+  }
+}
+
+// Return businesses that should be visible in the UI (bakery omitted until revealed)
+export function getVisibleBusinesses(): Business[] {
+  if (bakeryRevealed) return mockBusinesses;
+  return mockBusinesses.filter((b) => b.id !== '6');
+}
+
+// Utility to add a business to the front (if needed elsewhere)
+export function addBusinessToFront(business: Business) {
+  mockBusinesses.unshift(business);
 }

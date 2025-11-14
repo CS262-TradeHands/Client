@@ -19,6 +19,7 @@ export default function BusinessDetailScreen() {
     '3': require('../assets/images/businesses/cleaning-service.jpg'),
     '4': require('../assets/images/businesses/brewery.jpg'),
     '5': require('../assets/images/businesses/medical_practice.jpg'),
+    '6': require('../assets/images/businesses/backerei_worner.jpg'),
   };
 
   // Like toggle

@@ -14,9 +14,9 @@ export default function SignInScreen() {
     // Mock user data - replace with actual API call
     const userData = {
       id: '1',
-      email: email,
-      firstName: 'John',
-      lastName: 'Doe',
+      email: email || 'marc@bakery.com',
+      firstName: 'Marc',
+      lastName: 'Wörner',
     };
     
     signIn(userData);

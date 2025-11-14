@@ -7,7 +7,7 @@ import { Colors } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 
 const mockMatches = [
-  // Buyer interested in your business -> goes to buyer profile (buyer-detail)
+  // 1) Khaled stays at top
   {
     id: 'm1',
     title: 'buyer',
@@ -20,18 +20,20 @@ const mockMatches = [
     phone: '+1 (555) 123-4567',
   },
 
-  // Someone interested in you as a buyer -> goes to business listing
+  // 2) Bobby moved up to second
   {
-    id: 'm2',
-    title: 'business',
-    name: 'TechStart Solutions',
-    message: 'is interested in you as a buyer',
-    primaryAction: 'View business listing',
-    avatar: require('../assets/images/businesses/TechStart.jpg'),
-    route: '/business-detail?id=1',
+    id: 'm4',
+    title: 'buyer',
+    name: 'Bobby',
+    message: 'is interested in your business',
+    primaryAction: 'View buyer profile',
+    avatar: require('../assets/images/mii/buyer3.png'),
+    route: '/buyer-detail?id=3',
+    email: 'bobby@example.com',
+    phone: '+1 (555) 345-6789',
   },
 
-  // Approved contact request -> only show "View contact" which navigates to buyer detail
+  // 3) Miriam stays third
   {
     id: 'm3',
     title: 'approved',
@@ -45,18 +47,31 @@ const mockMatches = [
     phone: '+1 (555) 234-5678',
   },
 
-  // Another buyer
+  // 4) New: Mickey interested in the business
   {
-    id: 'm4',
+    id: 'm8',
     title: 'buyer',
-    name: 'Bobby',
+    name: 'Mickey',
     message: 'is interested in your business',
     primaryAction: 'View buyer profile',
-    avatar: require('../assets/images/mii/buyer3.png'),
-    route: '/buyer-detail?id=3',
-    email: 'bobby@example.com',
-    phone: '+1 (555) 345-6789',
+    avatar: require('../assets/images/mii/buyer4.png'),
+    route: '/buyer-detail?id=4',
+    email: 'mickey@example.com',
+    phone: '+1 (555) 456-7890',
   },
+
+  // keep the rest of the notifications in their original relative order
+  // Someone interested in you as a buyer -> goes to business listing
+  {
+    id: 'm2',
+    title: 'business',
+    name: 'TechStart Solutions',
+    message: 'is interested in you as a buyer',
+    primaryAction: 'View business listing',
+    avatar: require('../assets/images/businesses/TechStart.jpg'),
+    route: '/business-detail?id=1',
+  },
+
   // additional entries
   {
     id: 'm5',

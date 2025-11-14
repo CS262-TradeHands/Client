@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { revealBakery } from '../constants/mockBusinesses';
 
 interface BusinessFormData {
   name: string;
@@ -103,13 +104,16 @@ export default function AddBusinessScreen() {
     // Here you would typically send the data to your backend
     console.log('Submitting business listing:', formData);
     
+    // Reveal the bakery listing so it becomes visible at the top
+    revealBakery();
+
     Alert.alert(
       'Success',
-      'Your business listing has been submitted and will be reviewed shortly.',
+      'Your business listing has been submitted and is now visible.',
       [
         {
           text: 'OK',
-          onPress: () => router.back()
+          onPress: () => router.replace('/(tabs)/business-listings')
         }
       ]
     );
