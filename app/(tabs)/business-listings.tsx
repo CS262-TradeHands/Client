@@ -5,7 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpa
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
 
-import { Business as BusinessListing, mockBusinesses } from '../../constants/mockBusinesses';
+import { Business as BusinessListing, getVisibleBusinesses, isBakeryRevealed } from '../../constants/mockBusinesses';
 
 export default function BusinessListingsScreen() {
   const router = useRouter();
@@ -14,7 +14,8 @@ export default function BusinessListingsScreen() {
 
   // search state and filtering
   const [query, setQuery] = useState('');
-  const filteredListings = mockBusinesses.filter((l) => {
+  const visible = getVisibleBusinesses();
+  const filteredListings = visible.filter((l) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -70,9 +71,9 @@ export default function BusinessListingsScreen() {
             accessibilityLabel={isAuthenticated ? 'Open inbox' : 'Sign in to view inbox'}
           >
             <Ionicons name="mail-outline" size={20} color="#333" />
-            {isAuthenticated && (
+            {isAuthenticated && isBakeryRevealed() && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>2</Text>
+                <Text style={styles.badgeText}>2+</Text>
               </View>
             )}
           </Pressable>
@@ -101,14 +102,24 @@ export default function BusinessListingsScreen() {
       {/* Business Listings */}
       <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
 
-        <View style={styles.addRow}>
-          <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
-            <Text style={styles.addButtonText}>+ Add a business listing</Text>
-          </TouchableOpacity>
-        </View>
-        
+        {/* Show "My listings" title only when bakery is revealed (inside ScrollView so it scrolls away) */}
+        {isBakeryRevealed() && (
+          <View style={styles.myListingsTitle}>
+            <Text style={styles.myListingsText}>My listings</Text>
+          </View>
+        )}
+
+        {!isBakeryRevealed() && (
+          <View style={styles.addRow}>
+            <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
+              <Text style={styles.addButtonText}>+ Add a business listing</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {filteredListings.map((listing) => (
-          <View key={listing.id} style={styles.businessCard}>
+          <React.Fragment key={listing.id}>
+            <View style={styles.businessCard}>
             <View style={styles.cardHeader}>
               <Text style={styles.businessName}>{listing.name}</Text>
               <View style={styles.industryBadge}>
@@ -147,6 +158,14 @@ export default function BusinessListingsScreen() {
               <Text style={styles.viewDetailsButtonText}>View Details</Text>
             </TouchableOpacity>
           </View>
+          {isBakeryRevealed() && listing.id === '6' && (
+            <View style={styles.addRow2}>
+              <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
+                <Text style={styles.addButtonText}>+ Add a business listing</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          </React.Fragment>
         ))}
         
         {filteredListings.length === 0 && (
@@ -257,6 +276,16 @@ const styles = StyleSheet.create({
   },
   resultsRowHeader: {
     paddingHorizontal: 12,
+  },
+  myListingsTitle: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  myListingsText: {
+    paddingVertical: 8,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
   },
   resultsRow: {
     flexDirection: 'row',
@@ -441,6 +470,12 @@ const styles = StyleSheet.create({
     width: '100%', 
     alignItems: 'center', 
     marginTop: 14,
+    marginBottom: 16
+  },
+  addRow2: { 
+    width: '100%', 
+    alignItems: 'center', 
+    marginTop: 0,
     marginBottom: 16
   },
   addButton: {
