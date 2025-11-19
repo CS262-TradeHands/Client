@@ -61,6 +61,7 @@ export default function RootLayout() {
           <Stack.Screen name="add-buyer" options={{ headerShown: false }} />
           <Stack.Screen name="add-business" options={{ headerShown: false }} />
           <Stack.Screen name="inbox" options={{ headerShown: false }} />
+          <Stack.Screen name="algo" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </AuthProvider>
