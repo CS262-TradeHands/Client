@@ -17,6 +17,11 @@ export default function ProfileScreen() {
     router.push('/edit-profile');
   };
 
+  const handleViewMatches = () => {
+    console.log('View Matches clicked');
+    router.push('/algo');
+  };
+
   if (!isAuthenticated) {
     return (
       <SafeAreaView style={styles.container}>
@@ -97,6 +102,14 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
           <View style={styles.infoCard}>
+            <TouchableOpacity 
+              style={styles.settingRow} 
+              onPress={handleViewMatches}
+            >
+              <Text style={styles.settingText}>View Matches</Text>
+              <Text style={styles.settingArrow}>›</Text>
+            </TouchableOpacity>
+            <View style={styles.infoDivider} />
             <TouchableOpacity style={styles.settingRow}>
               <Text style={styles.settingText}>Notifications</Text>
               <Text style={styles.settingArrow}>›</Text>
