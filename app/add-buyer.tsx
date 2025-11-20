@@ -15,57 +15,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 
+// Simplified buyer profile data matching the domain model
 interface BuyerFormData {
-  // Essential Information
-  buyerType: string;
-  industryExperience: string;
-  previousAcquisitions: string;
-  budgetRange: string;
-  financingStatus: string;
-  proofOfFunds: boolean;
-  
-  // Target Business Criteria
-  industryPreferences: string[];
-  geographicRegion: string;
-  businessSize: string;
-  businessModel: string[];
-  timeline: string;
-  
-  // Buyer Intentions
-  operatingStyle: string;
-  employeeRetention: string;
-  growthStrategy: string;
-  relocationWillingness: string;
-  
-  // Contact & Profile
-  fullName: string;
-  email: string;
-  phone: string;
-  professionalBackground: string;
-  linkedinProfile: string;
-  confidentialityPreference: string;
-  
-  // Deal Preferences
-  transitionPeriod: string;
-  purchaseType: string;
-  nonCompeteExpectation: string;
-  earnoutWillingness: string;
-  
-  // Additional Considerations
-  acquisitionReason: string;
-  dealBreakers: string;
-  certifications: string;
+  // Profile fields (minimal, important only)
+  description: string;           // buyer profile description
+  location: string;              // preferred location
+  industry: string;              // primary industry
+  companyPreferences: string[];  // array of preferred company industries/types
+  budget: string;                // budget, free text (e.g. 500000)
+  experience: string;            // short experience summary
+  timeline: string;              // acquisition timeline
 }
 
-const BUYER_TYPES = [
-  'Individual Buyer',
-  'Investment Group',
-  'Private Equity',
-  'Competitor',
-  'Employee Buyout',
-  'Strategic Acquirer',
-  'Other'
-];
 
 const INDUSTRY_PREFERENCES = [
   'Technology',
@@ -83,54 +44,21 @@ const INDUSTRY_PREFERENCES = [
   'Other'
 ];
 
-const BUSINESS_MODELS = [
-  'B2B',
-  'B2C',
-  'E-commerce',
-  'Brick & Mortar',
-  'SaaS',
-  'Subscription',
-  'Marketplace',
-  'Franchise',
-  'Service-based'
-];
+// removed unused buyer type and business model lists — form simplified
 
 export default function AddBuyerScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const [currentStep, setCurrentStep] = useState(1);
+  // Single-page simplified form matching the UML: only essential fields
   const [formData, setFormData] = useState<BuyerFormData>({
-    buyerType: '',
-    industryExperience: '',
-    previousAcquisitions: '',
-    budgetRange: '',
-    financingStatus: '',
-    proofOfFunds: false,
-    industryPreferences: [],
-    geographicRegion: '',
-    businessSize: '',
-    businessModel: [],
+    description: '',
+    location: '',
+    industry: '',
+    companyPreferences: [],
+    budget: '',
+    experience: '',
     timeline: '',
-    operatingStyle: '',
-    employeeRetention: '',
-    growthStrategy: '',
-    relocationWillingness: '',
-    fullName: '',
-    email: '',
-    phone: '',
-    professionalBackground: '',
-    linkedinProfile: '',
-    confidentialityPreference: '',
-    transitionPeriod: '',
-    purchaseType: '',
-    nonCompeteExpectation: '',
-    earnoutWillingness: '',
-    acquisitionReason: '',
-    dealBreakers: '',
-    certifications: ''
   });
-
-  const totalSteps = 5;
 
   const updateFormData = (field: keyof BuyerFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -144,49 +72,20 @@ export default function AddBuyerScreen() {
     updateFormData(field, newArray);
   };
 
-  const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleSubmit();
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    } else {
-      router.back();
-    }
-  };
-
   const handleSubmit = () => {
-    // Here you would typically send the data to your API
-    Alert.alert(
-      'Profile Created!',
-      'Your buyer profile has been created successfully.',
-      [
-        {
-          text: 'OK',
-          onPress: () => router.back()
-        }
-      ]
-    );
+    // Basic validation: require description, location, industry
+    if (!formData.description.trim() || !formData.location.trim() || !formData.industry.trim()) {
+      Alert.alert('Missing required fields', 'Please fill in Description, Location, and Industry.');
+      return;
+    }
+
+    // Normally send to API here. For now show success and return to buyers list
+    Alert.alert('Profile Created', 'Your buyer profile has been saved.', [
+      { text: 'OK', onPress: () => router.push('/(tabs)/buyers') }
+    ]);
   };
 
-  const renderStepIndicator = () => (
-    <View style={styles.stepIndicator}>
-      {Array.from({ length: totalSteps }, (_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.stepDot,
-            i + 1 <= currentStep ? styles.stepDotActive : styles.stepDotInactive
-          ]}
-        />
-      ))}
-    </View>
-  );
+  // (single-page form — no step indicators)
 
   const renderMultiSelect = (
     title: string,
@@ -217,302 +116,89 @@ export default function AddBuyerScreen() {
     </View>
   );
 
-  const renderStep1 = () => (
+  // Single, compact form sections
+  const renderForm = () => (
     <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepTitle}>Buyer Type & Background</Text>
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Buyer Type *</Text>
-        <View style={styles.radioGroup}>
-          {BUYER_TYPES.map(type => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.radioOption,
-                formData.buyerType === type && styles.radioOptionSelected
-              ]}
-              onPress={() => updateFormData('buyerType', type)}
-            >
-              <Text style={[
-                styles.radioOptionText,
-                formData.buyerType === type && styles.radioOptionTextSelected
-              ]}>
-                {type}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+      <Text style={styles.stepTitle}>Create Buyer Profile</Text>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Industry Experience *</Text>
+        <Text style={styles.sectionTitle}>Profile Description *</Text>
         <TextInput
           style={styles.textArea}
-          placeholder="Describe your industry experience and expertise..."
-          value={formData.industryExperience}
-          onChangeText={(text) => updateFormData('industryExperience', text)}
+          placeholder="Briefly describe your buying interests and background..."
+          value={formData.description}
+          onChangeText={(text) => updateFormData('description', text)}
           multiline
           numberOfLines={4}
         />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Previous Acquisitions</Text>
+        <Text style={styles.sectionTitle}>Location *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="City, region, or 'National'"
+          value={formData.location}
+          onChangeText={(text) => updateFormData('location', text)}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Primary Industry *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g., Retail, Healthcare, Tech"
+          value={formData.industry}
+          onChangeText={(text) => updateFormData('industry', text)}
+        />
+      </View>
+
+      {renderMultiSelect('Company Preferences', INDUSTRY_PREFERENCES, 'companyPreferences')}
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Budget (approx.)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g., 500000"
+          value={formData.budget}
+          onChangeText={(text) => updateFormData('budget', text)}
+          keyboardType="numeric"
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Experience Summary</Text>
         <TextInput
           style={styles.textArea}
-          placeholder="Describe any previous business ownership or acquisition experience..."
-          value={formData.previousAcquisitions}
-          onChangeText={(text) => updateFormData('previousAcquisitions', text)}
-          multiline
-          numberOfLines={3}
-        />
-      </View>
-    </ScrollView>
-  );
-
-  const renderStep2 = () => (
-    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepTitle}>Financial Capacity</Text>
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Budget Range *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., $500K - $2M"
-          value={formData.budgetRange}
-          onChangeText={(text) => updateFormData('budgetRange', text)}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Financing Status *</Text>
-        <View style={styles.radioGroup}>
-          {['Cash Buyer', 'Pre-approved Financing', 'Needs Financing', 'SBA Qualified', 'Other'].map(status => (
-            <TouchableOpacity
-              key={status}
-              style={[
-                styles.radioOption,
-                formData.financingStatus === status && styles.radioOptionSelected
-              ]}
-              onPress={() => updateFormData('financingStatus', status)}
-            >
-              <Text style={[
-                styles.radioOptionText,
-                formData.financingStatus === status && styles.radioOptionTextSelected
-              ]}>
-                {status}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <TouchableOpacity
-          style={[styles.checkboxContainer, formData.proofOfFunds && styles.checkboxSelected]}
-          onPress={() => updateFormData('proofOfFunds', !formData.proofOfFunds)}
-        >
-          <Ionicons 
-            name={formData.proofOfFunds ? 'checkbox' : 'square-outline'} 
-            size={24} 
-            color={formData.proofOfFunds ? '#5A7A8C' : '#666'} 
-          />
-          <Text style={styles.checkboxText}>I can provide proof of funds when requested</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
-
-  const renderStep3 = () => (
-    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepTitle}>Target Business Criteria</Text>
-      
-      {renderMultiSelect('Industry Preferences *', INDUSTRY_PREFERENCES, 'industryPreferences')}
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Geographic Region *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., San Francisco Bay Area, National, etc."
-          value={formData.geographicRegion}
-          onChangeText={(text) => updateFormData('geographicRegion', text)}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Business Size Preference</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., $1M-5M revenue, 10-50 employees"
-          value={formData.businessSize}
-          onChangeText={(text) => updateFormData('businessSize', text)}
-        />
-      </View>
-
-      {renderMultiSelect('Business Model Preferences', BUSINESS_MODELS, 'businessModel')}
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Acquisition Timeline *</Text>
-        <View style={styles.radioGroup}>
-          {['Immediately', '3-6 months', '6-12 months', '1+ years', 'Flexible'].map(timeline => (
-            <TouchableOpacity
-              key={timeline}
-              style={[
-                styles.radioOption,
-                formData.timeline === timeline && styles.radioOptionSelected
-              ]}
-              onPress={() => updateFormData('timeline', timeline)}
-            >
-              <Text style={[
-                styles.radioOptionText,
-                formData.timeline === timeline && styles.radioOptionTextSelected
-              ]}>
-                {timeline}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </ScrollView>
-  );
-
-  const renderStep4 = () => (
-    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepTitle}>Contact & Deal Preferences</Text>
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Full Name *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Your full name"
-          value={formData.fullName}
-          onChangeText={(text) => updateFormData('fullName', text)}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Email *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="your.email@example.com"
-          value={formData.email}
-          onChangeText={(text) => updateFormData('email', text)}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Phone Number</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="(555) 123-4567"
-          value={formData.phone}
-          onChangeText={(text) => updateFormData('phone', text)}
-          keyboardType="phone-pad"
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Professional Background</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Brief overview of your professional background..."
-          value={formData.professionalBackground}
-          onChangeText={(text) => updateFormData('professionalBackground', text)}
+          placeholder="Years in industry, relevant roles, etc."
+          value={formData.experience}
+          onChangeText={(text) => updateFormData('experience', text)}
           multiline
           numberOfLines={3}
         />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>LinkedIn Profile</Text>
+        <Text style={styles.sectionTitle}>Acquisition Timeline</Text>
         <TextInput
           style={styles.input}
-          placeholder="https://linkedin.com/in/yourprofile"
-          value={formData.linkedinProfile}
-          onChangeText={(text) => updateFormData('linkedinProfile', text)}
-          autoCapitalize="none"
+          placeholder="e.g., 3-6 months, flexible"
+          value={formData.timeline}
+          onChangeText={(text) => updateFormData('timeline', text)}
         />
       </View>
     </ScrollView>
   );
 
-  const renderStep5 = () => (
-    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepTitle}>Additional Information</Text>
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Reason for Acquisition</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="What motivates this acquisition? (career change, expansion, investment, etc.)"
-          value={formData.acquisitionReason}
-          onChangeText={(text) => updateFormData('acquisitionReason', text)}
-          multiline
-          numberOfLines={3}
-        />
-      </View>
+  // other steps removed — form simplified to a single page
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Deal Breakers or Must-Haves</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Any specific requirements or deal breakers..."
-          value={formData.dealBreakers}
-          onChangeText={(text) => updateFormData('dealBreakers', text)}
-          multiline
-          numberOfLines={3}
-        />
-      </View>
+  // removed
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Certifications & Licenses</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Any relevant certifications, licenses, or qualifications..."
-          value={formData.certifications}
-          onChangeText={(text) => updateFormData('certifications', text)}
-          multiline
-          numberOfLines={2}
-        />
-      </View>
+  // removed
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Owner Transition Preference</Text>
-        <View style={styles.radioGroup}>
-          {['No transition needed', '1-3 months', '3-6 months', '6+ months', 'Negotiable'].map(period => (
-            <TouchableOpacity
-              key={period}
-              style={[
-                styles.radioOption,
-                formData.transitionPeriod === period && styles.radioOptionSelected
-              ]}
-              onPress={() => updateFormData('transitionPeriod', period)}
-            >
-              <Text style={[
-                styles.radioOptionText,
-                formData.transitionPeriod === period && styles.radioOptionTextSelected
-              ]}>
-                {period}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </ScrollView>
-  );
+  // removed
 
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 1: return renderStep1();
-      case 2: return renderStep2();
-      case 3: return renderStep3();
-      case 4: return renderStep4();
-      case 5: return renderStep5();
-      default: return renderStep1();
-    }
-  };
+  const renderCurrentStep = () => renderForm();
 
   if (!isAuthenticated) {
     return (
@@ -540,14 +226,12 @@ export default function AddBuyerScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#5A7A8C" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Create Buyer Profile</Text>
           <View style={styles.placeholder} />
         </View>
-
-        {renderStepIndicator()}
 
         {renderCurrentStep()}
 
@@ -555,20 +239,16 @@ export default function AddBuyerScreen() {
         <View style={styles.navigation}>
           <TouchableOpacity
             style={[styles.navButton, styles.navButtonSecondary]}
-            onPress={handleBack}
+            onPress={() => router.back()}
           >
-            <Text style={styles.navButtonTextSecondary}>
-              {currentStep === 1 ? 'Cancel' : 'Back'}
-            </Text>
+            <Text style={styles.navButtonTextSecondary}>Cancel</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.navButton, styles.navButtonPrimary]}
-            onPress={handleNext}
+            onPress={handleSubmit}
           >
-            <Text style={styles.navButtonText}>
-              {currentStep === totalSteps ? 'Create Profile' : 'Next'}
-            </Text>
+            <Text style={styles.navButtonText}>Save Profile</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
