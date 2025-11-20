@@ -1,12 +1,78 @@
+// Replace with:
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 
+// Import mock data structures (assuming they are accessible)
+import { mockBusinesses, Business } from '../../constants/mockBusinesses';
+
+// Re-declare Buyer type/mock from app/(tabs)/buyers.tsx since it's not exported globally
+// In a real app, this would be an imported interface.
+interface Buyer {
+  id: string;
+  name: string;
+  city: string;
+  title?: string;
+  // ... other fields as needed
+}
+const mockBuyers: Buyer[] = [
+    // Using a subset of the mock data from app/(tabs)/buyers.tsx for filtering
+    { id: '1', name: 'Khaled', city: 'San Francisco, CA', title: 'Investor / Entrepreneur' },
+];
+// NOTE: In a real app, you would fetch this data from your API.
+
+// Define the ItemCard component outside the main component to keep it clean
+const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView }: 
+  { name: string, id: string, type: 'business'|'buyer', industryOrTitle?: string, onEdit: (id: string) => void, onView: (id: string, type: 'business'|'buyer') => void }
+) => (
+    <View style={styles.itemCard}>
+        <View style={styles.itemCardHeader}>
+            <Text style={styles.itemCardName}>{name}</Text>
+            {industryOrTitle && <Text style={styles.itemCardSubtitle}>{industryOrTitle}</Text>}
+        </View>
+        <View style={styles.itemCardActions}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => onView(id, type)}>
+                <Ionicons name="eye-outline" size={20} color="#5A7A8C" />
+                <Text style={styles.actionButtonText}>View</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => onEdit(id)}>
+                <Ionicons name="create-outline" size={20} color="#5A7A8C" />
+                <Text style={styles.actionButtonText}>Edit</Text>
+            </TouchableOpacity>
+        </View>
+    </View>
+);
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, isAuthenticated, signOut } = useAuth();
+  // Mock Data, need to connect to backend in real app
+const MOCK_USER_ID = '1';
+
+const userBusinesses: Business[] = isAuthenticated ? 
+    mockBusinesses.filter(b => b.id === MOCK_USER_ID) : [];
+const userBuyers: Buyer[] = isAuthenticated ? 
+    mockBuyers.filter(b => b.id === MOCK_USER_ID) : [];
+
+// Handlers for navigation to View/Edit pages
+const handleEditBusiness = (id: string) => {
+    router.push(`/edit-business?id=${id}`);
+};
+
+const handleEditBuyer = (id: string) => {
+    router.push(`/edit-buyer?id=${id}`);
+};
+
+const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
+    if (type === 'business') {
+        router.push(`/business-detail?id=${id}`);
+    } else {
+        router.push(`/buyer-detail?id=${id}`);
+    }
+};
+// End of new handlers
 
   const handleSignOut = async () => {
     await signOut();
@@ -126,6 +192,63 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         </View>
+        {/* Your Business Listings Section */}
+<View style={styles.section}>
+  <Text style={styles.sectionTitle}>Your Business Listings ({userBusinesses.length})</Text>
+  {userBusinesses.length > 0 ? (
+    userBusinesses.map((b) => (
+      <ItemCard
+        key={b.id}
+        id={b.id}
+        name={b.name}
+        type="business"
+        industryOrTitle={b.industry}
+        onView={handleViewDetails}
+        onEdit={handleEditBusiness}
+      />
+    ))
+  ) : (
+    <View style={styles.placeholderCard}>
+        <Text style={styles.placeholderText}>No business listings created.</Text>
+        <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => router.push('/add-business' as any)}
+        >
+            <Ionicons name="add-circle-outline" size={20} color="#fff" />
+            <Text style={styles.addButtonText}>Add New Listing</Text>
+        </TouchableOpacity>
+    </View>
+  )}
+</View>
+
+{/* Your Buyer Profiles Section */}
+<View style={styles.section}>
+  <Text style={styles.sectionTitle}>Your Buyer Profiles ({userBuyers.length})</Text>
+  {userBuyers.length > 0 ? (
+    userBuyers.map((b) => (
+      <ItemCard
+        key={b.id}
+        id={b.id}
+        name={b.name}
+        type="buyer"
+        industryOrTitle={b.title}
+        onView={handleViewDetails}
+        onEdit={handleEditBuyer}
+      />
+    ))
+  ) : (
+    <View style={styles.placeholderCard}>
+        <Text style={styles.placeholderText}>No buyer profiles created.</Text>
+        <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => router.push('/add-buyer' as any)}
+        >
+            <Ionicons name="add-circle-outline" size={20} color="#fff" />
+            <Text style={styles.addButtonText}>Add New Profile</Text>
+        </TouchableOpacity>
+    </View>
+  )}
+</View>
 
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
@@ -298,4 +421,72 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  // New styles for Listings/Profiles section
+itemCard: {
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  padding: 15,
+  marginBottom: 10,
+  borderWidth: 1,
+  borderColor: '#f0f0f0',
+},
+itemCardHeader: {
+  marginBottom: 10,
+},
+itemCardName: {
+  fontSize: 18,
+  fontWeight: '700',
+  color: '#333',
+},
+itemCardSubtitle: {
+  fontSize: 14,
+  color: '#666',
+  marginTop: 4,
+},
+itemCardActions: {
+  flexDirection: 'row',
+  justifyContent: 'flex-end',
+  borderTopWidth: 1,
+  borderTopColor: '#f7f7f7',
+  paddingTop: 8,
+  marginTop: 5,
+},
+actionButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 6,
+  marginLeft: 10,
+  backgroundColor: '#E8E3DC',
+},
+actionButtonText: {
+  marginLeft: 5,
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#5A7A8C',
+},
+placeholderCard: {
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  padding: 20,
+  alignItems: 'center',
+  borderStyle: 'dashed',
+  borderColor: '#ccc',
+  borderWidth: 1,
+},
+addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#5A7A8C',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 15,
+},
+addButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    marginLeft: 8,
+},
 });
