@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -18,13 +19,15 @@ import { useAuth } from '../context/AuthContext';
 // Simplified buyer profile data matching the domain model
 interface BuyerFormData {
   // Profile fields (minimal, important only)
+  title: string;                 // one- or two-word title e.g. 'Investor'
   description: string;           // buyer profile description
   location: string;              // preferred location
-  industry: string;              // primary industry
-  companyPreferences: string[];  // array of preferred company industries/types
+  industryPreferences: string[]; // array of preferred industry preferences
   budget: string;                // budget, free text (e.g. 500000)
   experience: string;            // short experience summary
   timeline: string;              // acquisition timeline
+  sizePreference: string;        // chosen company size category
+  linkedin?: string;             // linkedin profile url (optional)
 }
 
 
@@ -44,6 +47,13 @@ const INDUSTRY_PREFERENCES = [
   'Other'
 ];
 
+const SIZE_PREFERENCES = [
+  'Small — up to 20 employees (~$15k/month)',
+  'Small-Medium — 20-50 employees (~$40k/month)',
+  'Medium — 50-200 employees (~$150k/month)',
+  'Large — 200+ employees (~$500k/month)'
+];
+
 // removed unused buyer type and business model lists — form simplified
 
 export default function AddBuyerScreen() {
@@ -51,13 +61,15 @@ export default function AddBuyerScreen() {
   const { isAuthenticated } = useAuth();
   // Single-page simplified form matching the UML: only essential fields
   const [formData, setFormData] = useState<BuyerFormData>({
+    title: '',
     description: '',
     location: '',
-    industry: '',
-    companyPreferences: [],
+    industryPreferences: [],
     budget: '',
     experience: '',
     timeline: '',
+    sizePreference: '',
+    linkedin: '',
   });
 
   const updateFormData = (field: keyof BuyerFormData, value: any) => {
@@ -73,9 +85,24 @@ export default function AddBuyerScreen() {
   };
 
   const handleSubmit = () => {
-    // Basic validation: require description, location, industry
-    if (!formData.description.trim() || !formData.location.trim() || !formData.industry.trim()) {
-      Alert.alert('Missing required fields', 'Please fill in Description, Location, and Industry.');
+    // Validation: require title, description, at least one industry preference, and budget
+    if (!formData.title.trim()) {
+      Alert.alert('Missing required field', 'Please enter a Title (e.g. "Investor").');
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      Alert.alert('Missing required field', 'Please enter a short Profile Description.');
+      return;
+    }
+
+    if (!(formData.industryPreferences && formData.industryPreferences.length > 0)) {
+      Alert.alert('Missing required field', 'Please select at least one Industry Preference.');
+      return;
+    }
+
+    if (!formData.budget.trim()) {
+      Alert.alert('Missing required field', 'Please enter an approximate Budget.');
       return;
     }
 
@@ -119,13 +146,24 @@ export default function AddBuyerScreen() {
   // Single, compact form sections
   const renderForm = () => (
     <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepTitle}>Create Buyer Profile</Text>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Title *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g., Investor, Operator"
+          placeholderTextColor="#999"
+          value={formData.title}
+          onChangeText={(text) => updateFormData('title', text)}
+        />
+      </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Profile Description *</Text>
         <TextInput
           style={styles.textArea}
           placeholder="Briefly describe your buying interests and background..."
+          placeholderTextColor="#999"
           value={formData.description}
           onChangeText={(text) => updateFormData('description', text)}
           multiline
@@ -138,28 +176,35 @@ export default function AddBuyerScreen() {
         <TextInput
           style={styles.input}
           placeholder="City, region, or 'National'"
+          placeholderTextColor="#999"
           value={formData.location}
           onChangeText={(text) => updateFormData('location', text)}
         />
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Primary Industry *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., Retail, Healthcare, Tech"
-          value={formData.industry}
-          onChangeText={(text) => updateFormData('industry', text)}
-        />
-      </View>
+      {renderMultiSelect('Industry Preferences *', INDUSTRY_PREFERENCES, 'industryPreferences')}
 
-      {renderMultiSelect('Company Preferences', INDUSTRY_PREFERENCES, 'companyPreferences')}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Company Size Preference</Text>
+            <View style={styles.radioGroup}>
+              {SIZE_PREFERENCES.map(size => (
+                <TouchableOpacity
+                  key={size}
+                  style={[styles.radioOption, formData.sizePreference === size && styles.radioOptionSelected]}
+                  onPress={() => updateFormData('sizePreference', size)}
+                >
+                  <Text style={[styles.radioOptionText, formData.sizePreference === size && styles.radioOptionTextSelected]}>{size}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Budget (approx.)</Text>
+        <Text style={styles.sectionTitle}>Budget (approx.) *</Text>
         <TextInput
           style={styles.input}
           placeholder="e.g., 500000"
+          placeholderTextColor="#999"
           value={formData.budget}
           onChangeText={(text) => updateFormData('budget', text)}
           keyboardType="numeric"
@@ -171,6 +216,7 @@ export default function AddBuyerScreen() {
         <TextInput
           style={styles.textArea}
           placeholder="Years in industry, relevant roles, etc."
+          placeholderTextColor="#999"
           value={formData.experience}
           onChangeText={(text) => updateFormData('experience', text)}
           multiline
@@ -183,20 +229,25 @@ export default function AddBuyerScreen() {
         <TextInput
           style={styles.input}
           placeholder="e.g., 3-6 months, flexible"
+          placeholderTextColor="#999"
           value={formData.timeline}
           onChangeText={(text) => updateFormData('timeline', text)}
         />
       </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>LinkedIn Profile (optional)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="https://www.linkedin.com/in/yourprofile"
+          placeholderTextColor="#999"
+          value={formData.linkedin}
+          onChangeText={(text) => updateFormData('linkedin', text)}
+          autoCapitalize="none"
+        />
+      </View>
     </ScrollView>
   );
-
-  // other steps removed — form simplified to a single page
-
-  // removed
-
-  // removed
-
-  // removed
 
   const renderCurrentStep = () => renderForm();
 
@@ -220,6 +271,7 @@ export default function AddBuyerScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" translucent={false} />
       <KeyboardAvoidingView 
         style={styles.container} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
