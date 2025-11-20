@@ -15,7 +15,34 @@ export default function SignInScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
 
+  const [emailError, setEmailError] = useState('');
+  const [confirmEmailError, setConfirmEmailError] = useState('');
+
+  const validateEmail = (value) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(value.trim());
+  };
+
+  const handleEmailChange = (value) => {
+    setEmail(value);
+    if (!validateEmail(value)) {
+      setEmailError('Please enter a valid email.');
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handleConfirmEmailChange = (value) => {
+    setConfirmEmail(value);
+    if (value !== email) {
+      setConfirmEmailError('Emails do not match.');
+    } else {
+      setConfirmEmailError('');
+    }
+  };
+  
   const handleCreateAccount = () => {
+    if (emailError || confirmEmailError) return;
     // Mock user data - replace with actual API call
     const userData = {
       id: '1',
@@ -61,20 +88,23 @@ export default function SignInScreen() {
           placeholder="Email"
           placeholderTextColor="#777"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={handleEmailChange}
           keyboardType="email-address"
           autoCapitalize="none"
         />
+        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+
 
         <TextInput
           style={styles.input}
           placeholder="Confirm Email"
           placeholderTextColor="#777"
           value={confirmEmail}
-          onChangeText={setConfirmEmail}
+          onChangeText={handleConfirmEmailChange}
           keyboardType="email-address"
           autoCapitalize="none"
         />
+        {confirmEmailError ? <Text style={styles.errorText}>{confirmEmailError}</Text> : null}
 
         <TextInput
           style={styles.input}
@@ -176,5 +206,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     fontSize: 16,
+  },
+  inputError: {
+  borderColor: 'red',
+  },
+  errorText: {
+    width: '75%',
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 10,
+    textAlign: 'left',
   },
 });
