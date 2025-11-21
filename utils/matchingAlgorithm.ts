@@ -74,33 +74,4 @@ export function findMatches(criteria: MatchCriteria): (Profile & { score: number
 }
 
 // --- Example Usage ---
-async function runExample() {
-  console.log('Running matching algorithm...');
-
-  // Define the criteria for the search
-  const searchCriteria: MatchCriteria = {
-    location: 'NY',
-    minAge: 20,
-    maxAge: 30,
-    requiredInterests: ['tech'],
-  };
-
-  console.log('\nSearching for:', searchCriteria);
-
-  const results = findMatches(searchCriteria);
-
-  if (results.length > 0) {
-    console.log('\nFound Matches (sorted by score):');
-    results.forEach(match => {
-      console.log(
-        `- ID: ${match.id}, Score: ${match.score}, Attributes:`,
-        match.attributes
-      );
-    });
-  } else {
-    console.log('\nNo matches found.');
-  }
-}
-
-// To run the example, you could call this function from another file.
-// runExample();
+// Removed the unused runExample function to resolve the error.
