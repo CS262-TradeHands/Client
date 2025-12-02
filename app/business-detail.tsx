@@ -1,27 +1,53 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Image, StatusBar as RNStatusBar, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getBusinessById, mockBusinesses } from '../constants/mockBusinesses';
+import { Listing } from '../types/listing';
 
+const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
+
+function formatCurrency(value?: number) {
+  if (typeof value !== 'number') return '';
+  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+}
+
+function formatPercent(value?: number) {
+  if (typeof value !== 'number') return '';
+  return `${value}%`;
+}
 
 export default function BusinessDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const id = (params as any).id as string | undefined;
-  const business = id ? getBusinessById(id) : mockBusinesses[0];
+  const id = params.id;
+
+  const [business, setBusiness] = useState<Listing>();
   const [liked, setLiked] = useState(false);
 
-  const imageMap: Record<string, any> = {
-    '1': require('../assets/images/businesses/TechStart.jpg'),
-    '2': require('../assets/images/businesses/boutique.jpg'),
-    '3': require('../assets/images/businesses/cleaning-service.jpg'),
-    '4': require('../assets/images/businesses/brewery.jpg'),
-    '5': require('../assets/images/businesses/medical_practice.jpg'),
-  };
+  const fetchedRef = useRef(false);
 
-  // Like toggle
+  useEffect(() => {
+    if (!id) {
+      console.warn('Business ID undefined on mount; waiting for id.');
+      return;
+    }
+
+    // Only fetch once per mounted screen
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
+    (async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/listings/${encodeURIComponent(String(id))}`);
+        const data = await response.json();
+        setBusiness(data);
+      } catch (error) {
+        console.error('Error fetching business details:', error);
+      }
+    })();
+  }, [params, id]);
+
   const toggleLike = () => {
     setLiked((v) => !v);
   };
@@ -35,16 +61,21 @@ export default function BusinessDetailScreen() {
         <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
           <Ionicons name="close" size={24} color="#333" />
         </TouchableOpacity>
-  <Text style={styles.businessName}>{business?.name ?? 'Business'}</Text>
+        <Text style={styles.businessName}>{business?.name ?? 'Business'}</Text>
         <View style={styles.businessMeta}>
           <View style={styles.industryBadge}>
-              <Text style={styles.industryBadgeText}>{business?.industry}</Text>
+            <Text style={styles.industryBadgeText}>{business?.industry}</Text>
           </View>
-            <Text style={styles.location}>{business?.location}</Text>
+          <Text style={styles.location}>{business?.city}, {business?.state || business?.country}</Text>
         </View>
         <View style={styles.askingRow}>
           <Text style={styles.askingLabel}>Asking Price</Text>
-            <Text style={styles.askingPrice}>{business?.askingPrice}</Text>
+          <Text style={styles.askingPrice}>
+            {formatCurrency(business?.asking_price_lower_bound)}
+            {business?.asking_price_upper_bound && business?.asking_price_lower_bound !== business?.asking_price_upper_bound
+              ? ` - ${formatCurrency(business?.asking_price_upper_bound)}`
+              : ''}
+          </Text>
         </View>
       </View>
 
@@ -55,7 +86,7 @@ export default function BusinessDetailScreen() {
           <View style={styles.ownerTopRow}>
             <View>
               <Text style={styles.ownerLabel}>Owner</Text>
-                <Text style={styles.ownerName}>{business?.ownerName}</Text>
+              <Text style={styles.ownerName}>John Doe</Text>
             </View>
             <TouchableOpacity style={styles.likeButtonInline} onPress={toggleLike}>
               <Ionicons name={liked ? 'thumbs-up' : 'thumbs-up-outline'} size={18} color={liked ? '#7FA084' : '#333'} />
@@ -65,7 +96,7 @@ export default function BusinessDetailScreen() {
           <View style={styles.ownerContactRow}>
             <Text style={styles.contactLabel}>Email:</Text>
             {liked ? (
-                <Text style={styles.ownerEmail}>{business?.ownerEmail}</Text>
+              <Text style={styles.ownerEmail}>johndoe@gmail.com</Text>
             ) : (
               <Text style={styles.maskedContact}>•••••••••••</Text>
             )}
@@ -73,7 +104,7 @@ export default function BusinessDetailScreen() {
           <View style={styles.ownerContactRow}>
             <Text style={styles.contactLabel}>Phone:</Text>
             {liked ? (
-                <Text style={styles.ownerPhone}>{business?.ownerPhone}</Text>
+              <Text style={styles.ownerPhone}>(555)345-3345</Text>
             ) : (
               <Text style={styles.maskedContact}>•••••••••••</Text>
             )}
@@ -83,9 +114,9 @@ export default function BusinessDetailScreen() {
 
         {/* Business Image */}
         <View style={styles.imageContainer}>
-          {business ? (
+          {business?.image_url ? (
             <Image
-              source={imageMap[business.id] ?? require('../assets/images/businesses/TechStart.jpg')}
+              source={{ uri: business.image_url }}
               style={styles.businessImage}
               resizeMode="cover"
             />
@@ -109,46 +140,30 @@ export default function BusinessDetailScreen() {
           <View style={styles.financialGrid}>
             <View style={styles.financialItem}>
               <Text style={styles.financialLabel}>Annual Revenue</Text>
-              <Text style={styles.financialValue}>{business?.financialHighlights.revenue}</Text>
+              <Text style={styles.financialValue}>{formatCurrency(business?.annual_revenue)}</Text>
             </View>
             <View style={styles.financialItem}>
-              <Text style={styles.financialLabel}>Annual Profit</Text>
-              <Text style={styles.financialValue}>{business?.financialHighlights.profit}</Text>
-            </View>
-            <View style={styles.financialItem}>
-              <Text style={styles.financialLabel}>Growth Rate</Text>
-              <Text style={styles.financialValue}>{business?.financialHighlights.growth}</Text>
+              <Text style={styles.financialLabel}>Profit Margin</Text>
+              <Text style={styles.financialValue}>{formatPercent(business?.profit_margin)}</Text>
             </View>
             <View style={styles.financialItem}>
               <Text style={styles.financialLabel}>Monthly Revenue</Text>
-              <Text style={styles.financialValue}>{business?.monthlyRevenue}</Text>
+              <Text style={styles.financialValue}>{formatCurrency(business?.monthly_revenue)}</Text>
             </View>
           </View>
         </View>
-
-        {/* Removed Key Assets, Growth Opportunities, Reason for Selling sections per request. */}
 
         {/* Business Information (non-sticky) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Business Information</Text>
           <View style={styles.infoGrid}>
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Business Hours</Text>
-              <Text style={styles.infoValue}>{business?.businessHours}</Text>
-            </View>
-            <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Website</Text>
               <Text style={styles.infoValue}>{business?.website}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Social Media</Text>
-              <Text style={styles.infoValue}>{business?.socialMedia.join(', ')}</Text>
             </View>
           </View>
         </View>
       </ScrollView>
-
-      {/* Footer and action buttons removed: contact is shown inline below the location and is gated by the Like state. */}
     </SafeAreaView>
   );
 }

@@ -1,28 +1,13 @@
 // Replace with:
-import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
+import { Buyer } from '../../types/buyer';
+import { Listing } from '../../types/listing';
 
-// Import mock data structures (assuming they are accessible)
-import { mockBusinesses, Business } from '../../constants/mockBusinesses';
-
-// Re-declare Buyer type/mock from app/(tabs)/buyers.tsx since it's not exported globally
-// In a real app, this would be an imported interface.
-interface Buyer {
-  id: string;
-  name: string;
-  city: string;
-  title?: string;
-  // ... other fields as needed
-}
-const mockBuyers: Buyer[] = [
-    // Using a subset of the mock data from app/(tabs)/buyers.tsx for filtering
-    { id: '1', name: 'Khaled', city: 'San Francisco, CA', title: 'Investor / Entrepreneur' },
-];
-// NOTE: In a real app, you would fetch this data from your API.
 
 // Define the ItemCard component outside the main component to keep it clean
 const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView }: 
@@ -49,13 +34,9 @@ const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView }:
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, isAuthenticated, signOut } = useAuth();
-  // Mock Data, need to connect to backend in real app
-const MOCK_USER_ID = '1';
 
-const userBusinesses: Business[] = isAuthenticated ? 
-    mockBusinesses.filter(b => b.id === MOCK_USER_ID) : [];
-const userBuyers: Buyer[] = isAuthenticated ? 
-    mockBuyers.filter(b => b.id === MOCK_USER_ID) : [];
+const userBusinesses: Listing[] = [];
+const userBuyers: Buyer[] = [];
 
 // Handlers for navigation to View/Edit pages
 const handleEditBusiness = (id: string) => {
@@ -196,11 +177,11 @@ const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
         {/* Your Business Listings Section */}
 <View style={styles.section}>
   <Text style={styles.sectionTitle}>Your Business Listings ({userBusinesses.length})</Text>
-  {userBusinesses.length > 0 ? (
+  { 0 > 0 ? (
     userBusinesses.map((b) => (
       <ItemCard
         key={b.id}
-        id={b.id}
+        id={b.owner_id.toString()}
         name={b.name}
         type="business"
         industryOrTitle={b.industry}
@@ -229,8 +210,8 @@ const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
     userBuyers.map((b) => (
       <ItemCard
         key={b.id}
-        id={b.id}
-        name={b.name}
+        id={b.user_id.toString()}
+        name={b.title}
         type="buyer"
         industryOrTitle={b.title}
         onView={handleViewDetails}

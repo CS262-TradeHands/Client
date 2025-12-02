@@ -1,11 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
+import { Listing } from '../../types/listing';
 
-import { Business as BusinessListing, mockBusinesses } from '../../constants/mockBusinesses';
+function formatCurrency(value?: number) {
+  if (typeof value !== 'number') return '';
+  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+}
 
 export default function BusinessListingsScreen() {
   const router = useRouter();
@@ -14,20 +18,50 @@ export default function BusinessListingsScreen() {
 
   // search state and filtering
   const [query, setQuery] = useState('');
-  const filteredListings = mockBusinesses.filter((l) => {
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // set the webservice url
+  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
+  
+  // fetch the listings to display
+  async function fetchBusinessListings(): Promise<Listing[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/listings`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+        console.error('Error fetching business listings:', error);
+        return [];
+    }
+  }
+
+  useEffect(() => {
+    async function loadListings() {
+      const data = await fetchBusinessListings();
+      setListings(data);
+      setLoading(false);
+    }
+
+    loadListings();
+  }, []);
+
+  const filteredListings = listings.filter((l) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
     return (
-      l.name.toLowerCase().includes(q) ||
-      l.industry.toLowerCase().includes(q) ||
-      l.location.toLowerCase().includes(q)
+      (l.name ?? '').toLowerCase().includes(q) ||
+      (l.industry ?? '').toLowerCase().includes(q) ||
+      (l.city ?? '').toLowerCase().includes(q) ||
+      (l.state ?? '').toLowerCase().includes(q) ||
+      (l.country ?? '').toLowerCase().includes(q)
     );
   });
 
-  const handleViewDetails = (listing: BusinessListing) => {
+  const handleViewDetails = (index: number) => {
     // Require sign-in to view details
     if (isAuthenticated) {
-      router.push(`/business-detail?id=${listing.id}`);
+      router.push(`/business-detail?id=${index+1}`);
     } else {
       setAuthPromptVisible(true);
     }
@@ -43,6 +77,10 @@ export default function BusinessListingsScreen() {
 
   const openAuthPrompt = () => setAuthPromptVisible(true);
   const closeAuthPrompt = () => setAuthPromptVisible(false);
+
+  if (loading) {
+    return <Text>Loading...</Text>;
+  }
 
   return (
     <View style={styles.container}>
@@ -107,8 +145,8 @@ export default function BusinessListingsScreen() {
           </TouchableOpacity>
         </View>
         
-        {filteredListings.map((listing) => (
-          <View key={listing.id} style={styles.businessCard}>
+        {filteredListings.map((listing, index) => (
+          <View key={listing.id || `listing-${index}`} style={styles.businessCard}>
             <View style={styles.cardHeader}>
               <Text style={styles.businessName}>{listing.name}</Text>
               <View style={styles.industryBadge}>
@@ -117,7 +155,7 @@ export default function BusinessListingsScreen() {
             </View>
             
             <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
-              <Text style={styles.businessLocation}>{listing.location}</Text>
+              <Text style={styles.businessLocation}>{listing.city}</Text>
             </ProtectedInfo>
             <Text style={styles.businessDescription}>{listing.description}</Text>
             
@@ -125,7 +163,12 @@ export default function BusinessListingsScreen() {
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Asking Price</Text>
                 <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
-                  <Text style={styles.detailValue}>{listing.askingPrice}</Text>
+                  <Text style={styles.detailValue}>
+                    {formatCurrency(listing.asking_price_lower_bound)}
+                    {listing.asking_price_upper_bound && listing.asking_price_lower_bound !== listing.asking_price_upper_bound
+                      ? ` - ${formatCurrency(listing.asking_price_upper_bound)}`
+                      : ''}
+                  </Text>
                 </ProtectedInfo>
               </View>
               <View style={styles.detailItem}>
@@ -136,13 +179,13 @@ export default function BusinessListingsScreen() {
               </View>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Established</Text>
-                <Text style={styles.detailValue}>{listing.yearsInOperation} years</Text>
+                <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
               </View>
             </View>
             
             <TouchableOpacity 
               style={styles.viewDetailsButton}
-              onPress={() => handleViewDetails(listing)}
+              onPress={() => handleViewDetails(index)}
             >
               <Text style={styles.viewDetailsButtonText}>View Details</Text>
             </TouchableOpacity>
