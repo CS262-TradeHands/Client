@@ -20,17 +20,6 @@ const mockMatches = [
     phone: '+1 (555) 123-4567',
   },
 
-  // Someone interested in you as a buyer -> goes to business listing
-  {
-    id: 'm2',
-    title: 'business',
-    name: 'TechStart Solutions',
-    message: 'is interested in you as a buyer',
-    primaryAction: 'View business listing',
-    avatar: require('../assets/images/businesses/TechStart.jpg'),
-    route: '/business-detail?id=1',
-  },
-
   // Approved contact request -> only show "View contact" which navigates to buyer detail
   {
     id: 'm3',
@@ -43,6 +32,17 @@ const mockMatches = [
     simpleContact: true,
     email: 'miriam@example.com',
     phone: '+1 (555) 234-5678',
+  },
+
+  // Someone interested in you as a buyer -> goes to business listing
+  {
+    id: 'm2',
+    title: 'business',
+    name: 'TechStart Solutions',
+    message: 'is interested in you as a buyer',
+    primaryAction: 'View business listing',
+    avatar: 'https://cybercraftinc.com/wp-content/uploads/2019/06/pexels-fauxels-3183150-1-scaled.webp',
+    route: '/business-detail?id=1',
   },
 
   // Another buyer
@@ -64,26 +64,8 @@ const mockMatches = [
     name: 'Green Clean Services',
     message: 'is interested in partnering with you',
     primaryAction: 'View business listing',
-    avatar: require('../assets/images/businesses/cleaning-service.jpg'),
+    avatar: 'https://thecleanstart.com/wp-content/uploads/2021/02/House-Cleaning-Service.jpg',
     route: '/business-detail?id=3',
-  },
-  {
-    id: 'm6',
-    title: 'business',
-    name: 'Craft Brewery Co.',
-    message: 'Looking for investor-operators',
-    primaryAction: 'View business listing',
-    avatar: require('../assets/images/businesses/brewery.jpg'),
-    route: '/business-detail?id=4',
-  },
-  {
-    id: 'm7',
-    title: 'business',
-    name: "Bella's Boutique",
-    message: 'Interested in you — exploring strategic acquisition talks',
-    primaryAction: 'View business listing',
-    avatar: require('../assets/images/businesses/boutique.jpg'),
-    route: '/business-detail?id=2',
   },
 ];
 
@@ -119,7 +101,8 @@ export default function InboxScreen() {
         renderItem={({ item }) => (
           <View style={styles.item}>
             <View style={styles.row}>
-              <Image source={item.avatar} style={styles.avatar} />
+              <Image source={typeof item.avatar === 'string' ? { uri: item.avatar } : (item.avatar as any)} 
+                style={styles.avatar} />
               <View style={styles.itemBody}>
                 <Text style={styles.notificationText}>
                   <Text style={styles.name}>{item.name} </Text>
