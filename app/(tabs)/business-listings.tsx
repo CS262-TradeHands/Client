@@ -20,10 +20,10 @@ export default function BusinessListingsScreen() {
   const [query, setQuery] = useState('');
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // set the webservice url
   const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
-  
+
   // fetch the listings to display
   async function fetchBusinessListings(): Promise<Listing[]> {
     try {
@@ -31,8 +31,8 @@ export default function BusinessListingsScreen() {
       const data = await response.json();
       return data;
     } catch (error) {
-        console.error('Error fetching business listings:', error);
-        return [];
+      console.error('Error fetching business listings:', error);
+      return [];
     }
   }
 
@@ -61,7 +61,7 @@ export default function BusinessListingsScreen() {
   const handleViewDetails = (index: number) => {
     // Require sign-in to view details
     if (isAuthenticated) {
-      router.push(`/business-detail?id=${index+1}`);
+      router.push(`/business-detail?id=${index + 1}`);
     } else {
       setAuthPromptVisible(true);
     }
@@ -71,7 +71,7 @@ export default function BusinessListingsScreen() {
     if (isAuthenticated) {
       router.push('/add-business' as any);
     } else {
-      setAuthPromptVisible(true);
+      router.push('/sign-in');
     }
   };
 
@@ -85,15 +85,15 @@ export default function BusinessListingsScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, isAuthenticated && styles.headerAuthenticated]}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
-            {isAuthenticated ? 'YOUR Business Dashboard' : 'Welcome to TradeHands'}
-          </Text>
-          <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
-            {isAuthenticated ? 'Browse YOUR listings and manage connections' : 'Find your perfect business opportunity'}
-          </Text>
-        </View>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
+              {isAuthenticated ? 'YOUR Business Dashboard' : 'Welcome to TradeHands'}
+            </Text>
+            <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
+              {isAuthenticated ? 'Browse YOUR listings and manage connections' : 'Find your perfect business opportunity'}
+            </Text>
+          </View>
 
           {/* Inbox icon (top-right). If not signed in, prompt to sign in. When signed-in, open inbox. */}
           <Pressable
@@ -144,7 +144,7 @@ export default function BusinessListingsScreen() {
             <Text style={styles.addButtonText}>+ Add a business listing</Text>
           </TouchableOpacity>
         </View>
-        
+
         {filteredListings.map((listing, index) => (
           <View key={listing.id || `listing-${index}`} style={styles.businessCard}>
             <View style={styles.cardHeader}>
@@ -153,12 +153,12 @@ export default function BusinessListingsScreen() {
                 <Text style={styles.industryBadgeText}>{listing.industry}</Text>
               </View>
             </View>
-            
+
             <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
               <Text style={styles.businessLocation}>{listing.city}</Text>
             </ProtectedInfo>
             <Text style={styles.businessDescription}>{listing.description}</Text>
-            
+
             <View style={styles.businessDetails}>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Asking Price</Text>
@@ -182,8 +182,8 @@ export default function BusinessListingsScreen() {
                 <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
               </View>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.viewDetailsButton}
               onPress={() => handleViewDetails(index)}
             >
@@ -191,7 +191,7 @@ export default function BusinessListingsScreen() {
             </TouchableOpacity>
           </View>
         ))}
-        
+
         {filteredListings.length === 0 && (
           <View style={styles.noResults}>
             <Text style={styles.noResultsText}>No businesses found matching your criteria</Text>
@@ -205,7 +205,7 @@ export default function BusinessListingsScreen() {
         <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={closeAuthPrompt}>
           <Pressable style={styles.modalOverlay} onPress={closeAuthPrompt}>
             <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
-              <Text style={styles.modalTitle}>Log in to continue</Text>
+              <Text style={styles.modalTitle}>Log in to view details</Text>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalPrimary]}
                 onPress={() => {
@@ -480,9 +480,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     marginVertical: 6,
   },
-  addRow: { 
-    width: '100%', 
-    alignItems: 'center', 
+  addRow: {
+    width: '100%',
+    alignItems: 'center',
     marginTop: 14,
     marginBottom: 16
   },
@@ -523,8 +523,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#2B4450',
   },
   modalSecondary: {
-    backgroundColor: '#e9ecef',
+    backgroundColor: '#E8E3DC',
+    borderWidth: 1,
+    borderColor: '#9B8F82',
   },
   modalButtonText: { color: '#fff', fontWeight: '700' },
-  modalSecondaryText: { color: '#111', fontWeight: '700' },
+  modalSecondaryText: { color: '#5A7A8C', fontWeight: '700' },
 });

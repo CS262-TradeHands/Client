@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -13,7 +14,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
 import { useAuth } from '../context/AuthContext';
 
 interface Props {
@@ -275,25 +275,27 @@ export default function BuyerDetailScreen() {
       {/* Auth Prompt Modal */}
       <Modal visible={authPromptVisible} transparent animationType="fade">
         <Pressable style={styles.modalOverlay} onPress={() => setAuthPromptVisible(false)}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Sign In Required</Text>
-            <Text style={styles.modalText}>Please sign in to view protected information and contact buyers.</Text>
+          <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
+            <Text style={styles.modalTitle}>Log in to view details</Text>
             <TouchableOpacity
-              style={styles.modalButton}
+              style={[styles.modalButton, styles.modalPrimary]}
               onPress={() => {
                 setAuthPromptVisible(false);
                 router.push('/sign-in');
               }}
             >
-              <Text style={styles.modalButtonText}>Sign In</Text>
+              <Text style={styles.modalButtonText}>Returning user login</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.modalButtonSecondary}
-              onPress={() => setAuthPromptVisible(false)}
+              style={[styles.modalButton, styles.modalSecondary]}
+              onPress={() => {
+                setAuthPromptVisible(false);
+                router.push('/create-account');
+              }}
             >
-              <Text style={styles.modalButtonTextSecondary}>Cancel</Text>
+              <Text style={styles.modalSecondaryText}>Create an account</Text>
             </TouchableOpacity>
-          </View>
+          </Pressable>
         </Pressable>
       </Modal>
     </SafeAreaView>
@@ -458,51 +460,45 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 24,
-    width: '80%',
+    padding: 20,
+    width: '86%',
     alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111',
     marginBottom: 12,
-    color: '#333',
-  },
-  modalText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 24,
   },
   modalButton: {
-    backgroundColor: '#5A7A8C',
-    paddingHorizontal: 30,
+    width: '100%',
     paddingVertical: 12,
     borderRadius: 8,
-    width: '100%',
     alignItems: 'center',
-    marginBottom: 10,
+    marginTop: 8,
+  },
+  modalPrimary: {
+    backgroundColor: '#5A7A8C',
+  },
+  modalSecondary: {
+    backgroundColor: '#E8E3DC',
+    borderWidth: 1,
+    borderColor: '#9B8F82',
   },
   modalButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  modalButtonSecondary: {
-    paddingVertical: 12,
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalButtonTextSecondary: {
+  modalSecondaryText: {
     color: '#5A7A8C',
-    fontSize: 16,
+    fontWeight: '700',
   },
   protectedContainer: {
     position: 'relative',
