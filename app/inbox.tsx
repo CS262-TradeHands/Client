@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Image, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 
-const mockMatches = [
-  // Buyer interested in your business -> goes to buyer profile (buyer-detail)
+// Add sender/recipient metadata to each item (example IDs shown for demo).
+const mockNotifications = [
+  // Received: someone else is the sender, you are the recipient
   {
     id: 'm1',
     title: 'buyer',
@@ -18,9 +19,9 @@ const mockMatches = [
     route: '/buyer-detail?id=1',
     email: 'khaled@example.com',
     phone: '+1 (555) 123-4567',
+    senderId: 'user_khaled',
+    recipientId: 'me', // current user
   },
-
-  // Approved contact request -> only show "View contact" which navigates to buyer detail
   {
     id: 'm3',
     title: 'approved',
@@ -32,9 +33,9 @@ const mockMatches = [
     simpleContact: true,
     email: 'miriam@example.com',
     phone: '+1 (555) 234-5678',
+    senderId: 'user_miriam',
+    recipientId: 'me',
   },
-
-  // Someone interested in you as a buyer -> goes to business listing
   {
     id: 'm2',
     title: 'business',
@@ -43,9 +44,9 @@ const mockMatches = [
     primaryAction: 'View business listing',
     avatar: 'https://cybercraftinc.com/wp-content/uploads/2019/06/pexels-fauxels-3183150-1-scaled.webp',
     route: '/business-detail?id=1',
+    senderId: 'biz_techstart',
+    recipientId: 'me',
   },
-
-  // Another buyer
   {
     id: 'm4',
     title: 'buyer',
@@ -56,16 +57,49 @@ const mockMatches = [
     route: '/buyer-detail?id=3',
     email: 'bobby@example.com',
     phone: '+1 (555) 345-6789',
+    senderId: 'user_bobby',
+    recipientId: 'me',
   },
-  // additional entries
+  // Sent: you are the sender, someone else is the recipient
   {
-    id: 'm5',
+    id: 's1',
+    title: 'buyer',
+    name: 'You',
+    message: 'sent a contact request to Khaled',
+    primaryAction: 'View buyer profile',
+    avatar: require('../assets/images/mii/buyer1.png'),
+    route: '/buyer-detail?id=1',
+    simpleContact: true,
+    email: 'khaled@example.com',
+    phone: '+1 (555) 123-4567',
+    senderId: 'me',
+    recipientId: 'user_khaled',
+  },
+  {
+    id: 's2',
     title: 'business',
-    name: 'Green Clean Services',
-    message: 'is interested in partnering with you',
+    name: 'You',
+    message: 'expressed interest in TechStart Solutions',
     primaryAction: 'View business listing',
-    avatar: 'https://thecleanstart.com/wp-content/uploads/2021/02/House-Cleaning-Service.jpg',
-    route: '/business-detail?id=3',
+    avatar: 'https://cybercraftinc.com/wp-content/uploads/2019/06/pexels-fauxels-3183150-1-scaled.webp',
+    route: '/business-detail?id=1',
+    simpleContact: true,
+    senderId: 'me',
+    recipientId: 'biz_techstart',
+  },
+  {
+    id: 's3',
+    title: 'buyer',
+    name: 'You',
+    message: 'requested contact with Miriam',
+    primaryAction: 'View buyer profile',
+    avatar: require('../assets/images/mii/buyer2.png'),
+    route: '/buyer-detail?id=2',
+    simpleContact: true,
+    email: 'miriam@example.com',
+    phone: '+1 (555) 234-5678',
+    senderId: 'me',
+    recipientId: 'user_miriam',
   },
 ];
 
@@ -74,6 +108,21 @@ export default function InboxScreen() {
   const router = useRouter();
   const [contactModalVisible, setContactModalVisible] = useState(false);
   const [contactInfo, setContactInfo] = useState<{ name?: string; email?: string; phone?: string } | null>(null);
+
+  const [activeSection, setActiveSection] = useState<'received' | 'sent'>('received');
+
+  // Derive current user id (replace 'me' with user.id from your auth when available)
+  const currentUserId = 'me'; // e.g., const currentUserId = user?.id;
+
+  // Compute sections from a single source of truth
+  const receivedItems = useMemo(
+    () => mockNotifications.filter((n) => n.recipientId === currentUserId && n.senderId !== currentUserId),
+    [currentUserId]
+  );
+  const sentItems = useMemo(
+    () => mockNotifications.filter((n) => n.senderId === currentUserId),
+    [currentUserId]
+  );
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -94,8 +143,26 @@ export default function InboxScreen() {
         <View style={styles.headerRight} />
       </View>
 
+      {/* Segmented control for sections */}
+      <View style={styles.segmented}>
+        <TouchableOpacity
+          style={[styles.segmentButton, activeSection === 'received' && styles.segmentButtonActive]}
+          onPress={() => setActiveSection('received')}
+          accessibilityLabel="View received notifications"
+        >
+          <Text style={[styles.segmentText, activeSection === 'received' && styles.segmentTextActive]}>Received</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentButton, activeSection === 'sent' && styles.segmentButtonActive]}
+          onPress={() => setActiveSection('sent')}
+          accessibilityLabel="View sent notifications"
+        >
+          <Text style={[styles.segmentText, activeSection === 'sent' && styles.segmentTextActive]}>Sent</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={mockMatches}
+        data={activeSection === 'received' ? receivedItems : sentItems}
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
@@ -124,7 +191,8 @@ export default function InboxScreen() {
                   <Text style={styles.primaryButtonText}>{item.primaryAction}</Text>
                 </TouchableOpacity>
 
-                {!item.simpleContact && (
+                {/* Hide approve/deny for sent items */}
+                {activeSection === 'received' && !item.simpleContact && (
                   <View style={styles.actionRow}>
                     <TouchableOpacity style={styles.pillButton} onPress={() => Alert.alert('Approved')}>
                       <Text style={styles.pillText}>Approve contact request</Text>
@@ -194,4 +262,11 @@ const styles = StyleSheet.create({
   calloutContainer: { backgroundColor: Colors.light.tint, paddingVertical: 18, paddingHorizontal: 22, borderRadius: 28, alignItems: 'center', minWidth: 240 },
   calloutName: { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 6 },
   calloutText: { color: '#fff', fontSize: 15 },
+
+  /* New: segmented control styles */
+  segmented: { flexDirection: 'row', paddingHorizontal: 16, marginTop: 6, marginBottom: 4 },
+  segmentButton: { flex: 1, paddingVertical: 10, borderWidth: 1, borderColor: '#e6e6e6', borderRadius: 10, marginHorizontal: 4, alignItems: 'center', backgroundColor: '#fff' },
+  segmentButtonActive: { backgroundColor: '#eaf2fb', borderColor: Colors.light.tint },
+  segmentText: { color: Colors.light.text, fontWeight: '600' },
+  segmentTextActive: { color: Colors.light.tint },
 });
