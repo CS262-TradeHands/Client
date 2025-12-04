@@ -1,4 +1,3 @@
-// Replace with:
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -8,8 +7,6 @@ import { useAuth } from '../../context/AuthContext';
 import { Buyer } from '../../types/buyer';
 import { Listing } from '../../types/listing';
 
-
-// Define the ItemCard component outside the main component to keep it clean
 const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView }:
   { name: string, id: string, type: 'business' | 'buyer', industryOrTitle?: string, onEdit: (id: string) => void, onView: (id: string, type: 'business' | 'buyer') => void }
 ) => (
@@ -38,7 +35,6 @@ export default function ProfileScreen() {
   const userBusinesses: Listing[] = [];
   const userBuyers: Buyer[] = [];
 
-  // Handlers for navigation to View/Edit pages
   const handleEditBusiness = (id: string) => {
     router.push(`/edit-business?id=${id}`);
   };
@@ -54,7 +50,6 @@ export default function ProfileScreen() {
       router.push(`/buyer-detail?id=${id}`);
     }
   };
-  // End of new handlers
 
   const handleSignOut = async () => {
     await signOut();
@@ -148,6 +143,64 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Your Business Listings Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Business Listings ({userBusinesses.length})</Text>
+          { 0 > 0 ? (
+            userBusinesses.map((b) => (
+              <ItemCard
+                key={b.id}
+                id={b.owner_id.toString()}
+                name={b.name}
+                type="business"
+                industryOrTitle={b.industry}
+                onView={handleViewDetails}
+                onEdit={handleEditBusiness}
+              />
+            ))
+          ) : (
+            <View style={styles.placeholderCard}>
+                <Text style={styles.placeholderText}>No business listings created.</Text>
+                <TouchableOpacity 
+                    style={styles.addButton} 
+                    onPress={() => router.push('/add-business' as any)}
+                >
+                    <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                    <Text style={styles.addButtonText}>Add New Listing</Text>
+                </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {/* Your Buyer Profiles Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Buyer Profiles ({userBuyers.length})</Text>
+          {userBuyers.length > 0 ? (
+            userBuyers.map((b) => (
+              <ItemCard
+                key={b.id}
+                id={b.user_id.toString()}
+                name={b.title}
+                type="buyer"
+                industryOrTitle={b.title}
+                onView={handleViewDetails}
+                onEdit={handleEditBuyer}
+              />
+            ))
+          ) : (
+            <View style={styles.placeholderCard}>
+                <Text style={styles.placeholderText}>No buyer profiles created.</Text>
+                <TouchableOpacity 
+                    style={styles.addButton} 
+                    onPress={() => router.push('/add-buyer' as any)}
+                >
+                    <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                    <Text style={styles.addButtonText}>Add New Profile</Text>
+                </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
         {/* Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
@@ -175,63 +228,6 @@ export default function ProfileScreen() {
               <Text style={styles.settingArrow}>›</Text>
             </TouchableOpacity>
           </View>
-        </View>
-        {/* Your Business Listings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Business Listings ({userBusinesses.length})</Text>
-          {0 > 0 ? (
-            userBusinesses.map((b) => (
-              <ItemCard
-                key={b.id}
-                id={b.owner_id.toString()}
-                name={b.name}
-                type="business"
-                industryOrTitle={b.industry}
-                onView={handleViewDetails}
-                onEdit={handleEditBusiness}
-              />
-            ))
-          ) : (
-            <View style={styles.placeholderCard}>
-              <Text style={styles.placeholderText}>No business listings created.</Text>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => router.push('/add-business' as any)}
-              >
-                <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                <Text style={styles.addButtonText}>Add New Listing</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {/* Your Buyer Profiles Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Buyer Profiles ({userBuyers.length})</Text>
-          {userBuyers.length > 0 ? (
-            userBuyers.map((b) => (
-              <ItemCard
-                key={b.id}
-                id={b.user_id.toString()}
-                name={b.title}
-                type="buyer"
-                industryOrTitle={b.title}
-                onView={handleViewDetails}
-                onEdit={handleEditBuyer}
-              />
-            ))
-          ) : (
-            <View style={styles.placeholderCard}>
-              <Text style={styles.placeholderText}>No buyer profiles created.</Text>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => router.push('/add-buyer' as any)}
-              >
-                <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                <Text style={styles.addButtonText}>Add New Profile</Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
 
         {/* Sign Out Button */}
@@ -418,7 +414,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // New styles for Listings/Profiles section
   itemCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
