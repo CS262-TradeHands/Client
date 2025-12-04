@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Image, StatusBar as RNStatusBar, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, StatusBar as RNStatusBar, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Listing } from '../types/listing';
+import { User } from '../types/user';
 
 const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
 
@@ -23,7 +24,10 @@ export default function BusinessDetailScreen() {
   const id = params.id;
 
   const [business, setBusiness] = useState<Listing>();
-  const [liked, setLiked] = useState(false);
+  const [loading, setLoading] = useState(true); // Added loading state
+  const [imageLoading, setImageLoading] = useState(true); // Added image loading state
+  const [ownerDetails, setOwnerDetails] = useState<User | null>(null); // State for owner details
+  const [ownerLoading, setOwnerLoading] = useState(true); // State for loading owner details
 
   const fetchedRef = useRef(false);
 
@@ -44,13 +48,46 @@ export default function BusinessDetailScreen() {
         setBusiness(data);
       } catch (error) {
         console.error('Error fetching business details:', error);
+      } finally {
+        setLoading(false); // End loading state
       }
     })();
   }, [params, id]);
 
-  const toggleLike = () => {
-    setLiked((v) => !v);
+  async function fetchOwnerDetails(ownerId: number) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(ownerId)}`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching owner details:', error);
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    if (business?.owner_id) {
+      (async () => {
+        setOwnerLoading(true); // Start loading
+        const details = await fetchOwnerDetails(business.owner_id);
+        setOwnerDetails(details);
+        setOwnerLoading(false); // End loading
+      })();
+    }
+  }, [business?.owner_id]);
+
+  const contactOwner = () => {
+    alert('A request has been sent to the owner.');
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#333" />
+        <Text style={styles.loadingText}>Loading business details...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -81,51 +118,52 @@ export default function BusinessDetailScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
 
-        {/* Owner info box (below asking price) */}
-        <View style={styles.ownerInline}>
-          <View style={styles.ownerTopRow}>
-            <View>
-              <Text style={styles.ownerLabel}>Owner</Text>
-              <Text style={styles.ownerName}>John Doe</Text>
-            </View>
-            <TouchableOpacity style={styles.likeButtonInline} onPress={toggleLike}>
-              <Ionicons name={liked ? 'thumbs-up' : 'thumbs-up-outline'} size={18} color={liked ? '#7FA084' : '#333'} />
-              <Text style={[styles.likeLabel, liked && { color: '#7FA084' }]}>{liked ? 'Liked' : 'Like'}</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.ownerContactRow}>
-            <Text style={styles.contactLabel}>Email:</Text>
-            {liked ? (
-              <Text style={styles.ownerEmail}>johndoe@gmail.com</Text>
-            ) : (
-              <Text style={styles.maskedContact}>•••••••••••</Text>
-            )}
-          </View>
-          <View style={styles.ownerContactRow}>
-            <Text style={styles.contactLabel}>Phone:</Text>
-            {liked ? (
-              <Text style={styles.ownerPhone}>(555)345-3345</Text>
-            ) : (
-              <Text style={styles.maskedContact}>•••••••••••</Text>
-            )}
-          </View>
-          {!liked && <Text style={styles.likePrompt}>Like this business to contact the owner</Text>}
-        </View>
-
         {/* Business Image */}
         <View style={styles.imageContainer}>
-          {business?.image_url ? (
+          {business?.image_url && (
             <Image
               source={{ uri: business.image_url }}
               style={styles.businessImage}
               resizeMode="cover"
+              onLoadEnd={() => setImageLoading(false)} // End image loading state
             />
-          ) : (
+          )}
+          {imageLoading && (
+            <View style={[styles.imagePlaceholder, StyleSheet.absoluteFill]}>
+              <Text style={styles.imagePlaceholderText}>📸</Text>
+              <Text style={styles.imagePlaceholderSubtext}>Loading image...</Text>
+            </View>
+          )}
+          {!business?.image_url && (
             <View style={styles.imagePlaceholder}>
               <Text style={styles.imagePlaceholderText}>📸</Text>
               <Text style={styles.imagePlaceholderSubtext}>Business Photos</Text>
             </View>
           )}
+        </View>
+
+        {/* Owner info box */}
+        <View style={styles.ownerInline}>
+          <View style={styles.ownerTopRow}>
+            <View>
+              <Text style={styles.ownerLabel}>Owner</Text>
+              <Text style={styles.ownerName}>{ownerLoading ? 'Loading...' : `${ownerDetails?.first_name} ${ownerDetails?.last_name}` || 'N/A'}</Text>
+            </View>
+            <TouchableOpacity style={styles.contactButton} onPress={contactOwner}>
+              <Ionicons name="send" size={18} color="#333" />
+              <Text style={styles.contactButtonText}>Request Contact</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.detailSection}>
+            <View style={styles.ownerContactRow}>
+              <Text style={styles.contactLabel}>Email:</Text>
+              <Text style={styles.maskedContact}>•••••••••••</Text>
+            </View>
+            <View style={styles.ownerContactRow}>
+              <Text style={styles.contactLabel}>Phone:</Text>
+              <Text style={styles.maskedContact}>•••••••••••</Text>
+            </View>
+          </View>
         </View>
 
         {/* Description */}
@@ -409,7 +447,6 @@ const styles = StyleSheet.create({
   ownerInline: {
     marginTop: 12,
     padding: 12,
-    borderWidth: 1,
     borderColor: '#e9ecef',
     borderRadius: 8,
     backgroundColor: '#fff',
@@ -420,11 +457,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  likeButtonInline: {
+  detailSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  contactButton: {
+    backgroundColor: '#7FA084',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
   },
   closeButton: {
     position: 'absolute',
@@ -447,29 +490,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
   },
-  likePrompt: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 8,
-    fontStyle: 'italic',
-  },
   ownerLabel: {
     fontSize: 12,
     color: '#666',
     marginBottom: 6,
-    fontWeight: '600',
-  },
-  likeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  likeLabel: {
-    fontSize: 14,
-    color: '#333',
-    marginLeft: 6,
     fontWeight: '600',
   },
   primaryButton: {
@@ -483,15 +507,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  contactButton: {
-    backgroundColor: '#7FA084',
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
   contactButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
   },
 });

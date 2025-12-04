@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
@@ -14,17 +14,15 @@ function formatCurrency(value?: number) {
 export default function BusinessListingsScreen() {
   const router = useRouter();
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
-  const { isAuthenticated, user } = useAuth(); // changed: include user
+  const { isAuthenticated, user } = useAuth();
 
   // search state and filtering
   const [query, setQuery] = useState('');
   const [listings, setListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  const [loading, setLoading] = useState(false); // Changed: Default to false
 
   // set the webservice url
   const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
-
 
   // fetch the listings to display
   async function fetchBusinessListings(): Promise<Listing[]> {
@@ -40,6 +38,7 @@ export default function BusinessListingsScreen() {
 
   useEffect(() => {
     async function loadListings() {
+      setLoading(true);
       const data = await fetchBusinessListings();
       setListings(data);
       setLoading(false);
@@ -62,7 +61,6 @@ export default function BusinessListingsScreen() {
     });
   }, [listings, query]);
 
-  // New: derive sections while keeping styling
   const currentUserId = user?.id?.toString?.() ?? 'anonymous';
   const myListings = useMemo(() => {
     return filteredListings.filter((l) => {
@@ -82,11 +80,10 @@ export default function BusinessListingsScreen() {
     });
   }, [filteredListings, currentUserId]);
 
-  const handleViewDetails = (index: number) => {
+  const handleViewDetails = (listingId: string) => {
     // Require sign-in to view details
     if (isAuthenticated) {
-      router.push(`/business-detail?id=${index + 1}`);
-      router.push(`/business-detail?id=${index + 1}`);
+      router.push(`/business-detail?id=${listingId}`);
     } else {
       setAuthPromptVisible(true);
     }
@@ -97,16 +94,11 @@ export default function BusinessListingsScreen() {
       router.push('/add-business' as any);
     } else {
       router.push('/sign-in');
-      router.push('/sign-in');
     }
   };
 
   const openAuthPrompt = () => setAuthPromptVisible(true);
   const closeAuthPrompt = () => setAuthPromptVisible(false);
-
-  if (loading) {
-    return <Text>Loading...</Text>;
-  }
 
   return (
     <View style={styles.container}>
@@ -114,12 +106,12 @@ export default function BusinessListingsScreen() {
       <View style={[styles.header, isAuthenticated && styles.headerAuthenticated]}>
         <View style={styles.headerRow}>
           <View>
-<Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
-  {isAuthenticated ? 'Business Dashboard' : 'Welcome to TradeHands'}
-</Text>
-<Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
-  {isAuthenticated ? 'Browse listings and manage connections' : 'Find your perfect business opportunity'}
-</Text>
+            <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
+              {isAuthenticated ? 'Business Dashboard' : 'Welcome to TradeHands'}
+            </Text>
+            <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
+              {isAuthenticated ? 'Browse listings and manage connections' : 'Find your perfect business opportunity'}
+            </Text>
           </View>
 
           <Pressable
@@ -171,54 +163,58 @@ export default function BusinessListingsScreen() {
         {/* My Listings Section */}
         <Text style={styles.resultsCount}>My Matched Listings ({myListings.length})</Text>
 
-        {myListings.map((listing, index) => (
-          <View key={listing.id || `my-listing-${index}`} style={styles.businessCard}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.businessName}>{listing.name}</Text>
-              <View style={styles.industryBadge}>
-                <Text style={styles.industryBadgeText}>{listing.industry}</Text>
+        {loading ? (
+          <Text>Loading...</Text>
+        ) : (
+          myListings.map((listing, index) => (
+            <View key={listing.business_id || `my-listing-${index}`} style={styles.businessCard}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.businessName}>{listing.name}</Text>
+                <View style={styles.industryBadge}>
+                  <Text style={styles.industryBadgeText}>{listing.industry}</Text>
+                </View>
               </View>
+
+              <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
+                <Text style={styles.businessLocation}>{listing.city}</Text>
+              </ProtectedInfo>
+              <Text style={styles.businessDescription}>{listing.description}</Text>
+
+              <View style={styles.businessDetails}>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Asking Price</Text>
+                  <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
+                    <Text style={styles.detailValue}>
+                      {formatCurrency(listing.asking_price_lower_bound)}
+                      {listing.asking_price_upper_bound && listing.asking_price_lower_bound !== listing.asking_price_upper_bound
+                        ? ` - ${formatCurrency(listing.asking_price_upper_bound)}`
+                        : ''}
+                    </Text>
+                  </ProtectedInfo>
+                </View>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Employees</Text>
+                  <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
+                    <Text style={styles.detailValue}>{listing.employees}</Text>
+                  </ProtectedInfo>
+                </View>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Established</Text>
+                  <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.viewDetailsButton}
+                onPress={() => handleViewDetails(listing.business_id.toString())}
+              >
+                <Text style={styles.viewDetailsButtonText}>View Details</Text>
+              </TouchableOpacity>
             </View>
+          )))
+        }
 
-            <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
-              <Text style={styles.businessLocation}>{listing.city}</Text>
-            </ProtectedInfo>
-            <Text style={styles.businessDescription}>{listing.description}</Text>
-
-            <View style={styles.businessDetails}>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Asking Price</Text>
-                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
-                  <Text style={styles.detailValue}>
-                    {formatCurrency(listing.asking_price_lower_bound)}
-                    {listing.asking_price_upper_bound && listing.asking_price_lower_bound !== listing.asking_price_upper_bound
-                      ? ` - ${formatCurrency(listing.asking_price_upper_bound)}`
-                      : ''}
-                  </Text>
-                </ProtectedInfo>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Employees</Text>
-                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
-                  <Text style={styles.detailValue}>{listing.employees}</Text>
-                </ProtectedInfo>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Established</Text>
-                <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.viewDetailsButton}
-              onPress={() => handleViewDetails(index)}
-            >
-              <Text style={styles.viewDetailsButtonText}>View Details</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-
-        {myListings.length === 0 && (
+        {myListings.length === 0 && !loading && (
           <View style={styles.noResults}>
             <Text style={styles.noResultsText}>No listings connected to you yet</Text>
             <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>
@@ -230,56 +226,60 @@ export default function BusinessListingsScreen() {
           Public Listings ({publicListings.length})
         </Text>
 
-        {publicListings.map((listing, index) => (
-          <View key={listing.id || `public-listing-${index}`} style={styles.businessCard}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.businessName}>{listing.name}</Text>
-              <View style={styles.industryBadge}>
-                <Text style={styles.industryBadgeText}>{listing.industry}</Text>
+        {loading ? (
+          <Text>Loading...</Text>
+        ) : (
+          publicListings.map((listing, index) => (
+            <View key={listing.business_id || `public-listing-${index}`} style={styles.businessCard}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.businessName}>{listing.name}</Text>
+                <View style={styles.industryBadge}>
+                  <Text style={styles.industryBadgeText}>{listing.industry}</Text>
+                </View>
               </View>
+
+
+              <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
+                <Text style={styles.businessLocation}>{listing.city}</Text>
+              </ProtectedInfo>
+              <Text style={styles.businessDescription}>{listing.description}</Text>
+
+
+              <View style={styles.businessDetails}>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Asking Price</Text>
+                  <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
+                    <Text style={styles.detailValue}>
+                      {formatCurrency(listing.asking_price_lower_bound)}
+                      {listing.asking_price_upper_bound && listing.asking_price_lower_bound !== listing.asking_price_upper_bound
+                        ? ` - ${formatCurrency(listing.asking_price_upper_bound)}`
+                        : ''}
+                    </Text>
+                  </ProtectedInfo>
+                </View>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Employees</Text>
+                  <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
+                    <Text style={styles.detailValue}>{listing.employees}</Text>
+                  </ProtectedInfo>
+                </View>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Established</Text>
+                  <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.viewDetailsButton}
+                onPress={() => handleViewDetails(listing.business_id.toString())}
+              >
+                <Text style={styles.viewDetailsButtonText}>View Details</Text>
+              </TouchableOpacity>
             </View>
+          )))
+        }
 
-
-            <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
-              <Text style={styles.businessLocation}>{listing.city}</Text>
-            </ProtectedInfo>
-            <Text style={styles.businessDescription}>{listing.description}</Text>
-
-
-            <View style={styles.businessDetails}>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Asking Price</Text>
-                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
-                  <Text style={styles.detailValue}>
-                    {formatCurrency(listing.asking_price_lower_bound)}
-                    {listing.asking_price_upper_bound && listing.asking_price_lower_bound !== listing.asking_price_upper_bound
-                      ? ` - ${formatCurrency(listing.asking_price_upper_bound)}`
-                      : ''}
-                  </Text>
-                </ProtectedInfo>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Employees</Text>
-                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
-                  <Text style={styles.detailValue}>{listing.employees}</Text>
-                </ProtectedInfo>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Established</Text>
-                <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.viewDetailsButton}
-              onPress={() => handleViewDetails(index)}
-            >
-              <Text style={styles.viewDetailsButtonText}>View Details</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-
-        {publicListings.length === 0 && (
+        {publicListings.length === 0 && !loading && (
           <View style={styles.noResults}>
             <Text style={styles.noResultsText}>No public listings found</Text>
             <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
