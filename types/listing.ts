@@ -7,7 +7,7 @@
  */
 
 export interface Listing {
-    id: number;
+    business_id: number;
     owner_id: number;
     name: string;
     industry: string;
