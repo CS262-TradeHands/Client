@@ -19,11 +19,11 @@ interface Buyer {
 }
 
 const mockBuyers: Buyer[] = [
-  { 
-    id: '1', 
-    name: 'Khaled', 
-    city: 'San Francisco, CA', 
-    title: 'Investor / Entrepreneur', 
+  {
+    id: '1',
+    name: 'Khaled',
+    city: 'San Francisco, CA',
+    title: 'Investor / Entrepreneur',
     avatar: require('../../assets/images/mii/buyer1.png'),
     bio: 'Serial entrepreneur with 15+ years of experience building and scaling tech companies.',
     lookingFor: ['Tech Companies', 'SaaS Businesses', 'E-commerce'],
@@ -31,11 +31,11 @@ const mockBuyers: Buyer[] = [
     experience: '15+ years in tech entrepreneurship',
     timeline: 'Ready to close within 3-6 months'
   },
-  { 
-    id: '2', 
-    name: 'Miriam', 
-    city: 'Austin, TX', 
-    title: 'Retail Buyer', 
+  {
+    id: '2',
+    name: 'Miriam',
+    city: 'Austin, TX',
+    title: 'Retail Buyer',
     avatar: require('../../assets/images/mii/buyer2.png'),
     bio: 'Experienced retail operator looking to expand portfolio with established businesses.',
     lookingFor: ['Retail Stores', 'Boutiques', 'Specialty Shops'],
@@ -43,11 +43,11 @@ const mockBuyers: Buyer[] = [
     experience: '10 years in retail management',
     timeline: 'Flexible, evaluating opportunities'
   },
-  { 
-    id: '3', 
-    name: 'Bobby', 
-    city: 'Denver, CO', 
-    title: 'Service Business Investor', 
+  {
+    id: '3',
+    name: 'Bobby',
+    city: 'Denver, CO',
+    title: 'Service Business Investor',
     avatar: require('../../assets/images/mii/buyer3.png'),
     bio: 'Private investor seeking profitable service-based businesses with recurring revenue.',
     lookingFor: ['Consulting Firms', 'Marketing Agencies', 'Professional Services'],
@@ -55,11 +55,11 @@ const mockBuyers: Buyer[] = [
     experience: '8 years in service business operations',
     timeline: 'Actively searching'
   },
-  { 
-    id: '4', 
-    name: 'Mickey', 
-    city: 'Portland, OR', 
-    title: 'Brewery Enthusiast', 
+  {
+    id: '4',
+    name: 'Mickey',
+    city: 'Portland, OR',
+    title: 'Brewery Enthusiast',
     avatar: require('../../assets/images/mii/buyer4.png'),
     bio: 'Craft beer enthusiast looking to acquire established breweries or taprooms.',
     lookingFor: ['Breweries', 'Taprooms', 'Bars & Pubs'],
@@ -67,11 +67,11 @@ const mockBuyers: Buyer[] = [
     experience: '5 years in hospitality industry',
     timeline: '6-12 months'
   },
-  { 
-    id: '5', 
-    name: 'Sandra', 
-    city: 'Miami, FL', 
-    title: 'Healthcare Investor', 
+  {
+    id: '5',
+    name: 'Sandra',
+    city: 'Miami, FL',
+    title: 'Healthcare Investor',
     avatar: require('../../assets/images/mii/buyer5.png'),
     bio: 'Healthcare professional seeking to acquire medical practices and healthcare services.',
     lookingFor: ['Medical Practices', 'Dental Clinics', 'Healthcare Services'],
@@ -79,11 +79,11 @@ const mockBuyers: Buyer[] = [
     experience: '12 years in healthcare administration',
     timeline: 'Ready to move quickly on the right opportunity'
   },
-  { 
-    id: '6', 
-    name: 'Alex', 
-    city: 'Seattle, WA', 
-    title: 'Tech Acquirer', 
+  {
+    id: '6',
+    name: 'Alex',
+    city: 'Seattle, WA',
+    title: 'Tech Acquirer',
     avatar: require('../../assets/images/mii/buyer6.png'),
     bio: 'Tech executive looking to acquire software companies and tech-enabled services.',
     lookingFor: ['Software Companies', 'Mobile Apps', 'SaaS Platforms'],
@@ -185,9 +185,17 @@ export default function BuyerScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-        {/* Add button row unchanged */}
         <View style={styles.addRow}>
-          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-buyer' as any)}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              if (isAuthenticated) {
+                router.push('/add-buyer' as any);
+              } else {
+                router.push('/sign-in');
+              }
+            }}
+          >
             <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
           </TouchableOpacity>
         </View>
@@ -275,8 +283,8 @@ export default function BuyerScreen() {
               <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View style={styles.buyerModalHeader}>
-                  <TouchableOpacity 
-                    onPress={() => setSelectedBuyer(null)} 
+                  <TouchableOpacity
+                    onPress={() => setSelectedBuyer(null)}
                     style={styles.closeButton}
                   >
                     <Ionicons name="close" size={24} color="#333" />
@@ -561,9 +569,9 @@ const styles = StyleSheet.create({
   moreBtn: { marginTop: 8 },
   moreBtnText: { color: '#333', textDecorationLine: 'underline' },
 
-  addRow: { 
-    width: '100%', 
-    alignItems: 'center', 
+  addRow: {
+    width: '100%',
+    alignItems: 'center',
     marginTop: 4,
     marginBottom: 16
   },

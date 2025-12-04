@@ -20,10 +20,10 @@ export default function BusinessListingsScreen() {
   const [query, setQuery] = useState('');
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // set the webservice url
   const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
-  
+
   // fetch the listings to display
   async function fetchBusinessListings(): Promise<Listing[]> {
     try {
@@ -31,8 +31,8 @@ export default function BusinessListingsScreen() {
       const data = await response.json();
       return data;
     } catch (error) {
-        console.error('Error fetching business listings:', error);
-        return [];
+      console.error('Error fetching business listings:', error);
+      return [];
     }
   }
 
@@ -83,7 +83,7 @@ export default function BusinessListingsScreen() {
   const handleViewDetails = (index: number) => {
     // Require sign-in to view details
     if (isAuthenticated) {
-      router.push(`/business-detail?id=${index+1}`);
+      router.push(`/business-detail?id=${index + 1}`);
     } else {
       setAuthPromptVisible(true);
     }
@@ -93,7 +93,7 @@ export default function BusinessListingsScreen() {
     if (isAuthenticated) {
       router.push('/add-business' as any);
     } else {
-      setAuthPromptVisible(true);
+      router.push('/sign-in');
     }
   };
 
@@ -110,12 +110,12 @@ export default function BusinessListingsScreen() {
       <View style={[styles.header, isAuthenticated && styles.headerAuthenticated]}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
-              {isAuthenticated ? 'Business Dashboard' : 'Welcome to TradeHands'}
-            </Text>
-            <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
-              {isAuthenticated ? 'Browse listings and manage connections' : 'Find your perfect business opportunity'}
-            </Text>
+<Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
+  {isAuthenticated ? 'Business Dashboard' : 'Welcome to TradeHands'}
+</Text>
+<Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
+  {isAuthenticated ? 'Browse listings and manage connections' : 'Find your perfect business opportunity'}
+</Text>
           </View>
 
           <Pressable
@@ -286,7 +286,7 @@ export default function BusinessListingsScreen() {
         <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={closeAuthPrompt}>
           <Pressable style={styles.modalOverlay} onPress={closeAuthPrompt}>
             <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
-              <Text style={styles.modalTitle}>Log in to continue</Text>
+              <Text style={styles.modalTitle}>Log in to view details</Text>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalPrimary]}
                 onPress={() => {
@@ -561,27 +561,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     marginVertical: 6,
   },
-  addRow: { 
-    // center the button within the row
-    width: '100%', 
-    alignItems: 'center', 
+  addRow: {
+    width: '100%',
+    alignItems: 'center',
     marginTop: 14,
-    marginBottom: 16
+    marginBottom: 16,
   },
   addButton: {
-    // center the button itself
     alignSelf: 'center',
     width: undefined,
     paddingHorizontal: 12,
     backgroundColor: '#2B4450',
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
     alignItems: 'center',
   },
   addButtonText: {
@@ -594,6 +586,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 18,
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   modalTitle: {
@@ -612,8 +610,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#2B4450',
   },
   modalSecondary: {
-    backgroundColor: '#e9ecef',
+    backgroundColor: '#E8E3DC',
+    borderWidth: 1,
+    borderColor: '#9B8F82',
   },
   modalButtonText: { color: '#fff', fontWeight: '700' },
-  modalSecondaryText: { color: '#111', fontWeight: '700' },
+  modalSecondaryText: { color: '#5A7A8C', fontWeight: '700' },
 });

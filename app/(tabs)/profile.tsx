@@ -10,51 +10,51 @@ import { Listing } from '../../types/listing';
 
 
 // Define the ItemCard component outside the main component to keep it clean
-const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView }: 
-  { name: string, id: string, type: 'business'|'buyer', industryOrTitle?: string, onEdit: (id: string) => void, onView: (id: string, type: 'business'|'buyer') => void }
+const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView }:
+  { name: string, id: string, type: 'business' | 'buyer', industryOrTitle?: string, onEdit: (id: string) => void, onView: (id: string, type: 'business' | 'buyer') => void }
 ) => (
-    <View style={styles.itemCard}>
-        <View style={styles.itemCardHeader}>
-            <Text style={styles.itemCardName}>{name}</Text>
-            {industryOrTitle && <Text style={styles.itemCardSubtitle}>{industryOrTitle}</Text>}
-        </View>
-        <View style={styles.itemCardActions}>
-            <TouchableOpacity style={styles.actionButton} onPress={() => onView(id, type)}>
-                <Ionicons name="eye-outline" size={20} color="#5A7A8C" />
-                <Text style={styles.actionButtonText}>View</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={() => onEdit(id)}>
-                <Ionicons name="create-outline" size={20} color="#5A7A8C" />
-                <Text style={styles.actionButtonText}>Edit</Text>
-            </TouchableOpacity>
-        </View>
+  <View style={styles.itemCard}>
+    <View style={styles.itemCardHeader}>
+      <Text style={styles.itemCardName}>{name}</Text>
+      {industryOrTitle && <Text style={styles.itemCardSubtitle}>{industryOrTitle}</Text>}
     </View>
+    <View style={styles.itemCardActions}>
+      <TouchableOpacity style={styles.actionButton} onPress={() => onView(id, type)}>
+        <Ionicons name="eye-outline" size={20} color="#5A7A8C" />
+        <Text style={styles.actionButtonText}>View</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.actionButton} onPress={() => onEdit(id)}>
+        <Ionicons name="create-outline" size={20} color="#5A7A8C" />
+        <Text style={styles.actionButtonText}>Edit</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
 );
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, isAuthenticated, signOut } = useAuth();
 
-const userBusinesses: Listing[] = [];
-const userBuyers: Buyer[] = [];
+  const userBusinesses: Listing[] = [];
+  const userBuyers: Buyer[] = [];
 
-// Handlers for navigation to View/Edit pages
-const handleEditBusiness = (id: string) => {
+  // Handlers for navigation to View/Edit pages
+  const handleEditBusiness = (id: string) => {
     router.push(`/edit-business?id=${id}`);
-};
+  };
 
-const handleEditBuyer = (id: string) => {
+  const handleEditBuyer = (id: string) => {
     router.push(`/edit-buyer?id=${id}`);
-};
+  };
 
-const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
+  const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
     if (type === 'business') {
-        router.push(`/business-detail?id=${id}`);
+      router.push(`/business-detail?id=${id}`);
     } else {
-        router.push(`/buyer-detail?id=${id}`);
+      router.push(`/buyer-detail?id=${id}`);
     }
-};
-// End of new handlers
+  };
+  // End of new handlers
 
   const handleSignOut = async () => {
     await signOut();
@@ -73,22 +73,24 @@ const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
   if (!isAuthenticated) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.notAuthenticatedContainer}>
-          <Text style={styles.notAuthenticatedTitle}>Not Signed In</Text>
-          <Text style={styles.notAuthenticatedText}>
-            Please sign in to view your profile
-          </Text>
-          <TouchableOpacity 
-            style={styles.signInButton} 
+        <TouchableOpacity onPress={() => router.back()} style={styles.authBackButton}>
+          <Text style={styles.authBackButtonText}>Back</Text>
+        </TouchableOpacity>
+        <View style={styles.authPrompt}>
+          <Ionicons name="lock-closed-outline" size={48} color="#5A7A8C" />
+          <Text style={styles.authPromptTitle}>Sign In Required</Text>
+          <Text style={styles.authPromptText}>Please sign in to view your profile.</Text>
+          <TouchableOpacity
+            style={styles.authPromptButton}
             onPress={() => router.push('/sign-in')}
           >
-            <Text style={styles.signInButtonText}>Sign In</Text>
+            <Text style={styles.authPromptButtonText}>Sign In</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.createAccountButton} 
+          <TouchableOpacity
+            style={styles.authCreateAccountButton}
             onPress={() => router.push('/create-account')}
           >
-            <Text style={styles.createAccountButtonText}>Create Account</Text>
+            <Text style={styles.authCreateAccountText}>Create Account</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -208,8 +210,8 @@ const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
           <View style={styles.infoCard}>
-            <TouchableOpacity 
-              style={styles.settingRow} 
+            <TouchableOpacity
+              style={styles.settingRow}
               onPress={handleViewMatches}
             >
               <Text style={styles.settingText}>View Matches</Text>
@@ -231,6 +233,63 @@ const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
               <Text style={styles.settingArrow}>›</Text>
             </TouchableOpacity>
           </View>
+        </View>
+        {/* Your Business Listings Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Business Listings ({userBusinesses.length})</Text>
+          {0 > 0 ? (
+            userBusinesses.map((b) => (
+              <ItemCard
+                key={b.id}
+                id={b.owner_id.toString()}
+                name={b.name}
+                type="business"
+                industryOrTitle={b.industry}
+                onView={handleViewDetails}
+                onEdit={handleEditBusiness}
+              />
+            ))
+          ) : (
+            <View style={styles.placeholderCard}>
+              <Text style={styles.placeholderText}>No business listings created.</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => router.push('/add-business' as any)}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                <Text style={styles.addButtonText}>Add New Listing</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {/* Your Buyer Profiles Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Buyer Profiles ({userBuyers.length})</Text>
+          {userBuyers.length > 0 ? (
+            userBuyers.map((b) => (
+              <ItemCard
+                key={b.id}
+                id={b.user_id.toString()}
+                name={b.title}
+                type="buyer"
+                industryOrTitle={b.title}
+                onView={handleViewDetails}
+                onEdit={handleEditBuyer}
+              />
+            ))
+          ) : (
+            <View style={styles.placeholderCard}>
+              <Text style={styles.placeholderText}>No buyer profiles created.</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => router.push('/add-buyer' as any)}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                <Text style={styles.addButtonText}>Add New Profile</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Sign Out Button */}
@@ -363,102 +422,115 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  notAuthenticatedContainer: {
+  authPrompt: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    padding: 40,
   },
-  notAuthenticatedTitle: {
+  authPromptTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+    marginTop: 20,
     marginBottom: 10,
   },
-  notAuthenticatedText: {
+  authPromptText: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
   },
-  signInButton: {
+  authPromptButton: {
     backgroundColor: '#5A7A8C',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 30,
+    paddingVertical: 12,
     borderRadius: 8,
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  signInButtonText: {
+  authPromptButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
-  createAccountButton: {
-    backgroundColor: '#7FA084',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+  authBackButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    zIndex: 20,
+  },
+  authBackButtonText: {
+    color: '#5A7A8C',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  authCreateAccountButton: {
+    paddingHorizontal: 30,
+    paddingVertical: 12,
     borderRadius: 8,
   },
-  createAccountButtonText: {
-    color: '#fff',
+  authCreateAccountText: {
+    color: '#5A7A8C',
     fontSize: 16,
     fontWeight: '600',
   },
   // New styles for Listings/Profiles section
-itemCard: {
-  backgroundColor: '#fff',
-  borderRadius: 12,
-  padding: 15,
-  marginBottom: 10,
-  borderWidth: 1,
-  borderColor: '#f0f0f0',
-},
-itemCardHeader: {
-  marginBottom: 10,
-},
-itemCardName: {
-  fontSize: 18,
-  fontWeight: '700',
-  color: '#333',
-},
-itemCardSubtitle: {
-  fontSize: 14,
-  color: '#666',
-  marginTop: 4,
-},
-itemCardActions: {
-  flexDirection: 'row',
-  justifyContent: 'flex-end',
-  borderTopWidth: 1,
-  borderTopColor: '#f7f7f7',
-  paddingTop: 8,
-  marginTop: 5,
-},
-actionButton: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  borderRadius: 6,
-  marginLeft: 10,
-  backgroundColor: '#E8E3DC',
-},
-actionButtonText: {
-  marginLeft: 5,
-  fontSize: 14,
-  fontWeight: '600',
-  color: '#5A7A8C',
-},
-placeholderCard: {
-  backgroundColor: '#fff',
-  borderRadius: 12,
-  padding: 20,
-  alignItems: 'center',
-  borderStyle: 'dashed',
-  borderColor: '#ccc',
-  borderWidth: 1,
-},
-addButton: {
+  itemCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  itemCardHeader: {
+    marginBottom: 10,
+  },
+  itemCardName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+  itemCardSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  itemCardActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    borderTopWidth: 1,
+    borderTopColor: '#f7f7f7',
+    paddingTop: 8,
+    marginTop: 5,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginLeft: 10,
+    backgroundColor: '#E8E3DC',
+  },
+  actionButtonText: {
+    marginLeft: 5,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#5A7A8C',
+  },
+  placeholderCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    borderStyle: 'dashed',
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#5A7A8C',
@@ -466,10 +538,10 @@ addButton: {
     paddingVertical: 10,
     borderRadius: 8,
     marginTop: 15,
-},
-addButtonText: {
+  },
+  addButtonText: {
     color: '#fff',
     fontWeight: '700',
     marginLeft: 8,
-},
+  },
 });
