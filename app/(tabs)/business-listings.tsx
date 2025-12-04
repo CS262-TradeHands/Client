@@ -35,8 +35,6 @@ export default function BusinessListingsScreen() {
     } catch (error) {
       console.error('Error fetching business listings:', error);
       return [];
-      console.error('Error fetching business listings:', error);
-      return [];
     }
   }
 
@@ -271,8 +269,6 @@ export default function BusinessListingsScreen() {
                 <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
               </View>
             </View>
-
-            <TouchableOpacity
 
             <TouchableOpacity
               style={styles.viewDetailsButton}
@@ -574,9 +570,6 @@ const styles = StyleSheet.create({
   addRow: {
     width: '100%',
     alignItems: 'center',
-  addRow: {
-    width: '100%',
-    alignItems: 'center',
     marginTop: 14,
     marginBottom: 16,
   },
@@ -626,11 +619,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8E3DC',
     borderWidth: 1,
     borderColor: '#9B8F82',
-    backgroundColor: '#E8E3DC',
-    borderWidth: 1,
-    borderColor: '#9B8F82',
   },
   modalButtonText: { color: '#fff', fontWeight: '700' },
-  modalSecondaryText: { color: '#5A7A8C', fontWeight: '700' },
   modalSecondaryText: { color: '#5A7A8C', fontWeight: '700' },
 });

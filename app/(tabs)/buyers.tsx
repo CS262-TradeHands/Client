@@ -193,78 +193,80 @@ export default function BuyerScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* My Matched Buyers Section (restored) */}
+          <Text style={styles.resultsCount}>My Matched Buyers ({myBuyers.length})</Text>
           <View style={styles.row}>
-          {filteredBuyers.map((b) => (
-            <View key={b.id} style={styles.card}>
-              <Image source={b.avatar || require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
-              <View style={styles.cardBody}>
-                <Text style={styles.buyerName}>{b.name}</Text>
-                <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                  <Text style={styles.buyerCity}>{b.city}</Text>
-                </ProtectedInfo>
-                <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                  <Text style={styles.buyerInterests}>{b.title}</Text>
-                </ProtectedInfo>
+            {myBuyers.map((b) => (
+              <View key={b.id} style={styles.card}>
+                <Image source={b.avatar || require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
+                <View style={styles.cardBody}>
+                  <Text style={styles.buyerName}>{b.name}</Text>
+                  <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+                    <Text style={styles.buyerCity}>{b.city}</Text>
+                  </ProtectedInfo>
+                  <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+                    <Text style={styles.buyerInterests}>{b.title}</Text>
+                  </ProtectedInfo>
+                </View>
+                <TouchableOpacity
+                  style={styles.moreBtn}
+                  onPress={() => {
+                    if (isAuthenticated) {
+                      setSelectedBuyer(b);
+                    } else {
+                      setAuthPromptVisible(true);
+                    }
+                  }}
+                >
+                  <Text style={styles.moreBtnText}>click for more info</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.moreBtn}
-                onPress={() => {
-                  if (isAuthenticated) {
-                    setSelectedBuyer(b);
-                  } else {
-                    setAuthPromptVisible(true);
-                  }
-                }}
-              >
-                <Text style={styles.moreBtnText}>click for more info</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-        {myBuyers.length === 0 && (
-          <View style={styles.noResults}>
-            <Text style={styles.noResultsText}>No listings connected to you yet</Text>
-            <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>
+            ))}
           </View>
-        )}
+          {myBuyers.length === 0 && (
+            <View style={styles.noResults}>
+              <Text style={styles.noResultsText}>No listings connected to you yet</Text>
+              <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>
+            </View>
+          )}
 
-        {/* Public Buyers Section */}
-        <Text style={[styles.resultsCount, { marginTop: 12 }]}>Public Buyers ({publicBuyers.length})</Text>
-        <View style={styles.row}>
-          {publicBuyers.map((b) => (
-            <View key={b.id} style={styles.card}>
-              <Image source={b.avatar || require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
-              <View style={styles.cardBody}>
-                <Text style={styles.buyerName}>{b.name}</Text>
-                <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                  <Text style={styles.buyerCity}>{b.city}</Text>
-                </ProtectedInfo>
-                <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                  <Text style={styles.buyerInterests}>{b.title}</Text>
-                </ProtectedInfo>
+          {/* Public Buyers Section */}
+          <Text style={[styles.resultsCount, { marginTop: 12 }]}>Public Buyers ({publicBuyers.length})</Text>
+          <View style={styles.row}>
+            {publicBuyers.map((b) => (
+              <View key={b.id} style={styles.card}>
+                <Image source={b.avatar || require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
+                <View style={styles.cardBody}>
+                  <Text style={styles.buyerName}>{b.name}</Text>
+                  <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+                    <Text style={styles.buyerCity}>{b.city}</Text>
+                  </ProtectedInfo>
+                  <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+                    <Text style={styles.buyerInterests}>{b.title}</Text>
+                  </ProtectedInfo>
+                </View>
+                <TouchableOpacity
+                  style={styles.moreBtn}
+                  onPress={() => {
+                    if (isAuthenticated) {
+                      setSelectedBuyer(b);
+                    } else {
+                      setAuthPromptVisible(true);
+                    }
+                  }}
+                >
+                  <Text style={styles.moreBtnText}>click for more info</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.moreBtn}
-                onPress={() => {
-                  if (isAuthenticated) {
-                    setSelectedBuyer(b);
-                  } else {
-                    setAuthPromptVisible(true);
-                  }
-                }}
-              >
-                <Text style={styles.moreBtnText}>click for more info</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-        {publicBuyers.length === 0 && (
-          <View style={styles.noResults}>
-            <Text style={styles.noResultsText}>No public listings found</Text>
-            <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
+            ))}
           </View>
-        )}
-      </ScrollView>
+          {publicBuyers.length === 0 && (
+            <View style={styles.noResults}>
+              <Text style={styles.noResultsText}>No public listings found</Text>
+              <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
+            </View>
+          )}
+        </ScrollView>
 
       {/* Buyer Detail Modal */}
       {selectedBuyer && (
