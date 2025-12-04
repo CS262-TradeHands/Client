@@ -131,6 +131,7 @@ export default function InboxScreen() {
   }, [isAuthenticated, router]);
 
   if (!isAuthenticated) return null;
+  const [authPromptVisible, setAuthPromptVisible] = useState(false);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -168,7 +169,7 @@ export default function InboxScreen() {
         renderItem={({ item }) => (
           <View style={styles.item}>
             <View style={styles.row}>
-              <Image source={typeof item.avatar === 'string' ? { uri: item.avatar } : (item.avatar as any)} 
+              <Image source={typeof item.avatar === 'string' ? { uri: item.avatar } : (item.avatar as any)}
                 style={styles.avatar} />
               <View style={styles.itemBody}>
                 <Text style={styles.notificationText}>
@@ -179,6 +180,10 @@ export default function InboxScreen() {
                 <TouchableOpacity
                   style={styles.primaryButton}
                   onPress={() => {
+                    if (!isAuthenticated) {
+                      setAuthPromptVisible(true);
+                      return;
+                    }
                     // If this is a 'view contact' action (approved contact), show popup
                     if (item.simpleContact || item.primaryAction?.toLowerCase().includes('view contact')) {
                       setContactInfo({ name: item.name, email: item.email, phone: item.phone });
@@ -194,10 +199,28 @@ export default function InboxScreen() {
                 {/* Hide approve/deny for sent items */}
                 {activeSection === 'received' && !item.simpleContact && (
                   <View style={styles.actionRow}>
-                    <TouchableOpacity style={styles.pillButton} onPress={() => Alert.alert('Approved')}>
+                    <TouchableOpacity
+                      style={styles.pillButton}
+                      onPress={() => {
+                        if (!isAuthenticated) {
+                          setAuthPromptVisible(true);
+                          return;
+                        }
+                        Alert.alert('Approved');
+                      }}
+                    >
                       <Text style={styles.pillText}>Approve contact request</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.pillButton, styles.pillSecondary]} onPress={() => Alert.alert('Denied')}>
+                    <TouchableOpacity
+                      style={[styles.pillButton, styles.pillSecondary]}
+                      onPress={() => {
+                        if (!isAuthenticated) {
+                          setAuthPromptVisible(true);
+                          return;
+                        }
+                        Alert.alert('Denied');
+                      }}
+                    >
                       <Text style={styles.pillText}>Deny contact request</Text>
                     </TouchableOpacity>
                   </View>
@@ -218,6 +241,35 @@ export default function InboxScreen() {
           </View>
         </Pressable>
       </Modal>
+
+      {/* Auth Prompt Modal */}
+      {authPromptVisible && (
+        <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={() => setAuthPromptVisible(false)}>
+          <Pressable style={styles.authModalOverlay} onPress={() => setAuthPromptVisible(false)}>
+            <Pressable style={styles.authModalContent} onPress={() => { /* absorb taps */ }}>
+              <Text style={styles.authModalTitle}>Log in to view details</Text>
+              <TouchableOpacity
+                style={[styles.authModalButton, styles.authModalPrimary]}
+                onPress={() => {
+                  setAuthPromptVisible(false);
+                  router.push('/sign-in');
+                }}
+              >
+                <Text style={styles.authModalButtonText}>Returning user login</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.authModalButton, styles.authModalSecondary]}
+                onPress={() => {
+                  setAuthPromptVisible(false);
+                  router.push('/create-account');
+                }}
+              >
+                <Text style={styles.authModalSecondaryText}>Create an account</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -269,4 +321,47 @@ const styles = StyleSheet.create({
   segmentButtonActive: { backgroundColor: '#eaf2fb', borderColor: Colors.light.tint },
   segmentText: { color: Colors.light.text, fontWeight: '600' },
   segmentTextActive: { color: Colors.light.tint },
+  /* auth modal styles */
+  authModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  authModalContent: {
+    width: '86%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+  },
+  authModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111',
+    marginBottom: 12,
+  },
+  authModalButton: {
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  authModalPrimary: {
+    backgroundColor: '#5A7A8C',
+  },
+  authModalSecondary: {
+    backgroundColor: '#E8E3DC',
+    borderWidth: 1,
+    borderColor: '#9B8F82',
+  },
+  authModalButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  authModalSecondaryText: {
+    color: '#5A7A8C',
+    fontWeight: '700',
+  },
 });
