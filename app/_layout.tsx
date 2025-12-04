@@ -64,6 +64,7 @@ export default function RootLayout() {
           <Stack.Screen name="algo" options={{ headerShown: false }} />
           <Stack.Screen name="edit-buyer" options={{ headerShown: false }} />
           <Stack.Screen name="edit-business" options={{ headerShown: false }} />
+          <Stack.Screen name="sign-in-form" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </AuthProvider>

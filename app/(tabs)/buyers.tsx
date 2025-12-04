@@ -182,28 +182,19 @@ export default function BuyerScreen() {
         <View style={styles.resultsRowHeader}>
           <Text style={styles.resultsCount}>{filteredBuyers.length} buyer{filteredBuyers.length !== 1 ? 's' : ''} found</Text>
         </View>
-      </View>
 
-      <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-        <View style={styles.addRow}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => {
-              if (isAuthenticated) {
-                router.push('/add-buyer' as any);
-              } else {
-                router.push('/sign-in');
-              }
-            }}
-          >
-            <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
-          </TouchableOpacity>
         </View>
 
-        {/* My Buyers Section */}
-        <Text style={styles.resultsCount}>My Matched Buyers ({myBuyers.length})</Text>
-        <View style={styles.row}>
-          {myBuyers.map((b) => (
+        <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+
+          <View style={styles.addRow}>
+            <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-buyer' as any)}>
+              <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.row}>
+          {filteredBuyers.map((b) => (
             <View key={b.id} style={styles.card}>
               <Image source={b.avatar || require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
               <View style={styles.cardBody}>

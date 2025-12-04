@@ -1,112 +1,49 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../context/AuthContext';
 
 export default function SignInScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { signIn } = useAuth();
 
   const handleSignIn = () => {
-    // Mock user data - replace with actual API call
-    const userData = {
-      id: '1',
-      email: email,
-      firstName: 'John',
-      lastName: 'Doe',
-    };
-    
-    signIn(userData);
-    router.replace('/(tabs)/profile');
+    router.push('/sign-in-form');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButtonAbsolute}>
-        <Text style={styles.backButtonText}>Back</Text>
+      <TouchableOpacity onPress={() => router.back()} style={styles.authBackButton}>
+        <Text style={styles.authBackButtonText}>Back</Text>
       </TouchableOpacity>
-
-      <Text style={styles.title}>Sign in</Text>
-
-      <View style={styles.formContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#777"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#777"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-          <Text style={styles.buttonText}>Sign in</Text>
+      <View style={styles.authPrompt}>
+        <Ionicons name="lock-closed-outline" size={48} color="#5A7A8C" />
+        <Text style={styles.authPromptTitle}>Sign In Required</Text>
+        <Text style={styles.authPromptText}>Please sign in to continue.</Text>
+        <TouchableOpacity
+          style={styles.authPromptButton}
+          onPress={handleSignIn}
+        >
+          <Text style={styles.authPromptButtonText}>Sign In</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.createAccountButton} onPress={() => router.push('/create-account')}>
-          <Text style={styles.createAccountText}>Create account</Text>
+        <TouchableOpacity
+          style={styles.authCreateAccountButton}
+          onPress={() => router.push('/create-account')}
+        >
+          <Text style={styles.authCreateAccountText}>Create Account</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f9fa',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    width: '75%',
-    borderWidth: 1,
-    borderColor: '#e6e6e6',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 14,
-    backgroundColor: '#fbfbfb',
-    fontSize: 16,
-    color: '#111',
-    textAlign: 'center',
-  },
-  headerRow: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    marginBottom: 10,
-  },
-  backButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  backButtonText: {
-    color: '#5A7A8C',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  backButtonAbsolute: {
+  authBackButton: {
     position: 'absolute',
     top: 60,
     left: 20,
@@ -114,30 +51,50 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     zIndex: 20,
   },
-  formContainer: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  button: {
-    width: '75%',
-    backgroundColor: '#5A7A8C',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '700',
+  authBackButtonText: {
+    color: '#5A7A8C',
     fontSize: 16,
+    fontWeight: '600',
   },
-  createAccountButton: {
-    marginTop: 12,
-    width: '75%',
+  authPrompt: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  authPromptTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  authPromptText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  authPromptButton: {
+    backgroundColor: '#5A7A8C',
+    paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    marginBottom: 12,
   },
-    createAccountText: {
-      color: '#5A7A8C',
-    }
-  });
+  authPromptButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  authCreateAccountButton: {
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  authCreateAccountText: {
+    color: '#5A7A8C',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
