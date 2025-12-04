@@ -146,6 +146,64 @@ const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
           </View>
         </View>
 
+        {/* Your Business Listings Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Business Listings ({userBusinesses.length})</Text>
+          { 0 > 0 ? (
+            userBusinesses.map((b) => (
+              <ItemCard
+                key={b.id}
+                id={b.owner_id.toString()}
+                name={b.name}
+                type="business"
+                industryOrTitle={b.industry}
+                onView={handleViewDetails}
+                onEdit={handleEditBusiness}
+              />
+            ))
+          ) : (
+            <View style={styles.placeholderCard}>
+                <Text style={styles.placeholderText}>No business listings created.</Text>
+                <TouchableOpacity 
+                    style={styles.addButton} 
+                    onPress={() => router.push('/add-business' as any)}
+                >
+                    <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                    <Text style={styles.addButtonText}>Add New Listing</Text>
+                </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {/* Your Buyer Profiles Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Buyer Profiles ({userBuyers.length})</Text>
+          {userBuyers.length > 0 ? (
+            userBuyers.map((b) => (
+              <ItemCard
+                key={b.id}
+                id={b.user_id.toString()}
+                name={b.title}
+                type="buyer"
+                industryOrTitle={b.title}
+                onView={handleViewDetails}
+                onEdit={handleEditBuyer}
+              />
+            ))
+          ) : (
+            <View style={styles.placeholderCard}>
+                <Text style={styles.placeholderText}>No buyer profiles created.</Text>
+                <TouchableOpacity 
+                    style={styles.addButton} 
+                    onPress={() => router.push('/add-buyer' as any)}
+                >
+                    <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                    <Text style={styles.addButtonText}>Add New Profile</Text>
+                </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
         {/* Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
@@ -174,63 +232,6 @@ const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
             </TouchableOpacity>
           </View>
         </View>
-        {/* Your Business Listings Section */}
-<View style={styles.section}>
-  <Text style={styles.sectionTitle}>Your Business Listings ({userBusinesses.length})</Text>
-  { 0 > 0 ? (
-    userBusinesses.map((b) => (
-      <ItemCard
-        key={b.id}
-        id={b.owner_id.toString()}
-        name={b.name}
-        type="business"
-        industryOrTitle={b.industry}
-        onView={handleViewDetails}
-        onEdit={handleEditBusiness}
-      />
-    ))
-  ) : (
-    <View style={styles.placeholderCard}>
-        <Text style={styles.placeholderText}>No business listings created.</Text>
-        <TouchableOpacity 
-            style={styles.addButton} 
-            onPress={() => router.push('/add-business' as any)}
-        >
-            <Ionicons name="add-circle-outline" size={20} color="#fff" />
-            <Text style={styles.addButtonText}>Add New Listing</Text>
-        </TouchableOpacity>
-    </View>
-  )}
-</View>
-
-{/* Your Buyer Profiles Section */}
-<View style={styles.section}>
-  <Text style={styles.sectionTitle}>Your Buyer Profiles ({userBuyers.length})</Text>
-  {userBuyers.length > 0 ? (
-    userBuyers.map((b) => (
-      <ItemCard
-        key={b.id}
-        id={b.user_id.toString()}
-        name={b.title}
-        type="buyer"
-        industryOrTitle={b.title}
-        onView={handleViewDetails}
-        onEdit={handleEditBuyer}
-      />
-    ))
-  ) : (
-    <View style={styles.placeholderCard}>
-        <Text style={styles.placeholderText}>No buyer profiles created.</Text>
-        <TouchableOpacity 
-            style={styles.addButton} 
-            onPress={() => router.push('/add-buyer' as any)}
-        >
-            <Ionicons name="add-circle-outline" size={20} color="#fff" />
-            <Text style={styles.addButtonText}>Add New Profile</Text>
-        </TouchableOpacity>
-    </View>
-  )}
-</View>
 
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>

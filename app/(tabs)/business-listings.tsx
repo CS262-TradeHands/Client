@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
@@ -14,7 +14,7 @@ function formatCurrency(value?: number) {
 export default function BusinessListingsScreen() {
   const router = useRouter();
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth(); // changed: include user
 
   // search state and filtering
   const [query, setQuery] = useState('');
@@ -46,17 +46,39 @@ export default function BusinessListingsScreen() {
     loadListings();
   }, []);
 
-  const filteredListings = listings.filter((l) => {
+  const filteredListings = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      (l.name ?? '').toLowerCase().includes(q) ||
-      (l.industry ?? '').toLowerCase().includes(q) ||
-      (l.city ?? '').toLowerCase().includes(q) ||
-      (l.state ?? '').toLowerCase().includes(q) ||
-      (l.country ?? '').toLowerCase().includes(q)
-    );
-  });
+    if (!q) return listings;
+    return listings.filter((l) => {
+      return (
+        (l.name ?? '').toLowerCase().includes(q) ||
+        (l.industry ?? '').toLowerCase().includes(q) ||
+        (l.city ?? '').toLowerCase().includes(q) ||
+        (l.state ?? '').toLowerCase().includes(q) ||
+        (l.country ?? '').toLowerCase().includes(q)
+      );
+    });
+  }, [listings, query]);
+
+  // New: derive sections while keeping styling
+  const currentUserId = user?.id?.toString?.() ?? 'anonymous';
+  const myListings = useMemo(() => {
+    return filteredListings.filter((l) => {
+      const ownerMatch = String(l.owner_id ?? '') === currentUserId;
+      const connectedMatch = Array.isArray((l as any).connectedUserIds) && (l as any).connectedUserIds.includes(currentUserId);
+      return ownerMatch || connectedMatch;
+    });
+  }, [filteredListings, currentUserId]);
+
+  const publicListings = useMemo(() => {
+    return filteredListings.filter((l) => {
+      const isMineOrConnected =
+        String(l.owner_id ?? '') === currentUserId ||
+        (Array.isArray((l as any).connectedUserIds) && (l as any).connectedUserIds.includes(currentUserId));
+      const isPublic = (l as any).is_public !== false; // default to public if not provided
+      return isPublic && !isMineOrConnected;
+    });
+  }, [filteredListings, currentUserId]);
 
   const handleViewDetails = (index: number) => {
     // Require sign-in to view details
@@ -84,18 +106,18 @@ export default function BusinessListingsScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Restored: regular header without blur/animation */}
       <View style={[styles.header, isAuthenticated && styles.headerAuthenticated]}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
-            {isAuthenticated ? 'YOUR Business Dashboard' : 'Welcome to TradeHands'}
-          </Text>
-          <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
-            {isAuthenticated ? 'Browse YOUR listings and manage connections' : 'Find your perfect business opportunity'}
-          </Text>
-        </View>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
+              {isAuthenticated ? 'Business Dashboard' : 'Welcome to TradeHands'}
+            </Text>
+            <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
+              {isAuthenticated ? 'Browse listings and manage connections' : 'Find your perfect business opportunity'}
+            </Text>
+          </View>
 
-          {/* Inbox icon (top-right). If not signed in, prompt to sign in. When signed-in, open inbox. */}
           <Pressable
             onPress={() => {
               if (isAuthenticated) {
@@ -116,7 +138,6 @@ export default function BusinessListingsScreen() {
           </Pressable>
         </View>
 
-        {/* Search input in header */}
         <View style={styles.searchRow}>
           <TextInput
             placeholder="Search for businesses"
@@ -128,7 +149,6 @@ export default function BusinessListingsScreen() {
           />
         </View>
 
-        {/* Results count directly below search */}
         <View style={styles.resultsRowHeader}>
           <Text style={styles.resultsCount}>
             {filteredListings.length} business{filteredListings.length !== 1 ? 'es' : ''} found
@@ -136,29 +156,31 @@ export default function BusinessListingsScreen() {
         </View>
       </View>
 
-      {/* Business Listings */}
       <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
-
+        {/* Add button row */}
         <View style={styles.addRow}>
           <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
             <Text style={styles.addButtonText}>+ Add a business listing</Text>
           </TouchableOpacity>
         </View>
-        
-        {filteredListings.map((listing, index) => (
-          <View key={listing.id || `listing-${index}`} style={styles.businessCard}>
+
+        {/* My Listings Section */}
+        <Text style={styles.resultsCount}>My Matched Listings ({myListings.length})</Text>
+
+        {myListings.map((listing, index) => (
+          <View key={listing.id || `my-listing-${index}`} style={styles.businessCard}>
             <View style={styles.cardHeader}>
               <Text style={styles.businessName}>{listing.name}</Text>
               <View style={styles.industryBadge}>
                 <Text style={styles.industryBadgeText}>{listing.industry}</Text>
               </View>
             </View>
-            
+
             <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
               <Text style={styles.businessLocation}>{listing.city}</Text>
             </ProtectedInfo>
             <Text style={styles.businessDescription}>{listing.description}</Text>
-            
+
             <View style={styles.businessDetails}>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Asking Price</Text>
@@ -182,8 +204,8 @@ export default function BusinessListingsScreen() {
                 <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
               </View>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.viewDetailsButton}
               onPress={() => handleViewDetails(index)}
             >
@@ -191,10 +213,69 @@ export default function BusinessListingsScreen() {
             </TouchableOpacity>
           </View>
         ))}
-        
-        {filteredListings.length === 0 && (
+
+        {myListings.length === 0 && (
           <View style={styles.noResults}>
-            <Text style={styles.noResultsText}>No businesses found matching your criteria</Text>
+            <Text style={styles.noResultsText}>No listings connected to you yet</Text>
+            <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>
+          </View>
+        )}
+
+        {/* Public Listings Section */}
+        <Text style={[styles.resultsCount, { marginTop: 16 }]}>
+          Public Listings ({publicListings.length})
+        </Text>
+
+        {publicListings.map((listing, index) => (
+          <View key={listing.id || `public-listing-${index}`} style={styles.businessCard}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.businessName}>{listing.name}</Text>
+              <View style={styles.industryBadge}>
+                <Text style={styles.industryBadgeText}>{listing.industry}</Text>
+              </View>
+            </View>
+
+            <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
+              <Text style={styles.businessLocation}>{listing.city}</Text>
+            </ProtectedInfo>
+            <Text style={styles.businessDescription}>{listing.description}</Text>
+
+            <View style={styles.businessDetails}>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Asking Price</Text>
+                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
+                  <Text style={styles.detailValue}>
+                    {formatCurrency(listing.asking_price_lower_bound)}
+                    {listing.asking_price_upper_bound && listing.asking_price_lower_bound !== listing.asking_price_upper_bound
+                      ? ` - ${formatCurrency(listing.asking_price_upper_bound)}`
+                      : ''}
+                  </Text>
+                </ProtectedInfo>
+              </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Employees</Text>
+                <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
+                  <Text style={styles.detailValue}>{listing.employees}</Text>
+                </ProtectedInfo>
+              </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Established</Text>
+                <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.viewDetailsButton}
+              onPress={() => handleViewDetails(index)}
+            >
+              <Text style={styles.viewDetailsButtonText}>View Details</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+
+        {publicListings.length === 0 && (
+          <View style={styles.noResults}>
+            <Text style={styles.noResultsText}>No public listings found</Text>
             <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
           </View>
         )}
@@ -247,7 +328,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   headerAuthenticated: {
-    backgroundColor: '#5A7A8C', // primary
+    backgroundColor: '#5A7A8C',
   },
   titleAuthenticated: {
     color: '#F5F1ED', // warm-neutral
@@ -481,24 +562,32 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   addRow: { 
+    // center the button within the row
     width: '100%', 
     alignItems: 'center', 
     marginTop: 14,
     marginBottom: 16
   },
   addButton: {
-    width: '92%',
+    // center the button itself
+    alignSelf: 'center',
+    width: undefined,
+    paddingHorizontal: 12,
     backgroundColor: '#2B4450',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
   },
-  addButtonText: { color: '#fff', fontWeight: '700' },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
   },
   modalContent: {
     width: '86%',
