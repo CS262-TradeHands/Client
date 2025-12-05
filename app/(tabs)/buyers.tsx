@@ -1,97 +1,11 @@
+import { Buyer } from '@/types/buyer';
+import { User } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
-import { useAuth } from '../../context/AuthContext'; // Adjusted the path
-
-interface Buyer {
-  id: string;
-  name: string;
-  city: string;
-  title?: string;
-  avatar?: any;
-  bio?: string;
-  lookingFor?: string[];
-  budget?: string;
-  experience?: string;
-  timeline?: string;
-}
-
-const mockBuyers: Buyer[] = [
-  {
-    id: '1',
-    name: 'Khaled',
-    city: 'San Francisco, CA',
-    title: 'Investor / Entrepreneur',
-    avatar: require('../../assets/images/mii/buyer1.png'),
-    bio: 'Serial entrepreneur with 15+ years of experience building and scaling tech companies.',
-    lookingFor: ['Tech Companies', 'SaaS Businesses', 'E-commerce'],
-    budget: '$500K - $2M',
-    experience: '15+ years in tech entrepreneurship',
-    timeline: 'Ready to close within 3-6 months'
-  },
-  {
-    id: '2',
-    name: 'Miriam',
-    city: 'Austin, TX',
-    title: 'Retail Buyer',
-    avatar: require('../../assets/images/mii/buyer2.png'),
-    bio: 'Experienced retail operator looking to expand portfolio with established businesses.',
-    lookingFor: ['Retail Stores', 'Boutiques', 'Specialty Shops'],
-    budget: '$200K - $800K',
-    experience: '10 years in retail management',
-    timeline: 'Flexible, evaluating opportunities'
-  },
-  {
-    id: '3',
-    name: 'Bobby',
-    city: 'Denver, CO',
-    title: 'Service Business Investor',
-    avatar: require('../../assets/images/mii/buyer3.png'),
-    bio: 'Private investor seeking profitable service-based businesses with recurring revenue.',
-    lookingFor: ['Consulting Firms', 'Marketing Agencies', 'Professional Services'],
-    budget: '$300K - $1M',
-    experience: '8 years in service business operations',
-    timeline: 'Actively searching'
-  },
-  {
-    id: '4',
-    name: 'Mickey',
-    city: 'Portland, OR',
-    title: 'Brewery Enthusiast',
-    avatar: require('../../assets/images/mii/buyer4.png'),
-    bio: 'Craft beer enthusiast looking to acquire established breweries or taprooms.',
-    lookingFor: ['Breweries', 'Taprooms', 'Bars & Pubs'],
-    budget: '$400K - $1.5M',
-    experience: '5 years in hospitality industry',
-    timeline: '6-12 months'
-  },
-  {
-    id: '5',
-    name: 'Sandra',
-    city: 'Miami, FL',
-    title: 'Healthcare Investor',
-    avatar: require('../../assets/images/mii/buyer5.png'),
-    bio: 'Healthcare professional seeking to acquire medical practices and healthcare services.',
-    lookingFor: ['Medical Practices', 'Dental Clinics', 'Healthcare Services'],
-    budget: '$600K - $3M',
-    experience: '12 years in healthcare administration',
-    timeline: 'Ready to move quickly on the right opportunity'
-  },
-  {
-    id: '6',
-    name: 'Alex',
-    city: 'Seattle, WA',
-    title: 'Tech Acquirer',
-    avatar: require('../../assets/images/mii/buyer6.png'),
-    bio: 'Tech executive looking to acquire software companies and tech-enabled services.',
-    lookingFor: ['Software Companies', 'Mobile Apps', 'SaaS Platforms'],
-    budget: '$750K - $5M',
-    experience: '20 years in tech industry',
-    timeline: 'Evaluating multiple opportunities'
-  },
-];
+import { useAuth } from '../../context/AuthContext';
 
 export default function BuyerScreen() {
   const router = useRouter();
@@ -100,18 +14,25 @@ export default function BuyerScreen() {
   const { isAuthenticated, user } = useAuth(); // include user
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
 
+  const [buyers, setBuyers] = useState<Buyer[]>([]); // State for buyers
+  const [users, setUsers] = useState<User[]>([]); // State for user data
+  const [buyersLoading, setBuyersLoading] = useState(true); // Loading state for buyers
+  const [usersLoading, setUsersLoading] = useState(true); // Loading state for users
+
   // Search filter unchanged
   const filteredBuyers = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return mockBuyers;
-    return mockBuyers.filter((b) => {
+    if (!q) return buyers;
+    return buyers.filter((b) => {
       return (
-        b.name.toLowerCase().includes(q) ||
+        // this grossness finds the corresponding user information for the buyer in question
+        users.find(user => user.user_id === b.user_id)!.first_name.toLowerCase().includes(q) ||
+        users.find(user => user.user_id === b.user_id)!.last_name.toLowerCase().includes(q) ||
         b.city.toLowerCase().includes(q) ||
         (b.title || '').toLowerCase().includes(q)
       );
     });
-  }, [query]);
+  }, [query, buyers, users]);
 
   // New: derive sections
   const currentUserId = user?.id?.toString?.() ?? 'anonymous';
@@ -132,6 +53,47 @@ export default function BuyerScreen() {
       return isPublic && !isMineOrConnected;
     });
   }, [filteredBuyers, currentUserId]);
+
+  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
+
+  async function fetchBuyerData() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/buyers`);
+      const buyerData = await response.json();
+      setBuyers(buyerData);
+    } catch (error) {
+      console.error('Error fetching buyers:', error);
+    } finally {
+      setBuyersLoading(false);
+    }
+  }
+
+  async function fetchUserData(buyers: Buyer[]) {
+    try {
+      const userDetails = await Promise.all(
+        buyers.map(async (buyer) => {
+          const response = await fetch(`${API_BASE_URL}/users/${buyer.user_id}`);
+          const userData = await response.json();
+          return userData;
+        })
+      );
+      setUsers(userDetails);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setUsersLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchBuyerData();
+  }, []);
+
+  useEffect(() => {
+    if (buyers.length > 0) {
+      fetchUserData(buyers);
+    }
+  }, [buyers]);
 
   return (
     <View style={styles.container}>
@@ -196,33 +158,40 @@ export default function BuyerScreen() {
           {/* My Matched Buyers Section (restored) */}
           <Text style={styles.resultsCount}>My Matched Buyers ({myBuyers.length})</Text>
           <View style={styles.row}>
-            {myBuyers.map((b) => (
-              <View key={b.id} style={styles.card}>
-                <Image source={b.avatar || require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
-                <View style={styles.cardBody}>
-                  <Text style={styles.buyerName}>{b.name}</Text>
-                  <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                    <Text style={styles.buyerCity}>{b.city}</Text>
-                  </ProtectedInfo>
-                  <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                    <Text style={styles.buyerInterests}>{b.title}</Text>
-                  </ProtectedInfo>
-                </View>
-                <TouchableOpacity
-                  style={styles.moreBtn}
-                  onPress={() => {
-                    if (isAuthenticated) {
-                      setSelectedBuyer(b);
-                    } else {
-                      setAuthPromptVisible(true);
-                    }
-                  }}
-                >
+            {buyersLoading || usersLoading ? (
+              <Text>Loading buyers...</Text>
+            ) : (
+              myBuyers.map((b, index) => (
+                <View key={b.buyer_id || `my-buyer-${index}`} style={styles.card}>
+                  {users.find(user => user.user_id === b.user_id)!.profile_image_url ? 
+                  <Image source={{uri: users.find(user => user.user_id === b.user_id)!.profile_image_url }} style={styles.avatarImage} />
+                  :
+                  <Image source={require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
+                  }
+                  <View style={styles.cardBody}>
+                    <Text style={styles.buyerName}>{users.find(user => user.user_id === b.user_id)!.first_name} {users.find(user => user.user_id === b.user_id)!.last_name}</Text>
+                    <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+                      <Text style={styles.buyerCity}>{b.city}</Text>
+                    </ProtectedInfo>
+                    <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+                      <Text style={styles.buyerInterests}>{b.title}</Text>
+                    </ProtectedInfo>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.moreBtn}
+                    onPress={() => {
+                      if (isAuthenticated) {
+                        setSelectedBuyer(b);
+                      } else {
+                        setAuthPromptVisible(true);
+                      }
+                    }}
+                  >
                   <Text style={styles.moreBtnText}>click for more info</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
+                  </TouchableOpacity>
+                </View>
+            )))}
+          </View> 
           {myBuyers.length === 0 && (
             <View style={styles.noResults}>
               <Text style={styles.noResultsText}>No listings connected to you yet</Text>
@@ -233,11 +202,18 @@ export default function BuyerScreen() {
           {/* Public Buyers Section */}
           <Text style={[styles.resultsCount, { marginTop: 12 }]}>Public Buyers ({publicBuyers.length})</Text>
           <View style={styles.row}>
-            {publicBuyers.map((b) => (
-              <View key={b.id} style={styles.card}>
-                <Image source={b.avatar || require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
+            {buyersLoading || usersLoading ? (
+              <Text>Loading buyers...</Text>
+            ) : (
+            publicBuyers.map((b, index) => (
+              <View key={b.buyer_id || `public-buyer-${index}`} style={styles.card}>
+                {users.find(user => user.user_id === b.user_id)!.profile_image_url ? 
+                <Image source={{uri: users.find(user => user.user_id === b.user_id)!.profile_image_url }} style={styles.avatarImage} />
+                :
+                <Image source={require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
+                }
                 <View style={styles.cardBody}>
-                  <Text style={styles.buyerName}>{b.name}</Text>
+                  <Text style={styles.buyerName}>{users.find(user => user.user_id === b.user_id)!.first_name} {users.find(user => user.user_id === b.user_id)!.last_name}</Text>
                   <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
                     <Text style={styles.buyerCity}>{b.city}</Text>
                   </ProtectedInfo>
@@ -258,7 +234,7 @@ export default function BuyerScreen() {
                   <Text style={styles.moreBtnText}>click for more info</Text>
                 </TouchableOpacity>
               </View>
-            ))}
+            )))}
           </View>
           {publicBuyers.length === 0 && (
             <View style={styles.noResults}>
@@ -287,8 +263,12 @@ export default function BuyerScreen() {
 
                 {/* Buyer Info */}
                 <View style={styles.buyerModalBody}>
-                  <Image source={selectedBuyer.avatar} style={styles.buyerModalAvatar} />
-                  <Text style={styles.buyerModalName}>{selectedBuyer.name}</Text>
+                  {users.find(user => user.user_id === selectedBuyer.user_id)!.profile_image_url ? 
+                  <Image source={{uri: users.find(user => user.user_id === selectedBuyer.user_id)!.profile_image_url }} style={styles.buyerModalAvatar} />
+                  :
+                  <Image source={require('../../assets/images/handshake-logo.png')} style={styles.buyerModalAvatar} />
+                  }
+                  <Text style={styles.buyerModalName}>{users.find(user => user.user_id === selectedBuyer.user_id)!.first_name} {users.find(user => user.user_id === selectedBuyer.user_id)!.last_name}</Text>
                   <Text style={styles.buyerModalTitle}>{selectedBuyer.title}</Text>
                   <View style={styles.buyerModalLocation}>
                     <Ionicons name="location-outline" size={16} color="#666" />
@@ -298,14 +278,14 @@ export default function BuyerScreen() {
                   {/* Bio */}
                   <View style={styles.buyerModalSection}>
                     <Text style={styles.buyerModalSectionTitle}>About</Text>
-                    <Text style={styles.buyerModalBio}>{selectedBuyer.bio}</Text>
+                    <Text style={styles.buyerModalBio}>{selectedBuyer.about}</Text>
                   </View>
 
                   {/* Looking For */}
                   <View style={styles.buyerModalSection}>
                     <Text style={styles.buyerModalSectionTitle}>Looking For</Text>
                     <View style={styles.buyerModalTags}>
-                      {selectedBuyer.lookingFor?.map((item, index) => (
+                      {selectedBuyer.industries?.map((item, index) => (
                         <View key={index} style={styles.buyerModalTag}>
                           <Text style={styles.buyerModalTagText}>{item}</Text>
                         </View>
@@ -313,30 +293,32 @@ export default function BuyerScreen() {
                     </View>
                   </View>
 
-                  {/* Investment Details */}
-                  <View style={styles.buyerModalSection}>
+                    {/* Investment Details */}
+                    <View style={styles.buyerModalSection}>
                     <Text style={styles.buyerModalSectionTitle}>Investment Details</Text>
                     <View style={styles.buyerModalDetails}>
                       <View style={styles.buyerModalDetailRow}>
-                        <Ionicons name="cash-outline" size={20} color="#5A7A8C" />
-                        <View style={styles.buyerModalDetailContent}>
-                          <Text style={styles.buyerModalDetailLabel}>Budget Range</Text>
-                          <Text style={styles.buyerModalDetailValue}>{selectedBuyer.budget}</Text>
-                        </View>
+                      <Ionicons name="cash-outline" size={20} color="#5A7A8C" />
+                      <View style={styles.buyerModalDetailContent}>
+                        <Text style={styles.buyerModalDetailLabel}>Budget Range</Text>
+                        <Text style={styles.buyerModalDetailValue}>
+                        ${Number(selectedBuyer.budget_range_lower).toLocaleString()} - ${Number(selectedBuyer.budget_range_higher).toLocaleString()}
+                        </Text>
+                      </View>
                       </View>
                       <View style={styles.buyerModalDetailRow}>
-                        <Ionicons name="briefcase-outline" size={20} color="#5A7A8C" />
-                        <View style={styles.buyerModalDetailContent}>
-                          <Text style={styles.buyerModalDetailLabel}>Experience</Text>
-                          <Text style={styles.buyerModalDetailValue}>{selectedBuyer.experience}</Text>
-                        </View>
+                      <Ionicons name="briefcase-outline" size={20} color="#5A7A8C" />
+                      <View style={styles.buyerModalDetailContent}>
+                        <Text style={styles.buyerModalDetailLabel}>Experience</Text>
+                        <Text style={styles.buyerModalDetailValue}>{selectedBuyer.experience}</Text>
+                      </View>
                       </View>
                       <View style={styles.buyerModalDetailRow}>
-                        <Ionicons name="time-outline" size={20} color="#5A7A8C" />
-                        <View style={styles.buyerModalDetailContent}>
-                          <Text style={styles.buyerModalDetailLabel}>Timeline</Text>
-                          <Text style={styles.buyerModalDetailValue}>{selectedBuyer.timeline}</Text>
-                        </View>
+                      <Ionicons name="time-outline" size={20} color="#5A7A8C" />
+                      <View style={styles.buyerModalDetailContent}>
+                        <Text style={styles.buyerModalDetailLabel}>Timeline</Text>
+                        <Text style={styles.buyerModalDetailValue}>{selectedBuyer.timeline}</Text>
+                      </View>
                       </View>
                     </View>
                   </View>
@@ -760,5 +742,14 @@ const styles = StyleSheet.create({
   noResultsSubtext: {
     fontSize: 14,
     color: '#999',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#666',
   },
 });
