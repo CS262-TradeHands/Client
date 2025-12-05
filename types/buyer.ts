@@ -6,7 +6,7 @@
  */
 
 export interface Buyer {
-    id: number;
+    buyer_id: number;
     user_id: number;
     title: string;
     about: string;
