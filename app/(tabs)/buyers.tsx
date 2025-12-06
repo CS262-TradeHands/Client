@@ -36,21 +36,34 @@ export default function BuyerScreen() {
 
   // New: derive sections
   const currentUserId = user?.id?.toString?.() ?? 'anonymous';
-  const myBuyers = useMemo(() => {
-    return filteredBuyers.filter((b: any) => {
-      const ownerMatch = String(b.ownerId ?? '') === currentUserId;
-      const connectedMatch = Array.isArray(b.connectedUserIds) && b.connectedUserIds.includes(currentUserId);
-      return ownerMatch || connectedMatch;
+  
+  // Separate counter for owned buyers only (buyers where user_id matches current user)
+  const ownedBuyers = useMemo(() => {
+    // If not authenticated or no valid user ID, return empty array
+    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+      return [];
+    }
+    return filteredBuyers.filter((b) => {
+      return String(b.user_id ?? '') === currentUserId;
     });
-  }, [filteredBuyers, currentUserId]);
+  }, [filteredBuyers, currentUserId, isAuthenticated, user?.id]);
+
+  // For now, myBuyers is the same as ownedBuyers (no connection logic yet)
+  const myBuyers = useMemo(() => {
+    // If not authenticated or no valid user ID, return empty array
+    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+      return [];
+    }
+    return filteredBuyers.filter((b) => {
+      return String(b.user_id ?? '') === currentUserId;
+    });
+  }, [filteredBuyers, currentUserId, isAuthenticated, user?.id]);
 
   const publicBuyers = useMemo(() => {
-    return filteredBuyers.filter((b: any) => {
-      const isMineOrConnected =
-        String(b.ownerId ?? '') === currentUserId ||
-        (Array.isArray(b.connectedUserIds) && b.connectedUserIds.includes(currentUserId));
-      const isPublic = b.is_public !== false; // default public if not specified
-      return isPublic && !isMineOrConnected;
+    return filteredBuyers.filter((b) => {
+      const isMine = String(b.user_id ?? '') === currentUserId;
+      const isPublic = (b as any).is_public !== false;
+      return isPublic && !isMine;
     });
   }, [filteredBuyers, currentUserId]);
 
@@ -94,6 +107,9 @@ export default function BuyerScreen() {
       fetchUserData(buyers);
     }
   }, [buyers]);
+
+  // New: view toggle state (matches | public)
+  const [viewMode, setViewMode] = useState<'matches' | 'public'>('matches');
 
   return (
     <View style={styles.container}>
@@ -144,104 +160,147 @@ export default function BuyerScreen() {
         <View style={styles.resultsRowHeader}>
           <Text style={styles.resultsCount}>{filteredBuyers.length} buyer{filteredBuyers.length !== 1 ? 's' : ''} found</Text>
         </View>
+        {/* Removed stray closing View here */}
+      </View>
 
+      <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
+        <View style={{ marginTop: 20 }} />
+        <Text style={[styles.resultsCount, { marginBottom: 8 }]}>
+          My Listings (0)
+        </Text>
+
+        <View style={styles.addRow}>
+          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-buyer' as any)}>
+        <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
+          </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+        {/* New: Browse toggle row placed right under the add button */}
+        <View style={styles.browseRow}>
+          <Text style={styles.browseLabel}>Browse:</Text>
+          <View style={styles.browseButtons}>
+        <TouchableOpacity
+          style={[styles.browseBtn, viewMode === 'matches' ? styles.browseBtnActive : styles.browseBtnInactive]}
+          onPress={() => setViewMode('matches')}
+        >
+          <Text style={[styles.browseBtnText, viewMode === 'matches' ? styles.browseBtnTextActive : styles.browseBtnTextInactive]}>
+            Matches
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.browseBtn, viewMode === 'public' ? styles.browseBtnActive : styles.browseBtnInactive]}
+          onPress={() => setViewMode('public')}
+        >
+          <Text style={[styles.browseBtnText, viewMode === 'public' ? styles.browseBtnTextActive : styles.browseBtnTextInactive]}>
+            Public
+          </Text>
+        </TouchableOpacity>
+          </View>
+        </View>
 
-          <View style={styles.addRow}>
-            <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-buyer' as any)}>
-              <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
+        {/* Single header that changes based on view mode */}
+        <Text style={[styles.resultsCount]}>
+          {viewMode === 'matches' 
+            ? `My Matched Buyers (${myBuyers.length})` 
+            : `Public Buyers (${publicBuyers.length})`}
+        </Text>
+        <View style={{ marginBottom: 16 }} />
+
+        {/* Existing sections wrapped with conditional display; content unchanged */}
+        {viewMode === 'matches' && (
+          <>
+        <View style={styles.row}>
+          {buyersLoading || usersLoading ? (
+            <Text>Loading buyers...</Text>
+          ) : (
+            myBuyers.map((b, index) => (
+          <View key={b.buyer_id || `my-buyer-${index}`} style={styles.card}>
+            {users.find(user => user.user_id === b.user_id)!.profile_image_url ? 
+            <Image source={{uri: users.find(user => user.user_id === b.user_id)!.profile_image_url }} style={styles.avatarImage} />
+            :
+            <Image source={require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
+            }
+            <View style={styles.cardBody}>
+              <Text style={styles.buyerName}>{users.find(user => user.user_id === b.user_id)!.first_name} {users.find(user => user.user_id === b.user_id)!.last_name}</Text>
+              <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+            <Text style={styles.buyerCity}>{b.city}</Text>
+              </ProtectedInfo>
+              <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+            <Text style={styles.buyerInterests}>{b.title}</Text>
+              </ProtectedInfo>
+            </View>
+            <TouchableOpacity
+              style={styles.moreBtn}
+              onPress={() => {
+            if (isAuthenticated) {
+              setSelectedBuyer(b);
+            } else {
+              setAuthPromptVisible(true);
+            }
+              }}
+            >
+              <Text style={styles.moreBtnText}>click for more info</Text>
             </TouchableOpacity>
           </View>
-
-          {/* My Matched Buyers Section (restored) */}
-          <Text style={styles.resultsCount}>My Matched Buyers ({myBuyers.length})</Text>
-          <View style={styles.row}>
-            {buyersLoading || usersLoading ? (
-              <Text>Loading buyers...</Text>
-            ) : (
-              myBuyers.map((b, index) => (
-                <View key={b.buyer_id || `my-buyer-${index}`} style={styles.card}>
-                  {users.find(user => user.user_id === b.user_id)!.profile_image_url ? 
-                  <Image source={{uri: users.find(user => user.user_id === b.user_id)!.profile_image_url }} style={styles.avatarImage} />
-                  :
-                  <Image source={require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
-                  }
-                  <View style={styles.cardBody}>
-                    <Text style={styles.buyerName}>{users.find(user => user.user_id === b.user_id)!.first_name} {users.find(user => user.user_id === b.user_id)!.last_name}</Text>
-                    <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                      <Text style={styles.buyerCity}>{b.city}</Text>
-                    </ProtectedInfo>
-                    <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                      <Text style={styles.buyerInterests}>{b.title}</Text>
-                    </ProtectedInfo>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.moreBtn}
-                    onPress={() => {
-                      if (isAuthenticated) {
-                        setSelectedBuyer(b);
-                      } else {
-                        setAuthPromptVisible(true);
-                      }
-                    }}
-                  >
-                  <Text style={styles.moreBtnText}>click for more info</Text>
-                  </TouchableOpacity>
-                </View>
-            )))}
+            ))
+            )}
           </View> 
           {myBuyers.length === 0 && (
             <View style={styles.noResults}>
-              <Text style={styles.noResultsText}>No listings connected to you yet</Text>
-              <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>
+          <Text style={styles.noResultsText}>No listings connected to you yet</Text>
+          <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>
             </View>
           )}
+        </>
+          )}
 
-          {/* Public Buyers Section */}
-          <Text style={[styles.resultsCount, { marginTop: 12 }]}>Public Buyers ({publicBuyers.length})</Text>
+          {viewMode === 'public' && (
+        <>
           <View style={styles.row}>
             {buyersLoading || usersLoading ? (
-              <Text>Loading buyers...</Text>
+          <Text>Loading buyers...</Text>
             ) : (
-            publicBuyers.map((b, index) => (
-              <View key={b.buyer_id || `public-buyer-${index}`} style={styles.card}>
-                {users.find(user => user.user_id === b.user_id)!.profile_image_url ? 
-                <Image source={{uri: users.find(user => user.user_id === b.user_id)!.profile_image_url }} style={styles.avatarImage} />
-                :
-                <Image source={require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
-                }
-                <View style={styles.cardBody}>
-                  <Text style={styles.buyerName}>{users.find(user => user.user_id === b.user_id)!.first_name} {users.find(user => user.user_id === b.user_id)!.last_name}</Text>
-                  <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                    <Text style={styles.buyerCity}>{b.city}</Text>
-                  </ProtectedInfo>
-                  <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
-                    <Text style={styles.buyerInterests}>{b.title}</Text>
-                  </ProtectedInfo>
-                </View>
-                <TouchableOpacity
-                  style={styles.moreBtn}
-                  onPress={() => {
-                    if (isAuthenticated) {
-                      setSelectedBuyer(b);
-                    } else {
-                      setAuthPromptVisible(true);
-                    }
-                  }}
-                >
-                  <Text style={styles.moreBtnText}>click for more info</Text>
-                </TouchableOpacity>
+          publicBuyers.map((b, index) => (
+            <View key={b.buyer_id || `public-buyer-${index}`} style={styles.card}>
+              {users.find(user => user.user_id === b.user_id)!.profile_image_url ? 
+              <Image source={{uri: users.find(user => user.user_id === b.user_id)!.profile_image_url }} style={styles.avatarImage} />
+              :
+              <Image source={require('../../assets/images/handshake-logo.png')} style={styles.avatarImage} />
+              }
+              <View style={styles.cardBody}>
+            <Text style={styles.buyerName}>{users.find(user => user.user_id === b.user_id)!.first_name} {users.find(user => user.user_id === b.user_id)!.last_name}</Text>
+            <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+              <Text style={styles.buyerCity}>{b.city}</Text>
+            </ProtectedInfo>
+            <ProtectedInfo signedIn={isAuthenticated} onPress={() => setAuthPromptVisible(true)}>
+              <Text style={styles.buyerInterests}>{b.title}</Text>
+            </ProtectedInfo>
               </View>
-            )))}
+              <TouchableOpacity
+            style={styles.moreBtn}
+            onPress={() => {
+              if (isAuthenticated) {
+                setSelectedBuyer(b);
+              } else {
+                setAuthPromptVisible(true);
+              }
+            }}
+              >
+            <Text style={styles.moreBtnText}>click for more info</Text>
+              </TouchableOpacity>
+            </View>
+          ))
+            )}
           </View>
           {publicBuyers.length === 0 && (
             <View style={styles.noResults}>
-              <Text style={styles.noResultsText}>No public listings found</Text>
-              <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
+          <Text style={styles.noResultsText}>No public listings found</Text>
+          <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
             </View>
           )}
+        </>
+          )}
+
         </ScrollView>
 
       {/* Buyer Detail Modal */}
@@ -465,6 +524,10 @@ const styles = StyleSheet.create({
   grid: {
     padding: 12,
     alignItems: 'stretch',
+  },
+  listingsContainer: {
+    paddingHorizontal: 12,
+    paddingBottom: 24,
   },
   resultsRowHeader: {
     paddingHorizontal: 12,
@@ -751,5 +814,48 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: '#666',
+  },
+
+  // New: browse toggle styles
+  browseRow: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  browseLabel: {
+    color: '#f0f0f0',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  browseButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  browseBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  browseBtnActive: {
+    backgroundColor: '#5A7A8C',
+    borderColor: '#5A7A8C',
+  },
+  browseBtnInactive: {
+    backgroundColor: 'transparent',
+    borderColor: '#9B8F82',
+  },
+  browseBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  browseBtnTextActive: {
+    color: '#fff',
+  },
+  browseBtnTextInactive: {
+    color: '#E8E3DC',
   },
 });

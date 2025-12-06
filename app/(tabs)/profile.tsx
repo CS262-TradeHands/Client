@@ -32,6 +32,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, isAuthenticated, signOut } = useAuth();
 
+  // TODO: Fetch actual user's businesses and buyers based on owner_id matching user.id
   const userBusinesses: Listing[] = [];
   const userBuyers: Buyer[] = [];
 
@@ -61,7 +62,6 @@ export default function ProfileScreen() {
   };
 
   const handleViewMatches = () => {
-    console.log('View Matches clicked');
     router.push('/algo');
   };
 
@@ -113,43 +113,13 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Account Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Information</Text>
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>First Name</Text>
-              <Text style={styles.infoValue}>{user?.firstName}</Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Last Name</Text>
-              <Text style={styles.infoValue}>{user?.lastName}</Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{user?.email}</Text>
-            </View>
-            {user?.phone && (
-              <>
-                <View style={styles.infoDivider} />
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Phone</Text>
-                  <Text style={styles.infoValue}>{user.phone}</Text>
-                </View>
-              </>
-            )}
-          </View>
-        </View>
-
         {/* Your Business Listings Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your Business Listings ({userBusinesses.length})</Text>
-          { 0 > 0 ? (
+          {userBusinesses.length > 0 ? (
             userBusinesses.map((b) => (
               <ItemCard
-                key={b.id}
+                key={b.business_id}
                 id={b.owner_id.toString()}
                 name={b.name}
                 type="business"
@@ -178,7 +148,7 @@ export default function ProfileScreen() {
           {userBuyers.length > 0 ? (
             userBuyers.map((b) => (
               <ItemCard
-                key={b.id}
+                key={b.buyer_id}
                 id={b.user_id.toString()}
                 name={b.title}
                 type="buyer"
