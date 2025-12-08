@@ -18,7 +18,7 @@ export interface Listing {
     asking_price_upper_bound: number;
     asking_price_lower_bound: number;
     description: string;
-    employees: string;
+    employees: number;
     years_in_operation: number;
     annual_revenue: number;
     monthly_revenue: number;
@@ -39,7 +39,7 @@ export interface ListingInput {
     asking_price_upper_bound: number;
     asking_price_lower_bound: number;
     description: string;
-    employees: string;
+    employees: number;
     years_in_operation: number;
     annual_revenue: number;
     monthly_revenue: number;

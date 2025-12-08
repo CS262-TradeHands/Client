@@ -130,8 +130,8 @@ export default function InboxScreen() {
     }
   }, [isAuthenticated, router]);
 
-  if (!isAuthenticated) return null;
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  if (!isAuthenticated) return null;
 
   return (
     <SafeAreaView style={styles.container}>
