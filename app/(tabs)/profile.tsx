@@ -28,6 +28,27 @@ const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView }:
   </View>
 );
 
+const FAQAccordionItem = ({ question, children }: { question: string, children: React.ReactNode }) => {
+  const [expanded, setExpanded] = React.useState(false);
+
+  return (
+    <View>
+      <TouchableOpacity
+        style={styles.settingRow}
+        onPress={() => setExpanded(!expanded)}
+      >
+        <Text style={styles.settingText}>{question}</Text>
+        <Text style={[styles.settingArrow, expanded && { transform: [{ rotate: '90deg' }] }]}>›</Text>
+      </TouchableOpacity>
+      {expanded && (
+        <View style={styles.faqAnswerContainer}>
+          {children}
+        </View>
+      )}
+    </View>
+  );
+};
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, isAuthenticated, signOut } = useAuth();
@@ -130,14 +151,14 @@ export default function ProfileScreen() {
             ))
           ) : (
             <View style={styles.placeholderCard}>
-                <Text style={styles.placeholderText}>No business listings created.</Text>
-                <TouchableOpacity 
-                    style={styles.addButton} 
-                    onPress={() => router.push('/add-business' as any)}
-                >
-                    <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                    <Text style={styles.addButtonText}>Add New Listing</Text>
-                </TouchableOpacity>
+              <Text style={styles.placeholderText}>No business listings created.</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => router.push('/add-business' as any)}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                <Text style={styles.addButtonText}>Add New Listing</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -159,16 +180,60 @@ export default function ProfileScreen() {
             ))
           ) : (
             <View style={styles.placeholderCard}>
-                <Text style={styles.placeholderText}>No buyer profiles created.</Text>
-                <TouchableOpacity 
-                    style={styles.addButton} 
-                    onPress={() => router.push('/add-buyer' as any)}
-                >
-                    <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                    <Text style={styles.addButtonText}>Add New Profile</Text>
-                </TouchableOpacity>
+              <Text style={styles.placeholderText}>No buyer profiles created.</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => router.push('/add-buyer' as any)}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                <Text style={styles.addButtonText}>Add New Profile</Text>
+              </TouchableOpacity>
             </View>
           )}
+        </View>
+
+        {/* FAQ Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
+          <View style={styles.infoCard}>
+            <FAQAccordionItem question="How do I create a business listing?">
+              <Text style={styles.faqAnswer}>
+                You can create a business listing once logged into an account. This can be done through the following steps:
+                {'\n'}• Navigate to the businesses page, indicated on the bottom left of the screen
+                {'\n'}• Click the “Add business listing” button at the top of the businesses page
+                {'\n'}• Insert the business name, industry, location, asking price, number of employees, years in operation, and a business description
+                {'\n'}• Click “submit listing.”
+              </Text>
+            </FAQAccordionItem>
+            <View style={styles.infoDivider} />
+            <FAQAccordionItem question="How do I create a buyer profile?">
+              <Text style={styles.faqAnswer}>
+                You can create a buyer profile once logged into an account. This can be done through the following steps:
+                {'\n'}• Navigate to the buyer page, indicated at the bottom middle of the screen
+                {'\n'}• Click the “Add buyer profile” button at the top of the buyers page
+                {'\n'}• Insert the title of your role, profile description, location, and business preferences.
+                {'\n'}• Click “submit listing.”
+              </Text>
+            </FAQAccordionItem>
+            <View style={styles.infoDivider} />
+            <FAQAccordionItem question="How do I edit my profile?">
+              <Text style={styles.faqAnswer}>
+                You can edit your profile information at any time. This can be done through the following steps:
+                {'\n'}• Navigate to the profile page
+                {'\n'}• Click the "Edit Profile" button next to your name
+                {'\n'}• Update your information and save changes.
+              </Text>
+            </FAQAccordionItem>
+            <View style={styles.infoDivider} />
+            <FAQAccordionItem question="How do I view my matches?">
+              <Text style={styles.faqAnswer}>
+                You can view your business matches in the settings. This can be done through the following steps:
+                {'\n'}• Navigate to the profile page
+                {'\n'}• Look for the "Settings" section
+                {'\n'}• Click on "View Matches" to see your compatible listings.
+              </Text>
+            </FAQAccordionItem>
+          </View>
         </View>
 
         {/* Settings */}
@@ -450,5 +515,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     marginLeft: 8,
+  },
+  faqAnswerContainer: {
+    paddingHorizontal: 0,
+    paddingBottom: 12,
+    paddingTop: 0,
+  },
+  faqAnswer: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
 });
