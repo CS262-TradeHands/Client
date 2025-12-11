@@ -10,7 +10,7 @@ export default function TabLayout() {
     <Tabs 
       initialRouteName="business-listings"
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#2B4450',
         tabBarStyle: {
           backgroundColor: '#f9f9f9',
         },
