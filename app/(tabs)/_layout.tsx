@@ -53,7 +53,7 @@ export default function TabLayout() {
           tabPress: (e) => {
             if (!isAuthenticated) {
               e.preventDefault();
-              router.push('/sign-in');
+              router.push('/sign-in-form');
             }
           },
         }}

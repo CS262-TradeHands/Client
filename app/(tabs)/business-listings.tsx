@@ -109,7 +109,7 @@ export default function BusinessListingsScreen() {
     if (isAuthenticated) {
       router.push('/add-business' as any);
     } else {
-      router.push('/sign-in');
+      setAuthPromptVisible(true);
     }
   };
 
@@ -339,12 +339,12 @@ export default function BusinessListingsScreen() {
         <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={closeAuthPrompt}>
           <Pressable style={styles.modalOverlay} onPress={closeAuthPrompt}>
             <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
-              <Text style={styles.modalTitle}>Log in to view details</Text>
+              <Text style={styles.modalTitle}>Log into TradeHands</Text>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalPrimary]}
                 onPress={() => {
                   closeAuthPrompt();
-                  router.push('/sign-in');
+                  router.push('/sign-in-form');
                 }}
               >
                 <Text style={styles.modalButtonText}>Returning user login</Text>

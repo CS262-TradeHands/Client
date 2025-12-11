@@ -51,7 +51,7 @@ const FAQAccordionItem = ({ question, children }: { question: string, children: 
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   // TODO: Fetch actual user's businesses and buyers based on owner_id matching user.id
   const userBusinesses: Listing[] = [];
@@ -81,37 +81,6 @@ export default function ProfileScreen() {
   const handleEditProfile = () => {
     router.push('/edit-profile');
   };
-
-  const handleViewMatches = () => {
-    router.push('/algo');
-  };
-
-  if (!isAuthenticated) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.authBackButton}>
-          <Text style={styles.authBackButtonText}>Back</Text>
-        </TouchableOpacity>
-        <View style={styles.authPrompt}>
-          <Ionicons name="lock-closed-outline" size={48} color="#5A7A8C" />
-          <Text style={styles.authPromptTitle}>Sign In Required</Text>
-          <Text style={styles.authPromptText}>Please sign in to view your profile.</Text>
-          <TouchableOpacity
-            style={styles.authPromptButton}
-            onPress={() => router.push('/sign-in')}
-          >
-            <Text style={styles.authPromptButtonText}>Sign In</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.authCreateAccountButton}
-            onPress={() => router.push('/create-account')}
-          >
-            <Text style={styles.authCreateAccountText}>Create Account</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -220,7 +189,7 @@ export default function ProfileScreen() {
               <Text style={styles.faqAnswer}>
                 You can edit your profile information at any time. This can be done through the following steps:
                 {'\n'}• Navigate to the profile page
-                {'\n'}• Click the "Edit Profile" button next to your name
+                {'\n'}• Click the &quot;Edit Profile&quot; button next to your name
                 {'\n'}• Update your information and save changes.
               </Text>
             </FAQAccordionItem>
@@ -229,8 +198,8 @@ export default function ProfileScreen() {
               <Text style={styles.faqAnswer}>
                 You can view your business matches in the settings. This can be done through the following steps:
                 {'\n'}• Navigate to the profile page
-                {'\n'}• Look for the "Settings" section
-                {'\n'}• Click on "View Matches" to see your compatible listings.
+                {'\n'}• Look for the &quot;Settings&quot; section
+                {'\n'}• Click on &quot;View Matches&quot; to see your compatible listings.
               </Text>
             </FAQAccordionItem>
           </View>
@@ -240,14 +209,6 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
           <View style={styles.infoCard}>
-            <TouchableOpacity
-              style={styles.settingRow}
-              onPress={handleViewMatches}
-            >
-              <Text style={styles.settingText}>View Matches</Text>
-              <Text style={styles.settingArrow}>›</Text>
-            </TouchableOpacity>
-            <View style={styles.infoDivider} />
             <TouchableOpacity style={styles.settingRow}>
               <Text style={styles.settingText}>Notifications</Text>
               <Text style={styles.settingArrow}>›</Text>
