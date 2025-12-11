@@ -93,8 +93,8 @@ export default function BusinessListingsScreen() {
     });
   }, [filteredListings, currentUserId]);
 
-  // New: view toggle state (matches | public)
-  const [viewMode, setViewMode] = useState<'matches' | 'public'>('matches');
+  // New: view toggle state (matches | public) - ensure default is 'public'
+  const [viewMode, setViewMode] = useState<'matches' | 'public'>('public');
 
   const handleViewDetails = (listingId: string) => {
     // Require sign-in to view details
@@ -186,14 +186,6 @@ export default function BusinessListingsScreen() {
           <Text style={styles.browseLabel}>Browse:</Text>
           <View style={styles.browseButtons}>
             <TouchableOpacity
-              style={[styles.browseBtn, viewMode === 'matches' ? styles.browseBtnActive : styles.browseBtnInactive]}
-              onPress={() => setViewMode('matches')}
-            >
-              <Text style={[styles.browseBtnText, viewMode === 'matches' ? styles.browseBtnTextActive : styles.browseBtnTextInactive]}>
-                Matches
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
               style={[styles.browseBtn, viewMode === 'public' ? styles.browseBtnActive : styles.browseBtnInactive]}
               onPress={() => setViewMode('public')}
             >
@@ -201,78 +193,26 @@ export default function BusinessListingsScreen() {
                 Public
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.browseBtn, viewMode === 'matches' ? styles.browseBtnActive : styles.browseBtnInactive]}
+              onPress={() => setViewMode('matches')}
+            >
+              <Text style={[styles.browseBtnText, viewMode === 'matches' ? styles.browseBtnTextActive : styles.browseBtnTextInactive]}>
+                Matches
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
         {/* Single header that changes based on view mode */}
         <Text style={styles.resultsCount}>
-          {viewMode === 'matches' 
-            ? `My Matched Listings (${myListings.length})` 
-            : `Public Listings (${publicListings.length})`}
+          {viewMode === 'public' 
+            ? `Public Listings (${publicListings.length})` 
+            : `My Matched Listings (${myListings.length})`}
         </Text>
         <View style={{ marginBottom: 16 }} />
 
         {/* Existing sections wrapped with conditional display; content unchanged */}
-        {viewMode === 'matches' && (
-          <>
-            {loading ? (
-              <Text>Loading...</Text>
-            ) : (
-              myListings.map((listing, index) => (
-                <View key={listing.business_id || `my-listing-${index}`} style={styles.businessCard}>
-                  {/* ...existing card content... */}
-                  <View style={styles.cardHeader}>
-                    <Text style={styles.businessName}>{listing.name}</Text>
-                    <View style={styles.industryBadge}>
-                      <Text style={styles.industryBadgeText}>{listing.industry}</Text>
-                    </View>
-                  </View>
-                  <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
-                    <Text style={styles.businessLocation}>{listing.city}</Text>
-                  </ProtectedInfo>
-                  <Text style={styles.businessDescription}>{listing.description}</Text>
-                  <View style={styles.businessDetails}>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Asking Price</Text>
-                      <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
-                        <Text style={styles.detailValue}>
-                          {formatCurrency(listing.asking_price_lower_bound)}
-                          {listing.asking_price_upper_bound && listing.asking_price_lower_bound !== listing.asking_price_upper_bound
-                            ? ` - ${formatCurrency(listing.asking_price_upper_bound)}`
-                            : ''}
-                        </Text>
-                      </ProtectedInfo>
-                    </View>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Employees</Text>
-                      <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
-                        <Text style={styles.detailValue}>{listing.employees}</Text>
-                      </ProtectedInfo>
-                    </View>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Established</Text>
-                      <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.viewDetailsButton}
-                    onPress={() => handleViewDetails(listing.business_id.toString())}
-                  >
-                    <Text style={styles.viewDetailsButtonText}>View Details</Text>
-                  </TouchableOpacity>
-                </View>
-              ))
-            )}
-
-            {myListings.length === 0 && !loading && (
-              <View style={styles.noResults}>
-                <Text style={styles.noResultsText}>No listings connected to you yet</Text>
-                <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>
-              </View>
-            )}
-          </>
-        )}
-
         {viewMode === 'public' && (
           <>
             {loading ? (
@@ -328,6 +268,66 @@ export default function BusinessListingsScreen() {
               <View style={styles.noResults}>
                 <Text style={styles.noResultsText}>No public listings found</Text>
                 <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
+              </View>
+            )}
+          </>
+        )}
+
+        {viewMode === 'matches' && (
+          <>
+            {loading ? (
+              <Text>Loading...</Text>
+            ) : (
+              myListings.map((listing, index) => (
+                <View key={listing.business_id || `my-listing-${index}`} style={styles.businessCard}>
+                  {/* ...existing card content... */}
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.businessName}>{listing.name}</Text>
+                    <View style={styles.industryBadge}>
+                      <Text style={styles.industryBadgeText}>{listing.industry}</Text>
+                    </View>
+                  </View>
+                  <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt} style={{ marginBottom: 6 }}>
+                    <Text style={styles.businessLocation}>{listing.city}</Text>
+                  </ProtectedInfo>
+                  <Text style={styles.businessDescription}>{listing.description}</Text>
+                  <View style={styles.businessDetails}>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Asking Price</Text>
+                      <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
+                        <Text style={styles.detailValue}>
+                          {formatCurrency(listing.asking_price_lower_bound)}
+                          {listing.asking_price_upper_bound && listing.asking_price_lower_bound !== listing.asking_price_upper_bound
+                            ? ` - ${formatCurrency(listing.asking_price_upper_bound)}`
+                            : ''}
+                        </Text>
+                      </ProtectedInfo>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Employees</Text>
+                      <ProtectedInfo signedIn={isAuthenticated} onPress={openAuthPrompt}>
+                        <Text style={styles.detailValue}>{listing.employees}</Text>
+                      </ProtectedInfo>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Established</Text>
+                      <Text style={styles.detailValue}>{listing.years_in_operation} years</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.viewDetailsButton}
+                    onPress={() => handleViewDetails(listing.business_id.toString())}
+                  >
+                    <Text style={styles.viewDetailsButtonText}>View Details</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+
+            {myListings.length === 0 && !loading && (
+              <View style={styles.noResults}>
+                <Text style={styles.noResultsText}>No listings connected to you yet</Text>
+                <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>
               </View>
             )}
           </>
