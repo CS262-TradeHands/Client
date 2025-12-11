@@ -4,8 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { useEffect, useState, useRef } from 'react';
+import { Dimensions, StyleSheet, Text, TouchableWithoutFeedback, View, Animated } from 'react-native';
 import 'react-native-reanimated';
 import { AuthProvider } from '../context/AuthContext';
 
@@ -73,25 +73,51 @@ export default function RootLayout() {
 
 export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
   const [videoFinished, setVideoFinished] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
-  // scale factor for the video
-  const VIDEO_SCALE = 2;
+  useEffect(() => {
+    // Fade in and scale animation for text
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1200,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        delay: 300,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   useEffect(() => {
     if (videoFinished) {
-      const timer = setTimeout(onFinish, 500);
-      return () => clearTimeout(timer);
+      // Fade out animation before finishing
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setTimeout(onFinish, 200);
+      });
     }
-  }, [videoFinished, onFinish]);
+  }, [videoFinished, onFinish, fadeAnim]);
 
   const handleSkip = () => {
     onFinish();
   };
 
   // Prepare expo-video player at top-level (hooks must be called unconditionally)
-  const videoSource = require('../assets/images/Firefly-logo.mp4');
+  const videoSource = require('../assets/images/simple.mp4');
   const player = useVideoPlayer(videoSource, (p) => {
     try {
+      p.muted = true; // Mute the video to avoid interrupting background audio
+      p.audioMixingMode = 'mixWithOthers'; // Allow background audio to continue
       (p as any)?.play?.();
       if ((p as any)?.onPlaybackStatusUpdate) {
         (p as any).onPlaybackStatusUpdate((status: any) => {
@@ -134,21 +160,41 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
         />
         <View style={styles.videoWrapper} pointerEvents="none">
           <VideoView
-            style={[styles.video, { transform: [{ scale: VIDEO_SCALE }] }]}
+            style={styles.video}
             player={player}
+            contentFit="contain"
           />
           <LinearGradient
-            colors={['transparent', 'rgba(10, 25, 41, 0.3)', 'rgba(10, 25, 41, 0.6)', '#0A1929']}
-            locations={[0, 0.3, 0.7, 1]}
+            colors={['transparent', 'rgba(10, 25, 41, 0.2)', 'rgba(10, 25, 41, 0.5)', 'rgba(10, 25, 41, 0.8)']}
+            locations={[0, 0.4, 0.7, 1]}
             style={styles.vignette}
           />
         </View>
-        <Text style={styles.welcomeText} pointerEvents="none">Welcome to TradeHands!</Text>
+        <Animated.Text 
+          style={[
+            styles.welcomeText,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            }
+          ]} 
+          pointerEvents="none"
+        >
+          Welcome to TradeHands!
+        </Animated.Text>
+        <Animated.Text 
+          style={[
+            styles.tapText,
+            { opacity: fadeAnim }
+          ]} 
+          pointerEvents="none"
+        >
+          Tap to continue
+        </Animated.Text>
       </View>
     </TouchableWithoutFeedback>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -163,6 +209,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+    backgroundColor: '#000000',
   },
   video: {
     width: '100%',
@@ -176,13 +223,32 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   welcomeText: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 2,
+    color: '#E8E8E8',
+    letterSpacing: 1.5,
     fontFamily: 'System',
+    textAlign: 'center',
     position: 'absolute',
-    bottom: 50,
+    bottom: height * 0.25,
+    left: 20,
+    right: 20,
+    zIndex: 10,
+    textShadowColor: 'rgba(255, 255, 255, 0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 30,
+  },
+  tapText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.4)',
+    letterSpacing: 1,
+    fontFamily: 'System',
+    textAlign: 'center',
+    position: 'absolute',
+    bottom: height * 0.15,
+    left: 0,
+    right: 0,
     zIndex: 10,
   },
 });
