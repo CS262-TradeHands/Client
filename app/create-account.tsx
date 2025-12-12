@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 
@@ -18,12 +18,12 @@ export default function SignInScreen() {
   const [emailError, setEmailError] = useState('');
   const [confirmEmailError, setConfirmEmailError] = useState('');
 
-  const validateEmail = (value) => {
+  const validateEmail = (value: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(value.trim());
   };
 
-  const handleEmailChange = (value) => {
+  const handleEmailChange = (value: string) => {
     setEmail(value);
     if (!validateEmail(value)) {
       setEmailError('Please enter a valid email.');
@@ -32,7 +32,7 @@ export default function SignInScreen() {
     }
   };
 
-  const handleConfirmEmailChange = (value) => {
+  const handleConfirmEmailChange = (value: string) => {
     setConfirmEmail(value);
     if (value !== email) {
       setConfirmEmailError('Emails do not match.');
@@ -61,6 +61,12 @@ export default function SignInScreen() {
       <TouchableOpacity onPress={() => router.back()} style={styles.backButtonAbsolute}>
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
+
+      <Image
+        source={require('../assets/images/handshake-logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
 
       <Text style={styles.title}>Create a new account</Text>
 
@@ -93,7 +99,6 @@ export default function SignInScreen() {
           autoCapitalize="none"
         />
         {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-
 
         <TextInput
           style={styles.input}
@@ -216,5 +221,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 10,
     textAlign: 'left',
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    alignSelf: 'center',
   },
 });

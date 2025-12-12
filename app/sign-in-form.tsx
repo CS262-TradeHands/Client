@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 
@@ -29,7 +29,13 @@ export default function SignInFormScreen() {
                 <Text style={styles.backButtonText}>Back</Text>
             </TouchableOpacity>
 
-            <Text style={styles.title}>Sign in</Text>
+            <Image
+                source={require('../assets/images/handshake-logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
+            />
+
+            <Text style={styles.title}>Sign into TradeHands</Text>
 
             <View style={styles.formContainer}>
                 <TextInput
@@ -128,5 +134,10 @@ const styles = StyleSheet.create({
     },
     createAccountText: {
         color: '#5A7A8C',
-    }
+    },
+    logo: {
+        width: 150,
+        height: 150,
+        alignSelf: 'center',
+    },
 });

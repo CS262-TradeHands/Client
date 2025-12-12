@@ -108,6 +108,14 @@ export default function BuyerScreen() {
     }
   }, [buyers]);
 
+  const handleAddBuyerProfile = () => {
+    if (isAuthenticated) {
+      router.push('/add-buyer' as any);
+    } else {
+      setAuthPromptVisible(true);
+    }
+  };
+
   // New: view toggle state (matches | public)
   const [viewMode, setViewMode] = useState<'matches' | 'public'>('public');
 
@@ -117,10 +125,10 @@ export default function BuyerScreen() {
         <View style={styles.headerRow}>
           <View>
             <Text style={[styles.title, isAuthenticated && styles.titleAuthenticated]}>
-              {isAuthenticated ? 'Connect with YOUR Buyers' : 'Buyers'}
+              {isAuthenticated ? 'Buyers Dashboard' : 'Welcome to TradeHands'}
             </Text>
             <Text style={[styles.subtitle, isAuthenticated && styles.subtitleAuthenticated]}>
-              {isAuthenticated ? 'View detailed buyer profiles and reach out' : 'Sign in to view buyer details'}
+              {isAuthenticated ? 'View detailed buyer profiles and reach out' : 'Find your perfect business opportunity'}
             </Text>
           </View>
 
@@ -170,7 +178,7 @@ export default function BuyerScreen() {
         </Text>
 
         <View style={styles.addRow}>
-          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-buyer' as any)}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddBuyerProfile}>
         <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
           </TouchableOpacity>
         </View>
@@ -398,12 +406,12 @@ export default function BuyerScreen() {
         <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={() => setAuthPromptVisible(false)}>
           <Pressable style={styles.modalOverlay} onPress={() => setAuthPromptVisible(false)}>
             <Pressable style={styles.modalContent} onPress={() => { /* absorb taps */ }}>
-              <Text style={styles.modalTitle}>Log in to view details</Text>
+              <Text style={styles.modalTitle}>Log into TradeHands</Text>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalPrimary]}
                 onPress={() => {
                   setAuthPromptVisible(false);
-                  router.push('/sign-in');
+                  router.push('/sign-in-form');
                 }}
               >
                 <Text style={styles.modalButtonText}>Returning user login</Text>
@@ -649,7 +657,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   modalPrimary: {
-    backgroundColor: '#5A7A8C',
+    backgroundColor: '#2B4450',
   },
   modalSecondary: {
     backgroundColor: '#E8E3DC',

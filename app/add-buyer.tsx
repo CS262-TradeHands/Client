@@ -14,7 +14,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../context/AuthContext';
 
 // Simplified buyer profile data matching the domain model
 interface BuyerFormData {
@@ -58,7 +57,6 @@ const SIZE_PREFERENCES = [
 
 export default function AddBuyerScreen() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
   // Single-page simplified form matching the UML: only essential fields
   const [formData, setFormData] = useState<BuyerFormData>({
     title: '',
@@ -250,33 +248,6 @@ export default function AddBuyerScreen() {
   );
 
   const renderCurrentStep = () => renderForm();
-
-  if (!isAuthenticated) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.authBackButton}>
-          <Text style={styles.authBackButtonText}>Back</Text>
-        </TouchableOpacity>
-        <View style={styles.authPrompt}>
-          <Ionicons name="lock-closed-outline" size={48} color="#5A7A8C" />
-          <Text style={styles.authPromptTitle}>Sign In Required</Text>
-          <Text style={styles.authPromptText}>Please sign in to create a buyer profile.</Text>
-          <TouchableOpacity
-            style={styles.authPromptButton}
-            onPress={() => router.push('/sign-in')}
-          >
-            <Text style={styles.authPromptButtonText}>Sign In</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.authCreateAccountButton}
-            onPress={() => router.push('/create-account')}
-          >
-            <Text style={styles.authCreateAccountText}>Create Account</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>

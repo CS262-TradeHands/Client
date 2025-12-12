@@ -4,8 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useEffect, useState, useRef } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableWithoutFeedback, View, Animated } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import 'react-native-reanimated';
 import { AuthProvider } from '../context/AuthContext';
 
@@ -55,7 +55,6 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="business-detail" options={{ headerShown: false }} />
           <Stack.Screen name="buyer-detail" options={{ headerShown: false }} />
-          <Stack.Screen name="sign-in" options={{ headerShown: false }} />
           <Stack.Screen name="create-account" options={{ headerShown: false }} />
           <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
           <Stack.Screen name="add-buyer" options={{ headerShown: false }} />
@@ -93,7 +92,7 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, scaleAnim]);
 
   useEffect(() => {
     if (videoFinished) {
