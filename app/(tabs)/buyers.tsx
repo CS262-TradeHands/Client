@@ -35,29 +35,29 @@ export default function BuyerScreen() {
   }, [query, buyers, users]);
 
   // New: derive sections
-  const currentUserId = user?.id?.toString?.() ?? 'anonymous';
+  const currentUserId = user?.user_id?.toString?.() ?? 'anonymous';
   
   // Separate counter for owned buyers only (buyers where user_id matches current user)
   const ownedBuyers = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
     return filteredBuyers.filter((b) => {
       return String(b.user_id ?? '') === currentUserId;
     });
-  }, [filteredBuyers, currentUserId, isAuthenticated, user?.id]);
+  }, [filteredBuyers, currentUserId, isAuthenticated, user?.user_id]);
 
   // For now, myBuyers is the same as ownedBuyers (no connection logic yet)
   const myBuyers = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
     return filteredBuyers.filter((b) => {
       return String(b.user_id ?? '') === currentUserId;
     });
-  }, [filteredBuyers, currentUserId, isAuthenticated, user?.id]);
+  }, [filteredBuyers, currentUserId, isAuthenticated, user?.user_id]);
 
   const publicBuyers = useMemo(() => {
     return filteredBuyers.filter((b) => {
@@ -253,7 +253,7 @@ export default function BuyerScreen() {
         ))
           )}
         </View>
-        {publicBuyers.length === 0 && (
+        {publicBuyers.length === 0 && !(buyersLoading || usersLoading) && (
           <View style={styles.noResults}>
         <Text style={styles.noResultsText}>No public listings found</Text>
         <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
@@ -300,7 +300,7 @@ export default function BuyerScreen() {
             ))
             )}
           </View> 
-          {myBuyers.length === 0 && (
+          {myBuyers.length === 0 && !(buyersLoading || usersLoading) && (
             <View style={styles.noResults}>
           <Text style={styles.noResultsText}>No listings connected to you yet</Text>
           <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>

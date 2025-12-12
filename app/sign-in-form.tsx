@@ -1,26 +1,37 @@
+import { User } from '@/types/user';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 
+
 export default function SignInFormScreen() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const { signIn } = useAuth();
+    const [error, setError] = useState('');
+    const [users, setUsers] = useState<User[]>([]);
+    const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
 
-    const handleSignIn = () => {
-        // Mock user data - replace with actual API call
-        const userData = {
-            id: '1',
-            email: email,
-            firstName: 'John',
-            lastName: 'Doe',
-        };
+    const handleSignIn = async () => {
+        try {
+            // Call the API to validate user credentials
+            const response = await fetch(`${API_BASE_URL}/users`);
+            const userData = await response.json();
+            setUsers(userData);
 
-        signIn(userData);
-        router.replace('/(tabs)/profile');
+            const potentialUser = users.find(u => u.email === email && u.password_hash === password);
+            if (potentialUser) {
+                signIn(potentialUser);
+                router.replace('/(tabs)/profile');
+            } else {
+                setError("Email or password do not match. Please try again.")
+            }
+        } catch (err) {
+            console.error('Error fetching user data:', err);
+        }
     };
 
     return (
@@ -56,6 +67,8 @@ export default function SignInFormScreen() {
                     onChangeText={setPassword}
                     secureTextEntry
                 />
+
+                {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
 
                 <TouchableOpacity style={styles.button} onPress={handleSignIn}>
                     <Text style={styles.buttonText}>Sign in</Text>

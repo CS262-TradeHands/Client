@@ -61,29 +61,29 @@ export default function BusinessListingsScreen() {
     });
   }, [listings, query]);
 
-  const currentUserId = user?.id?.toString?.() ?? 'anonymous';
+  const currentUserId = user?.user_id?.toString?.() ?? 'anonymous';
   
   // Separate counter for owned listings only (listings where owner_id matches current user)
   const ownedListings = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
     return filteredListings.filter((l) => {
       return String(l.owner_id ?? '') === currentUserId;
     });
-  }, [filteredListings, currentUserId, isAuthenticated, user?.id]);
+  }, [filteredListings, currentUserId, isAuthenticated, user?.user_id]);
 
   // For now, myListings is the same as ownedListings (no connection logic yet)
   const myListings = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
     return filteredListings.filter((l) => {
       return String(l.owner_id ?? '') === currentUserId;
     });
-  }, [filteredListings, currentUserId, isAuthenticated, user?.id]);
+  }, [filteredListings, currentUserId, isAuthenticated, user?.user_id]);
 
   const publicListings = useMemo(() => {
     return filteredListings.filter((l) => {
