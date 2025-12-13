@@ -1,7 +1,8 @@
 import { User } from '@/types/user';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,24 +11,22 @@ export default function SignInFormScreen() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const { signIn } = useAuth();
     const [error, setError] = useState('');
-    const [users, setUsers] = useState<User[]>([]);
     const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
 
     const handleSignIn = async () => {
         try {
-            // Call the API to validate user credentials
             const response = await fetch(`${API_BASE_URL}/users`);
-            const userData = await response.json();
-            setUsers(userData);
+            const userData: User[] = await response.json();
 
-            const potentialUser = users.find(u => u.email === email && u.password_hash === password);
+            const potentialUser = userData.find(u => u.email === email && u.password_hash === password);
             if (potentialUser) {
                 signIn(potentialUser);
                 router.replace('/(tabs)/profile');
             } else {
-                setError("Email or password do not match. Please try again.")
+                setError("Email or password does not match. Please try again.")
             }
         } catch (err) {
             console.error('Error fetching user data:', err);
@@ -40,15 +39,20 @@ export default function SignInFormScreen() {
                 <Text style={styles.backButtonText}>Back</Text>
             </TouchableOpacity>
 
-            <Image
-                source={require('../assets/images/handshake-logo.png')}
-                style={styles.logo}
-                resizeMode="contain"
-            />
+            <KeyboardAvoidingView
+                style={styles.keyboardAvoidingView}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
+                <Image
+                    source={require('../assets/images/handshake-logo.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
 
-            <Text style={styles.title}>Sign into TradeHands</Text>
+                <Text style={styles.title}>Sign into TradeHands</Text>
 
-            <View style={styles.formContainer}>
+                <View style={styles.formContainer}>
+
                 <TextInput
                     style={styles.input}
                     placeholder="Email"
@@ -57,16 +61,30 @@ export default function SignInFormScreen() {
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    onFocus={() => setError('')}
                 />
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor="#777"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
+                <View style={styles.passwordContainer}>
+                    <TextInput
+                        style={styles.passwordInput}
+                        placeholder="Password"
+                        placeholderTextColor="#777"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                        onFocus={() => setError('')}
+                    />
+                    <TouchableOpacity
+                        style={styles.eyeButton}
+                        onPress={() => setShowPassword(!showPassword)}
+                    >
+                        <Ionicons
+                            name={showPassword ? 'eye-off' : 'eye'}
+                            size={24}
+                            color="#777"
+                        />
+                    </TouchableOpacity>
+                </View>
 
                 {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
 
@@ -78,6 +96,7 @@ export default function SignInFormScreen() {
                     <Text style={styles.createAccountText}>Create account</Text>
                 </TouchableOpacity>
             </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
@@ -85,10 +104,13 @@ export default function SignInFormScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#fff',
+    },
+    keyboardAvoidingView: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#fff',
     },
     title: {
         fontSize: 24,
@@ -108,6 +130,30 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#111',
         textAlign: 'center',
+    },
+    passwordContainer: {
+        width: '75%',
+        position: 'relative',
+        marginBottom: 14,
+    },
+    passwordInput: {
+        borderWidth: 1,
+        borderColor: '#e6e6e6',
+        borderRadius: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        paddingRight: 15,
+        backgroundColor: '#fbfbfb',
+        fontSize: 16,
+        color: '#111',
+        textAlign: 'center',
+    },
+    eyeButton: {
+        position: 'absolute',
+        right: 10,
+        top: '40%',
+        transform: [{ translateY: -12 }],
+        padding: 5,
     },
     backButtonText: {
         color: '#5A7A8C',
