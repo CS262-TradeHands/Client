@@ -61,29 +61,29 @@ export default function BusinessListingsScreen() {
     });
   }, [listings, query]);
 
-  const currentUserId = user?.id?.toString?.() ?? 'anonymous';
+  const currentUserId = user?.user_id?.toString?.() ?? 'anonymous';
   
   // Separate counter for owned listings only (listings where owner_id matches current user)
   const ownedListings = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
     return filteredListings.filter((l) => {
       return String(l.owner_id ?? '') === currentUserId;
     });
-  }, [filteredListings, currentUserId, isAuthenticated, user?.id]);
+  }, [filteredListings, currentUserId, isAuthenticated, user?.user_id]);
 
   // For now, myListings is the same as ownedListings (no connection logic yet)
   const myListings = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
     return filteredListings.filter((l) => {
       return String(l.owner_id ?? '') === currentUserId;
     });
-  }, [filteredListings, currentUserId, isAuthenticated, user?.id]);
+  }, [filteredListings, currentUserId, isAuthenticated, user?.user_id]);
 
   const publicListings = useMemo(() => {
     return filteredListings.filter((l) => {
@@ -171,10 +171,21 @@ export default function BusinessListingsScreen() {
       <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
       <View style={{ marginTop: 20 }} />
         <Text style={[styles.resultsCount, { marginBottom: 8 }]}>
-          My Listings (0)
+          My Business Listings ({ownedListings.length})
         </Text>
 
-        {/* Add button row */}
+        {ownedListings.map((l, index) => (
+          <View key={l.business_id || `owned-listing-${index}`} style={styles.condensedCard}>
+            <View>
+              <Text style={styles.buyerName}>{l.name}</Text>
+              <Text style={styles.buyerTitle}>{l.industry}</Text>
+            </View>
+            <TouchableOpacity onPress={() => handleViewDetails(l.business_id.toString())} style={styles.linkButton}>
+              <Text style={styles.linkText}>View Details</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+
         <View style={styles.addRow}>
           <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
             <Text style={styles.addButtonText}>+ Add a business listing</Text>
@@ -711,5 +722,40 @@ const styles = StyleSheet.create({
   },
   browseBtnTextInactive: {
     color: '#E8E3DC',
+  },
+  condensedCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    marginTop: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  buyerName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buyerTitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  linkButton: {
+    backgroundColor: '#5A7A8C',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  linkText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

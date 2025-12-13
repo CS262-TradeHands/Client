@@ -19,6 +19,13 @@ export default function BuyerScreen() {
   const [buyersLoading, setBuyersLoading] = useState(true); // Loading state for buyers
   const [usersLoading, setUsersLoading] = useState(true); // Loading state for users
 
+  const SIZE_PREFERENCES = [
+  'Small — up to 20 employees (~$15k/month)',
+  'Small-Medium — 20-50 employees (~$40k/month)',
+  'Medium — 50-200 employees (~$150k/month)',
+  'Large — 200+ employees (~$500k/month)'
+  ];
+
   // Search filter unchanged
   const filteredBuyers = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -35,29 +42,29 @@ export default function BuyerScreen() {
   }, [query, buyers, users]);
 
   // New: derive sections
-  const currentUserId = user?.id?.toString?.() ?? 'anonymous';
+  const currentUserId = user?.user_id?.toString?.() ?? 'anonymous';
   
   // Separate counter for owned buyers only (buyers where user_id matches current user)
   const ownedBuyers = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
     return filteredBuyers.filter((b) => {
       return String(b.user_id ?? '') === currentUserId;
     });
-  }, [filteredBuyers, currentUserId, isAuthenticated, user?.id]);
+  }, [filteredBuyers, currentUserId, isAuthenticated, user?.user_id]);
 
   // For now, myBuyers is the same as ownedBuyers (no connection logic yet)
   const myBuyers = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.id || currentUserId === 'anonymous') {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
     return filteredBuyers.filter((b) => {
       return String(b.user_id ?? '') === currentUserId;
     });
-  }, [filteredBuyers, currentUserId, isAuthenticated, user?.id]);
+  }, [filteredBuyers, currentUserId, isAuthenticated, user?.user_id]);
 
   const publicBuyers = useMemo(() => {
     return filteredBuyers.filter((b) => {
@@ -174,14 +181,31 @@ export default function BuyerScreen() {
       <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
         <View style={{ marginTop: 20 }} />
         <Text style={[styles.resultsCount, { marginBottom: 8 }]}>
-          My Listings (0)
+          My Buyer Profile
         </Text>
 
-        <View style={styles.addRow}>
-          <TouchableOpacity style={styles.addButton} onPress={handleAddBuyerProfile}>
-        <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
-          </TouchableOpacity>
-        </View>
+        {ownedBuyers.length === 0 ? (
+          <View style={styles.addRow}>
+            <TouchableOpacity style={styles.addButton} onPress={handleAddBuyerProfile}>
+              <Text style={styles.addButtonText}>+ Add a buyer profile</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          ownedBuyers.map((b, index) => {
+            const userInfo = users.find(u => u.user_id === b.user_id);
+            return (
+              <View key={b.buyer_id || `owned-buyer-${index}`} style={styles.condensedCard}>
+                <View>
+                  <Text style={styles.buyerName}>{userInfo?.first_name} {userInfo?.last_name}</Text>
+                  <Text style={styles.buyerTitle}>{b.title}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setSelectedBuyer(b)} style={styles.linkButton}>
+                  <Text style={styles.linkText}>View Details</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })
+        )}
 
         {/* New: Browse toggle row placed right under the add button */}
         <View style={styles.browseRow}>
@@ -253,7 +277,7 @@ export default function BuyerScreen() {
         ))
           )}
         </View>
-        {publicBuyers.length === 0 && (
+        {publicBuyers.length === 0 && !(buyersLoading || usersLoading) && (
           <View style={styles.noResults}>
         <Text style={styles.noResultsText}>No public listings found</Text>
         <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
@@ -300,7 +324,7 @@ export default function BuyerScreen() {
             ))
             )}
           </View> 
-          {myBuyers.length === 0 && (
+          {myBuyers.length === 0 && !(buyersLoading || usersLoading) && (
             <View style={styles.noResults}>
           <Text style={styles.noResultsText}>No listings connected to you yet</Text>
           <Text style={styles.noResultsSubtext}>Create a listing or check back after matches are made</Text>
@@ -357,9 +381,11 @@ export default function BuyerScreen() {
                           <Text style={styles.buyerModalTagText}>{item}</Text>
                         </View>
                       ))}
+                      <View style={styles.buyerModalTag}>
+                        <Text style={styles.buyerModalTagText}>{SIZE_PREFERENCES.find(s => s.includes(selectedBuyer.size_preference)) || selectedBuyer.size_preference}</Text>
+                      </View>
                     </View>
                   </View>
-
                     {/* Investment Details */}
                     <View style={styles.buyerModalSection}>
                     <Text style={styles.buyerModalSectionTitle}>Investment Details</Text>
@@ -377,14 +403,14 @@ export default function BuyerScreen() {
                       <Ionicons name="briefcase-outline" size={20} color="#5A7A8C" />
                       <View style={styles.buyerModalDetailContent}>
                         <Text style={styles.buyerModalDetailLabel}>Experience</Text>
-                        <Text style={styles.buyerModalDetailValue}>{selectedBuyer.experience}</Text>
+                        <Text style={styles.buyerModalDetailValue}>{selectedBuyer.experience} Years</Text>
                       </View>
                       </View>
                       <View style={styles.buyerModalDetailRow}>
                       <Ionicons name="time-outline" size={20} color="#5A7A8C" />
                       <View style={styles.buyerModalDetailContent}>
                         <Text style={styles.buyerModalDetailLabel}>Timeline</Text>
-                        <Text style={styles.buyerModalDetailValue}>{selectedBuyer.timeline}</Text>
+                        <Text style={styles.buyerModalDetailValue}>{selectedBuyer.timeline} Months</Text>
                       </View>
                       </View>
                     </View>
@@ -865,5 +891,36 @@ const styles = StyleSheet.create({
   },
   browseBtnTextInactive: {
     color: '#E8E3DC',
+  },
+  condensedCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    marginTop: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  buyerTitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  linkButton: {
+    backgroundColor: '#5A7A8C',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  linkText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

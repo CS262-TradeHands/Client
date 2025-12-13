@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
@@ -52,10 +53,39 @@ const FAQAccordionItem = ({ question, children }: { question: string, children: 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const [userBusinesses, setUserBusinesses] = useState<Listing[]>([]);
+  const [userBuyer, setUserBuyer] = useState<Buyer>();
+  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
 
-  // TODO: Fetch actual user's businesses and buyers based on owner_id matching user.id
-  const userBusinesses: Listing[] = [];
-  const userBuyers: Buyer[] = [];
+  async function fetchBuyerData() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/buyers`);
+      const buyerData: Buyer[] = await response.json();
+      const buyer = buyerData.find(b => b.user_id === user?.user_id );
+
+      if (buyer) {
+        setUserBuyer(buyer);
+      }
+
+    } catch (error) {
+      console.error('Error fetching buyers:', error);
+    }
+  }
+
+  async function fetchListingData() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/listings`);
+      const listingData: Listing[] = await response.json();
+      const listings = listingData.filter(b => b.owner_id === user?.user_id );
+
+      if (listings) {
+        setUserBusinesses(listings);
+      }
+
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+    }
+  }
 
   const handleEditBusiness = (id: string) => {
     router.push(`/edit-business?id=${id}`);
@@ -69,18 +99,23 @@ export default function ProfileScreen() {
     if (type === 'business') {
       router.push(`/business-detail?id=${id}`);
     } else {
-      router.push(`/buyer-detail?id=${id}`);
+      router.push(`/buyers?id=${id}`);
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = () => {
+    signOut();
     router.replace('/(tabs)/business-listings');
   };
 
   const handleEditProfile = () => {
     router.push('/edit-profile');
   };
+
+  useFocusEffect(() => {
+    fetchBuyerData();
+    fetchListingData();
+  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -90,12 +125,12 @@ export default function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {user?.firstName?.[0]?.toUpperCase() || 'U'}
+                {user?.first_name?.[0]?.toUpperCase() || 'U'}
               </Text>
             </View>
           </View>
           <Text style={styles.userName}>
-            {user?.firstName} {user?.lastName}
+            {user?.first_name} {user?.last_name}
           </Text>
           <Text style={styles.userEmail}>{user?.email}</Text>
           <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
@@ -134,22 +169,20 @@ export default function ProfileScreen() {
 
         {/* Your Buyer Profiles Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Buyer Profiles ({userBuyers.length})</Text>
-          {userBuyers.length > 0 ? (
-            userBuyers.map((b) => (
+          <Text style={styles.sectionTitle}>Your Buyer Profile</Text>
+          {userBuyer ? (
               <ItemCard
-                key={b.buyer_id}
-                id={b.user_id.toString()}
-                name={b.title}
+                key={userBuyer.buyer_id}
+                id={userBuyer.user_id.toString()}
+                name={userBuyer.title}
                 type="buyer"
-                industryOrTitle={b.title}
+                industryOrTitle={userBuyer.title}
                 onView={handleViewDetails}
                 onEdit={handleEditBuyer}
               />
-            ))
-          ) : (
+            ) : (
             <View style={styles.placeholderCard}>
-              <Text style={styles.placeholderText}>No buyer profiles created.</Text>
+              <Text style={styles.placeholderText}>No buyer profile created.</Text>
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => router.push('/add-buyer' as any)}
