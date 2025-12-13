@@ -174,25 +174,23 @@ export default function BusinessListingsScreen() {
           My Business Listings ({ownedListings.length})
         </Text>
 
-        {ownedListings.length === 0 ? (
-          <View style={styles.addRow}>
-            <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
-              <Text style={styles.addButtonText}>+ Add a business listing</Text>
+        {ownedListings.map((l, index) => (
+          <View key={l.business_id || `owned-listing-${index}`} style={styles.condensedCard}>
+            <View>
+              <Text style={styles.buyerName}>{l.name}</Text>
+              <Text style={styles.buyerTitle}>{l.industry}</Text>
+            </View>
+            <TouchableOpacity onPress={() => handleViewDetails(l.business_id.toString())} style={styles.linkButton}>
+              <Text style={styles.linkText}>View Details</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          ownedListings.map((l, index) => (
-            <View key={l.business_id || `owned-listing-${index}`} style={styles.condensedCard}>
-              <View>
-                <Text style={styles.buyerName}>{l.name}</Text>
-                <Text style={styles.buyerTitle}>{l.industry}</Text>
-              </View>
-              <TouchableOpacity onPress={() => handleViewDetails(l.business_id.toString())} style={styles.linkButton}>
-                <Text style={styles.linkText}>View Details</Text>
-              </TouchableOpacity>
-            </View>
-          ))
-        )}
+        ))}
+
+        <View style={styles.addRow}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddBusiness}>
+            <Text style={styles.addButtonText}>+ Add a business listing</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* New: Browse toggle row placed right under the add button */}
         <View style={styles.browseRow}>
