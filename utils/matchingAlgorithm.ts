@@ -26,21 +26,23 @@ const matches = listingsToSearch
   .map(listing => {
     let score = 0;
     // Location matching (20 points)
-    if (buyerProfile.country.toLowerCase() === listing.country.toLowerCase()) {
+    if (buyerProfile.country && listing.country && buyerProfile.country.toLowerCase() === listing.country.toLowerCase()) {
       score += 3;
     }
-    if (buyerProfile.state.toLowerCase() === listing.state.toLowerCase()) {
+    if (buyerProfile.state && listing.state && buyerProfile.state.toLowerCase() === listing.state.toLowerCase()) {
       score += 7;
     }
-    if (buyerProfile.city.toLowerCase() === listing.city.toLowerCase()) {
+    if (buyerProfile.city && listing.city && buyerProfile.city.toLowerCase() === listing.city.toLowerCase()) {
       score += 10;
     }
     
     // Industry matching (15 points)
-    for(const industry of buyerProfile.industries) {
-      if (listing.industry && industry.toLowerCase() === listing.industry.toLowerCase()) {
-        score += 15;
-        break;
+    if (buyerProfile.industries && buyerProfile.industries.length > 0) {
+      for(const industry of buyerProfile.industries) {
+        if (listing.industry && industry && industry.toLowerCase() === listing.industry.toLowerCase()) {
+          score += 15;
+          break;
+        }
       }
     }
     
@@ -107,15 +109,15 @@ const matches = listingsToSearch
   .map(result => result.listing);
  return matches;
 }
-//buisnessProfile: Listing, profilesToSearch: Buyer[]
-export function findMatches_listing(): Buyer[] {
 
+export function findMatches_listing(): Buyer[] {
   return [];
 }
+
 export function findMatches_listing_v2(listingProfile: Listing, buyersToSearch: Buyer[]): Buyer[] {
 
-  let employees: number;
-  let monthlyRevenue: number;
+  let employees: number = 0;
+  let monthlyRevenue: number = 0;
   if (listingProfile.employees && listingProfile.monthly_revenue) {
     employees = listingProfile.employees;
     monthlyRevenue = listingProfile.monthly_revenue;
@@ -126,21 +128,23 @@ export function findMatches_listing_v2(listingProfile: Listing, buyersToSearch: 
       let score = 0;
       
       // Location matching (20 points)
-      if (listingProfile.country.toLowerCase() === buyer.country.toLowerCase()) {
+      if (listingProfile.country && buyer.country && listingProfile.country.toLowerCase() === buyer.country.toLowerCase()) {
         score += 3;
       }
-      if (listingProfile.state.toLowerCase() === buyer.state.toLowerCase()) {
+      if (listingProfile.state && buyer.state && listingProfile.state.toLowerCase() === buyer.state.toLowerCase()) {
         score += 7;
       }
-      if (listingProfile.city.toLowerCase() === buyer.city.toLowerCase()) {
+      if (listingProfile.city && buyer.city && listingProfile.city.toLowerCase() === buyer.city.toLowerCase()) {
         score += 10;
       }
       
       // Industry matching (15 points)
-      for(const industry of buyer.industries) {
-        if (listingProfile.industry && industry.toLowerCase() === listingProfile.industry.toLowerCase()) {
-          score += 15;
-          break;
+      if (buyer.industries && buyer.industries.length > 0) {
+        for(const industry of buyer.industries) {
+          if (listingProfile.industry && industry && industry.toLowerCase() === listingProfile.industry.toLowerCase()) {
+            score += 15;
+            break;
+          }
         }
       }
       
