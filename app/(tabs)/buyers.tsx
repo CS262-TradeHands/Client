@@ -6,6 +6,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
+import { findMatches_listing_v2 } from '../../utils/matchingAlgorithm';
+import { Listing } from '../../types/listing';
 
 export default function BuyerScreen() {
   const router = useRouter();
@@ -16,14 +18,16 @@ export default function BuyerScreen() {
 
   const [buyers, setBuyers] = useState<Buyer[]>([]); // State for buyers
   const [users, setUsers] = useState<User[]>([]); // State for user data
+  const [listings, setListings] = useState<Listing[]>([]); // State for listings
   const [buyersLoading, setBuyersLoading] = useState(true); // Loading state for buyers
   const [usersLoading, setUsersLoading] = useState(true); // Loading state for users
+  const [listingsLoading, setListingsLoading] = useState(true); // Loading state for listings
 
   const SIZE_PREFERENCES = [
-  'Small — up to 20 employees (~$15k/month)',
-  'Small-Medium — 20-50 employees (~$40k/month)',
-  'Medium — 50-200 employees (~$150k/month)',
-  'Large — 200+ employees (~$500k/month)'
+    'Small — up to 20 employees (~$15k/month)',
+    'Small-Medium — 20-50 employees (~$40k/month)',
+    'Medium — 50-200 employees (~$150k/month)',
+    'Large — 200+ employees (~$500k/month)'
   ];
 
   // Search filter unchanged
@@ -55,16 +59,47 @@ export default function BuyerScreen() {
     });
   }, [filteredBuyers, currentUserId, isAuthenticated, user?.user_id]);
 
-  // For now, myBuyers is the same as ownedBuyers (no connection logic yet)
+  // Fetch listings for matching
+  async function fetchListings() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/listings`);
+      const data = await response.json();
+      setListings(data);
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+    } finally {
+      setListingsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchBuyerData();
+    fetchListings();
+  }, []);
+
+  // Get the current user's listing profile(s)
+  const currentUserListings = useMemo(() => {
+    if (!isAuthenticated || !user?.user_id || listingsLoading) return [];
+    return listings.filter(listing => String(listing.owner_id) === currentUserId);
+  }, [listings, listingsLoading, isAuthenticated, user?.user_id, currentUserId]);
+
+  // Get matched buyers using the algorithm
   const myBuyers = useMemo(() => {
-    // If not authenticated or no valid user ID, return empty array
     if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
-    return filteredBuyers.filter((b) => {
-      return String(b.user_id ?? '') === currentUserId;
-    });
-  }, [filteredBuyers, currentUserId, isAuthenticated, user?.user_id]);
+    
+    // If user has no listings, return empty
+    if (currentUserListings.length === 0) {
+      return [];
+    }
+
+    // Get matches for the first listing (you could iterate all listings if needed)
+    const firstListing = currentUserListings[0];
+    const matchedBuyers = findMatches_listing_v2(firstListing, buyers);
+    
+    return matchedBuyers;
+  }, [currentUserListings, buyers, isAuthenticated, user?.user_id, currentUserId]);
 
   const publicBuyers = useMemo(() => {
     return filteredBuyers.filter((b) => {

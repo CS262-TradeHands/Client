@@ -4,7 +4,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
+import { Buyer } from '../../types/buyer';
 import { Listing } from '../../types/listing';
+import { findMatches_buyer } from '../../utils/matchingAlgorithm';
 
 function formatCurrency(value?: number) {
   if (typeof value !== 'number') return '';
@@ -19,7 +21,9 @@ export default function BusinessListingsScreen() {
   // search state and filtering
   const [query, setQuery] = useState('');
   const [listings, setListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(false); // Changed: Default to false
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [buyersLoading, setBuyersLoading] = useState(true);
 
   // set the webservice url
   const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
@@ -36,6 +40,19 @@ export default function BusinessListingsScreen() {
     }
   }
 
+  // Fetch buyers for matching
+  async function fetchBuyers() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/buyers`);
+      const data = await response.json();
+      setBuyers(data);
+    } catch (error) {
+      console.error('Error fetching buyers:', error);
+    } finally {
+      setBuyersLoading(false);
+    }
+  }
+
   useEffect(() => {
     async function loadListings() {
       setLoading(true);
@@ -45,6 +62,7 @@ export default function BusinessListingsScreen() {
     }
 
     loadListings();
+    fetchBuyers();
   }, []);
 
   const filteredListings = useMemo(() => {
@@ -74,16 +92,23 @@ export default function BusinessListingsScreen() {
     });
   }, [filteredListings, currentUserId, isAuthenticated, user?.user_id]);
 
+  // Get the current user's buyer profile
+  const currentBuyer = useMemo(() => {
+    if (!isAuthenticated || !user?.user_id || buyersLoading) return null;
+    return buyers.find(buyer => String(buyer.buyer_id) === currentUserId) || null;
+  }, [buyers, buyersLoading, isAuthenticated, user?.user_id, currentUserId]);
+
   // For now, myListings is the same as ownedListings (no connection logic yet)
   const myListings = useMemo(() => {
-    // If not authenticated or no valid user ID, return empty array
+    // Get matched buyers using the hook
+    const matchedListings = currentBuyer ? findMatches_buyer(currentBuyer, listings) : [];
+
     if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
       return [];
     }
-    return filteredListings.filter((l) => {
-      return String(l.owner_id ?? '') === currentUserId;
-    });
-  }, [filteredListings, currentUserId, isAuthenticated, user?.user_id]);
+    // Show the matched buyers' potential interest in similar listings
+    return matchedListings.length > 0 ? ownedListings : [];
+  }, [ownedListings, isAuthenticated, user?.user_id, currentUserId, currentBuyer, listings]);
 
   const publicListings = useMemo(() => {
     return filteredListings.filter((l) => {
