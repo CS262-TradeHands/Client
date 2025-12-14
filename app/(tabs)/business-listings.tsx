@@ -4,7 +4,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
+import { Buyer } from '../../types/buyer';
 import { Listing } from '../../types/listing';
+import { findMatchedListingsForBuyer } from '../../utils/matchingAlgorithm';
 
 function formatCurrency(value?: number) {
   if (typeof value !== 'number') return '';
@@ -13,40 +15,18 @@ function formatCurrency(value?: number) {
 
 export default function BusinessListingsScreen() {
   const router = useRouter();
+  const [query, setQuery] = useState('');
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
   const { isAuthenticated, user } = useAuth();
 
-  // search state and filtering
-  const [query, setQuery] = useState('');
-  const [listings, setListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(false); // Changed: Default to false
+  const [listings, setListings] = useState<Listing[]>([]); // State for listings 
+  const [buyers, setBuyers] = useState<Buyer[]>([]); // State for buyers
+  const [loading, setLoading] = useState(false); // loading state for listings
+  const [buyersLoading, setBuyersLoading] = useState(true); // loading state for buyers
 
-  // set the webservice url
   const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
 
-  // fetch the listings to display
-  async function fetchBusinessListings(): Promise<Listing[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/listings`);
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error fetching business listings:', error);
-      return [];
-    }
-  }
-
-  useEffect(() => {
-    async function loadListings() {
-      setLoading(true);
-      const data = await fetchBusinessListings();
-      setListings(data);
-      setLoading(false);
-    }
-
-    loadListings();
-  }, []);
-
+  // SEARCH FILTER
   const filteredListings = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return listings;
@@ -61,9 +41,10 @@ export default function BusinessListingsScreen() {
     });
   }, [listings, query]);
 
+  // GET CURRENT USERS ID
   const currentUserId = user?.user_id?.toString?.() ?? 'anonymous';
-  
-  // Separate counter for owned listings only (listings where owner_id matches current user)
+
+  // LISTINGS OWNED BY CURRENT USER (listings where owner_id matches current user)
   const ownedListings = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
     if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
@@ -74,28 +55,86 @@ export default function BusinessListingsScreen() {
     });
   }, [filteredListings, currentUserId, isAuthenticated, user?.user_id]);
 
-  // For now, myListings is the same as ownedListings (no connection logic yet)
+  // BUYER PROFILE OWNED BY CURRENT USER (buyer profile where user_id matches current user)
+  const currentBuyer = useMemo(() => {
+    if (!isAuthenticated || !user?.user_id || buyersLoading) {
+      return null;
+    }
+    return buyers.find(buyer => String(buyer.user_id ?? '') === currentUserId) || null;
+  }, [buyers, buyersLoading, isAuthenticated, user?.user_id, currentUserId]);
+
+  // GET MATCHED LISTINGS FOR THE CURRENT USER'S BUYER PROFILE
   const myListings = useMemo(() => {
-    // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous' || !currentBuyer) {
       return [];
     }
-    return filteredListings.filter((l) => {
-      return String(l.owner_id ?? '') === currentUserId;
-    });
-  }, [filteredListings, currentUserId, isAuthenticated, user?.user_id]);
+    console.log('\nmatched listings called');
+    const matchedListings = findMatchedListingsForBuyer(currentBuyer, listings);
 
+    return matchedListings;
+  }, [isAuthenticated, user?.user_id, currentUserId, currentBuyer, listings]);
+
+  // PUBLIC LISTINGS (either no user authenticated or the non-matches)
   const publicListings = useMemo(() => {
     return filteredListings.filter((l) => {
       const isMine = String(l.owner_id ?? '') === currentUserId;
       const isPublic = (l as any).is_public !== false;
-      return isPublic && !isMine;
+      const isMatched = myListings.some(ml => ml.business_id === l.business_id);
+      return isPublic && !isMine && !isMatched;
     });
-  }, [filteredListings, currentUserId]);
+  }, [filteredListings, currentUserId, myListings]);
+
+  // FETCH LISTINGS FOR DISPLAY
+  async function fetchBusinessListings(): Promise<Listing[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/listings`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching business listings:', error);
+      return [];
+    }
+  }
+
+  // FETCH BUYERS FOR MATCHING
+  async function fetchBuyers() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/buyers`);
+      const data = await response.json();
+      setBuyers(data);
+    } catch (error) {
+      console.error('Error fetching buyers:', error);
+    } finally {
+      setBuyersLoading(false);
+    }
+  }
+
+  // CALL FUNCTIONS TO GET BUYERS AND LISTINGS
+  useEffect(() => {
+    async function loadListings() {
+      setLoading(true);
+      const data = await fetchBusinessListings();
+      setListings(data);
+      setLoading(false);
+    }
+
+    loadListings();
+    fetchBuyers();
+  }, []);
+
+  // ADD LISTING BUTTON
+  const handleAddBusiness = () => {
+    if (isAuthenticated) {
+      router.push('/add-business' as any);
+    } else {
+      setAuthPromptVisible(true);
+    }
+  };
 
   // New: view toggle state (matches | public) - ensure default is 'public'
   const [viewMode, setViewMode] = useState<'matches' | 'public'>('public');
 
+  // SHOWS THE SIGN IN PROMPT OR SHOWS DETAILS
   const handleViewDetails = (listingId: string) => {
     // Require sign-in to view details
     if (isAuthenticated) {
@@ -105,20 +144,12 @@ export default function BusinessListingsScreen() {
     }
   };
 
-  const handleAddBusiness = () => {
-    if (isAuthenticated) {
-      router.push('/add-business' as any);
-    } else {
-      setAuthPromptVisible(true);
-    }
-  };
-
+  // FUNCTIONS TO OPEN AND CLOSE SIGN IN PROMPT
   const openAuthPrompt = () => setAuthPromptVisible(true);
   const closeAuthPrompt = () => setAuthPromptVisible(false);
 
   return (
     <View style={styles.container}>
-      {/* Restored: regular header without blur/animation */}
       <View style={[styles.header, isAuthenticated && styles.headerAuthenticated]}>
         <View style={styles.headerRow}>
           <View>

@@ -6,27 +6,33 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
+import { Listing } from '../../types/listing';
+import { findMatchedBuyersForListing } from '../../utils/matchingAlgorithm';
 
 export default function BuyerScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
-  const { isAuthenticated, user } = useAuth(); // include user
-  const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
+  const { isAuthenticated, user } = useAuth(); // CURRENT USER DETAILS
+  const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null); // SHOWS BUYER DETAIL
 
   const [buyers, setBuyers] = useState<Buyer[]>([]); // State for buyers
   const [users, setUsers] = useState<User[]>([]); // State for user data
+  const [listings, setListings] = useState<Listing[]>([]); // State for listings
   const [buyersLoading, setBuyersLoading] = useState(true); // Loading state for buyers
   const [usersLoading, setUsersLoading] = useState(true); // Loading state for users
+  const [listingsLoading, setListingsLoading] = useState(true); // Loading state for listings
+
+  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
 
   const SIZE_PREFERENCES = [
-  'Small — up to 20 employees (~$15k/month)',
-  'Small-Medium — 20-50 employees (~$40k/month)',
-  'Medium — 50-200 employees (~$150k/month)',
-  'Large — 200+ employees (~$500k/month)'
+    'Small — up to 20 employees (~$15k/month)',
+    'Small-Medium — 20-50 employees (~$40k/month)',
+    'Medium — 50-200 employees (~$150k/month)',
+    'Large — 200+ employees (~$500k/month)'
   ];
 
-  // Search filter unchanged
+  // SEARCH FILTER
   const filteredBuyers = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return buyers;
@@ -41,10 +47,10 @@ export default function BuyerScreen() {
     });
   }, [query, buyers, users]);
 
-  // New: derive sections
+  // GET CURRENT USERS ID
   const currentUserId = user?.user_id?.toString?.() ?? 'anonymous';
   
-  // Separate counter for owned buyers only (buyers where user_id matches current user)
+  // BUYER PROFILE OWNED BY CURRENT USER (buyers where user_id matches current user)
   const ownedBuyers = useMemo(() => {
     // If not authenticated or no valid user ID, return empty array
     if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
@@ -55,27 +61,52 @@ export default function BuyerScreen() {
     });
   }, [filteredBuyers, currentUserId, isAuthenticated, user?.user_id]);
 
-  // For now, myBuyers is the same as ownedBuyers (no connection logic yet)
-  const myBuyers = useMemo(() => {
-    // If not authenticated or no valid user ID, return empty array
-    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous') {
+  // LISTINGS OWNED BY CURRENT USER (listings where owner_id matches current user)
+  const currentUserListings = useMemo(() => {
+    if (!isAuthenticated || !user?.user_id || listingsLoading) {
       return [];
     }
-    return filteredBuyers.filter((b) => {
-      return String(b.user_id ?? '') === currentUserId;
-    });
-  }, [filteredBuyers, currentUserId, isAuthenticated, user?.user_id]);
+    return listings.filter(listing => String(listing.owner_id) === currentUserId);
+  }, [listings, listingsLoading, isAuthenticated, user?.user_id, currentUserId]);
 
+  // GET MATCHED BUYERS FOR THE CURRENT USER'S LISTING
+  const myBuyers = useMemo(() => {
+    if (!isAuthenticated || !user?.user_id || currentUserId === 'anonymous' || currentUserListings.length === 0) {
+      return [];
+    }
+
+    // Get matches for the first listing (you could iterate all listings if needed)
+    console.log('\nfind buyers called');
+    const firstListing = currentUserListings[0];
+    const matchedBuyers = findMatchedBuyersForListing(firstListing, buyers);
+    
+    return matchedBuyers;
+  }, [currentUserListings, buyers, isAuthenticated, user?.user_id, currentUserId]);
+
+  // PUBLIC BUYERS (either no user authenticated or the non-matches)
   const publicBuyers = useMemo(() => {
     return filteredBuyers.filter((b) => {
       const isMine = String(b.user_id ?? '') === currentUserId;
       const isPublic = (b as any).is_public !== false;
-      return isPublic && !isMine;
+      const isMatched = myBuyers.some(mb => mb.buyer_id === b.buyer_id);
+      return isPublic && !isMine && !isMatched;
     });
-  }, [filteredBuyers, currentUserId]);
+  }, [filteredBuyers, currentUserId, myBuyers]);
 
-  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
+  // FETCH LISTINGS FOR MATCHING
+  async function fetchListings() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/listings`);
+      const data = await response.json();
+      setListings(data);
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+    } finally {
+      setListingsLoading(false);
+    }
+  }
 
+  // FETCH BUYERS FOR DISPLAY
   async function fetchBuyerData() {
     try {
       const response = await fetch(`${API_BASE_URL}/buyers`);
@@ -88,6 +119,7 @@ export default function BuyerScreen() {
     }
   }
 
+  // FETCH USER DATA ASSOCIATED WITH EACH BUYER
   async function fetchUserData(buyers: Buyer[]) {
     try {
       const userDetails = await Promise.all(
@@ -105,8 +137,10 @@ export default function BuyerScreen() {
     }
   }
 
+  // GET BUYER, LISTING, USER DATA
   useEffect(() => {
     fetchBuyerData();
+    fetchListings();
   }, []);
 
   useEffect(() => {
@@ -115,6 +149,7 @@ export default function BuyerScreen() {
     }
   }, [buyers]);
 
+  // ADD BUYER PROFILE BUTTON
   const handleAddBuyerProfile = () => {
     if (isAuthenticated) {
       router.push('/add-buyer' as any);
