@@ -1,7 +1,14 @@
 import { Buyer } from '../types/buyer';
 import { Listing } from '../types/listing';
 
-export function findMatches_buyer(buyerProfile: Buyer, listingsToSearch: Listing[]): Listing[] {
+/**
+ * This function implements an algorithm to match an input buyer to potential listings.
+ *
+ * @param buyerProfile: the buyer to search the listings for
+ * @param listingsToSearch: the listings array to find matches inside of
+ * @returns: the array of highest rated listings for that buyer
+ */
+export function findMatchedListingsForBuyer(buyerProfile: Buyer, listingsToSearch: Listing[]): Listing[] {
 
   let employees: number;
   let monthlyRevenue: number;
@@ -67,11 +74,11 @@ const matches = listingsToSearch
     }
 
     // Size/Scale matching (15 points)
-    if (buyerProfile.size_preference && listing.employees) {
-    if (employees === listing.employees) {
+    if (buyerProfile.size_preference && listing.employees && listing.monthly_revenue) {
+    if (listing.employees <= employees) {
       score += 7;
     }
-    if (monthlyRevenue === listing.monthly_revenue) {
+    if (listing.monthly_revenue <= monthlyRevenue) {
       score += 8;
     }
     }
@@ -102,25 +109,30 @@ const matches = listingsToSearch
       }
     }
 
+    console.log(listing.name, score);
     return { listing, score };
   })
-  .filter(result => result.score >= 75)
+  .filter(result => result.score >= 50)
   .sort((a, b) => b.score - a.score)
   .map(result => result.listing);
- return matches;
+
+  return matches;
 }
 
-export function findMatches_listing(): Buyer[] {
-  return [];
-}
-
-export function findMatches_listing_v2(listingProfile: Listing, buyersToSearch: Buyer[]): Buyer[] {
+/**
+ * This function implements an algorithm to match an input listing to potential buyers.
+ *
+ * @param listing: the listing to search the buyers for
+ * @param buyersToSearch: the buyer array to find matches inside of
+ * @returns: the array of highest rated buyers for that listing
+ */
+export function findMatchedBuyersForListing(listing: Listing, buyersToSearch: Buyer[]): Buyer[] {
 
   let employees: number = 0;
   let monthlyRevenue: number = 0;
-  if (listingProfile.employees && listingProfile.monthly_revenue) {
-    employees = listingProfile.employees;
-    monthlyRevenue = listingProfile.monthly_revenue;
+  if (listing.employees && listing.monthly_revenue) {
+    employees = listing.employees;
+    monthlyRevenue = listing.monthly_revenue;
   }
 
   const matches = buyersToSearch
@@ -128,20 +140,20 @@ export function findMatches_listing_v2(listingProfile: Listing, buyersToSearch: 
       let score = 0;
       
       // Location matching (20 points)
-      if (listingProfile.country && buyer.country && listingProfile.country.toLowerCase() === buyer.country.toLowerCase()) {
+      if (listing.country && buyer.country && listing.country.toLowerCase() === buyer.country.toLowerCase()) {
         score += 3;
       }
-      if (listingProfile.state && buyer.state && listingProfile.state.toLowerCase() === buyer.state.toLowerCase()) {
+      if (listing.state && buyer.state && listing.state.toLowerCase() === buyer.state.toLowerCase()) {
         score += 7;
       }
-      if (listingProfile.city && buyer.city && listingProfile.city.toLowerCase() === buyer.city.toLowerCase()) {
+      if (listing.city && buyer.city && listing.city.toLowerCase() === buyer.city.toLowerCase()) {
         score += 10;
       }
       
       // Industry matching (15 points)
       if (buyer.industries && buyer.industries.length > 0) {
         for(const industry of buyer.industries) {
-          if (listingProfile.industry && industry && industry.toLowerCase() === listingProfile.industry.toLowerCase()) {
+          if (listing.industry && industry && industry.toLowerCase() === listing.industry.toLowerCase()) {
             score += 15;
             break;
           }
@@ -150,14 +162,14 @@ export function findMatches_listing_v2(listingProfile: Listing, buyersToSearch: 
       
       // Budget vs Price matching (30 points)
       if (buyer.budget_range_lower !== undefined && buyer.budget_range_higher !== undefined && 
-        listingProfile.asking_price_lower_bound !== undefined && listingProfile.asking_price_upper_bound !== undefined) {
-        const overlapStart = Math.max(buyer.budget_range_lower, listingProfile.asking_price_lower_bound);
-        const overlapEnd = Math.min(buyer.budget_range_higher, listingProfile.asking_price_upper_bound);
+        listing.asking_price_lower_bound !== undefined && listing.asking_price_upper_bound !== undefined) {
+        const overlapStart = Math.max(buyer.budget_range_lower, listing.asking_price_lower_bound);
+        const overlapEnd = Math.min(buyer.budget_range_higher, listing.asking_price_upper_bound);
         
         if (overlapStart <= overlapEnd) {
           const overlapSize = overlapEnd - overlapStart;
           const buyerBudgetRange = buyer.budget_range_higher - buyer.budget_range_lower;
-          const listingPriceRange = listingProfile.asking_price_upper_bound - listingProfile.asking_price_lower_bound;
+          const listingPriceRange = listing.asking_price_upper_bound - listing.asking_price_lower_bound;
           const avgRange = (buyerBudgetRange + listingPriceRange) / 2;
           
           const overlapPercentage = avgRange > 0 ? overlapSize / avgRange : 1;
@@ -166,7 +178,7 @@ export function findMatches_listing_v2(listingProfile: Listing, buyersToSearch: 
       }
 
       // Size/Scale matching (15 points)
-      if (buyer.size_preference && listingProfile.employees) {
+      if (buyer.size_preference && employees && monthlyRevenue) {
         let buyerEmployees: number = 0;
         let buyerMonthlyRevenue: number = 0;
         if (buyer.size_preference === "Small") {
@@ -183,18 +195,18 @@ export function findMatches_listing_v2(listingProfile: Listing, buyersToSearch: 
           buyerMonthlyRevenue = 100000000;
         }
         
-        if (buyerEmployees === employees) {
+        if (employees <= buyerEmployees) {
           score += 7;
         }
-        if (buyerMonthlyRevenue === monthlyRevenue) {
+        if (monthlyRevenue <= buyerMonthlyRevenue) {
           score += 8;
         }
       }
 
       // Additional criteria (10 points)
-      if (buyer.about && listingProfile.description) {
+      if (buyer.about && listing.description) {
         const aboutLower = buyer.about.toLowerCase();
-        const descriptionLower = listingProfile.description.toLowerCase();
+        const descriptionLower = listing.description.toLowerCase();
         const keywords = aboutLower.split(/\s+/).filter(word => word.length > 3);
         const matchingKeywords = keywords.filter(keyword =>
           descriptionLower.includes(keyword)
@@ -203,8 +215,8 @@ export function findMatches_listing_v2(listingProfile: Listing, buyersToSearch: 
       }
 
       // Timeline Matching (10 points)
-      if (buyer.timeline !== undefined && listingProfile.timeline !== undefined) {
-        const timelineDiff = Math.abs(buyer.timeline - listingProfile.timeline);
+      if (buyer.timeline !== undefined && listing.timeline !== undefined) {
+        const timelineDiff = Math.abs(buyer.timeline - listing.timeline);
         if (timelineDiff === 0) {
           score += 10;
         } else if (timelineDiff <= 1) {
@@ -216,9 +228,10 @@ export function findMatches_listing_v2(listingProfile: Listing, buyersToSearch: 
         }
       }
 
+      console.log(buyer.title, score);
       return { buyer, score };
     })
-    .filter(result => result.score >= 75)
+    .filter(result => result.score >= 50)
     .sort((a, b) => b.score - a.score)
     .map(result => result.buyer);
     
