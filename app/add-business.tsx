@@ -131,7 +131,7 @@ export default function AddBusinessScreen() {
   };
 
   const validateForm = (): boolean => {
-    const { name, industry, industryOther, city, state, country, description, employees, yearsInOperation, askingPriceLower, askingPriceUpper, annualRevenue, monthlyRevenue, profitMargin, timeline } = formData;
+    const { name, industry, industryOther, city, country, description, employees, yearsInOperation, askingPriceLower, askingPriceUpper, annualRevenue, monthlyRevenue, profitMargin, timeline } = formData;
     
     if (!name.trim()) {
       Alert.alert('Validation Error', 'Business name is required');
@@ -147,10 +147,6 @@ export default function AddBusinessScreen() {
     }
     if (!city.trim()) {
       Alert.alert('Validation Error', 'City is required');
-      return false;
-    }
-    if (!state.trim()) {
-      Alert.alert('Validation Error', 'State is required');
       return false;
     }
     if (!country.trim()) {
@@ -324,7 +320,7 @@ export default function AddBusinessScreen() {
             </View>
 
             <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.label}>State *</Text>
+              <Text style={styles.label}>State</Text>
               <TextInput
                 style={styles.input}
                 value={formData.state}
