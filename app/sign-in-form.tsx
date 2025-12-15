@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import { User } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,7 +15,7 @@ export default function SignInFormScreen() {
     const [showPassword, setShowPassword] = useState(false);
     const { signIn } = useAuth();
     const [error, setError] = useState('');
-    const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
+    
 
     const handleSignIn = async () => {
         try {

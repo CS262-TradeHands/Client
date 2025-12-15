@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -55,7 +56,7 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const [userBusinesses, setUserBusinesses] = useState<Listing[]>([]);
   const [userBuyer, setUserBuyer] = useState<Buyer>();
-  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
+  
 
   async function fetchBuyerData() {
     try {

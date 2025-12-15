@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import { Buyer } from '@/types/buyer';
 import { User } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +24,7 @@ export default function BuyerScreen() {
   const [usersLoading, setUsersLoading] = useState(true); // Loading state for users
   const [listingsLoading, setListingsLoading] = useState(true); // Loading state for listings
 
-  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
+  
 
   const SIZE_PREFERENCES = [
     'Small — up to 20 employees (~$15k/month)',

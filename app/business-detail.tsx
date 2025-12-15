@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -6,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Listing } from '../types/listing';
 import { User } from '../types/user';
 
-const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
 
 function formatCurrency(value?: number) {
   if (typeof value !== 'number') return '';

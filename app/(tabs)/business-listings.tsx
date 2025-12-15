@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -24,7 +25,7 @@ export default function BusinessListingsScreen() {
   const [loading, setLoading] = useState(false); // loading state for listings
   const [buyersLoading, setBuyersLoading] = useState(true); // loading state for buyers
 
-  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
+  
 
   // SEARCH FILTER
   const filteredListings = useMemo(() => {
