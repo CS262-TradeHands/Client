@@ -2,15 +2,27 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../context/AuthContext';
+import { ListingInput } from '../types/listing';
 
 interface BusinessFormData {
   name: string;
   industry: string;
-  askingPrice: string;
-  location: string;
+  industryOther?: string;
+  city: string;
+  state: string;
+  country: string;
+  askingPriceLower: string;
+  askingPriceUpper: string;
   description: string;
+  imageUrl: string;
   employees: string;
   yearsInOperation: string;
+  annualRevenue: string;
+  monthlyRevenue: string;
+  profitMargin: string;
+  timeline: string;
+  website: string;
 }
 
 const industries = [
@@ -20,14 +32,26 @@ const industries = [
 
 export default function AddBusinessScreen() {
   const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
   const [formData, setFormData] = useState<BusinessFormData>({
     name: '',
     industry: '',
-    askingPrice: '',
-    location: '',
+    industryOther: '',
+    city: '',
+    state: '',
+    country: '',
+    askingPriceLower: '',
+    askingPriceUpper: '',
     description: '',
+    imageUrl: '',
     employees: '',
-    yearsInOperation: ''
+    yearsInOperation: '',
+    annualRevenue: '',
+    monthlyRevenue: '',
+    profitMargin: '',
+    timeline: '',
+    website: ''
   });
   const [showIndustryPicker, setShowIndustryPicker] = useState(false);
 
@@ -37,11 +61,77 @@ export default function AddBusinessScreen() {
 
   const handleIndustrySelect = (industry: string) => {
     handleInputChange('industry', industry);
+    if (industry !== 'Other') {
+      // clear any previous other value
+      handleInputChange('industryOther' as any, '');
+    }
     setShowIndustryPicker(false);
   };
 
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    if (!isAuthenticated || !user?.user_id) {
+      Alert.alert('Authentication Required', 'You must be signed in to create a listing.');
+      router.push('/sign-in-form' as any);
+      return;
+    }
+
+    const owner_id = Number(user.user_id);
+    const city = formData.city.trim();
+    const state = formData.state.trim();
+    const country = formData.country.trim();
+
+    const asking_price_lower_bound = Number(formData.askingPriceLower) || 0;
+    const asking_price_upper_bound = Number(formData.askingPriceUpper) || asking_price_lower_bound;
+
+    const input: ListingInput = {
+      owner_id,
+      name: formData.name.trim(),
+      industry: formData.industry === 'Other' ? (formData.industryOther || '').trim() : formData.industry.trim(),
+      city,
+      state,
+      country,
+      asking_price_upper_bound,
+      asking_price_lower_bound,
+      description: formData.description.trim(),
+      image_url: formData.imageUrl?.trim() || '',
+      employees: Number(formData.employees) || 0,
+      years_in_operation: Number(formData.yearsInOperation) || 0,
+      annual_revenue: Number(formData.annualRevenue) || 0,
+      monthly_revenue: Number(formData.monthlyRevenue) || 0,
+      profit_margin: Number(formData.profitMargin) || 0,
+      timeline: Number(formData.timeline) || 0,
+      website: formData.website?.trim() || '',
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/listings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error('Failed to create listing:', errText);
+        Alert.alert('Error', 'There was a problem creating your listing. Please try again.');
+        return;
+      }
+
+      const created = await res.json();
+      console.log('Created listing:', created);
+      Alert.alert('Success', 'Your business listing has been submitted and will be reviewed shortly.', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    } catch (err) {
+      console.error('Error creating listing:', err);
+      Alert.alert('Network Error', 'Unable to reach the server. Please try again later.');
+    }
+  };
+
   const validateForm = (): boolean => {
-    const { name, industry, location, description, employees, yearsInOperation } = formData;
+    const { name, industry, industryOther, city, country, description, employees, yearsInOperation, askingPriceLower, askingPriceUpper, annualRevenue, monthlyRevenue, profitMargin, timeline } = formData;
     
     if (!name.trim()) {
       Alert.alert('Validation Error', 'Business name is required');
@@ -51,8 +141,16 @@ export default function AddBusinessScreen() {
       Alert.alert('Validation Error', 'Please select an industry');
       return false;
     }
-    if (!location.trim()) {
-      Alert.alert('Validation Error', 'Location is required');
+    if (industry === 'Other' && (!industryOther || !industryOther.trim())) {
+      Alert.alert('Validation Error', 'Please specify the industry');
+      return false;
+    }
+    if (!city.trim()) {
+      Alert.alert('Validation Error', 'City is required');
+      return false;
+    }
+    if (!country.trim()) {
+      Alert.alert('Validation Error', 'Country is required');
       return false;
     }
     if (!description.trim()) {
@@ -65,6 +163,38 @@ export default function AddBusinessScreen() {
     }
     if (!yearsInOperation.trim() || isNaN(Number(yearsInOperation)) || Number(yearsInOperation) < 0) {
       Alert.alert('Validation Error', 'Please enter valid years in operation');
+      return false;
+    }
+
+    // Asking price bounds
+    if (!askingPriceLower.trim() || isNaN(Number(askingPriceLower)) || Number(askingPriceLower) < 0) {
+      Alert.alert('Validation Error', 'Please enter a valid asking price lower bound');
+      return false;
+    }
+    if (!askingPriceUpper.trim() || isNaN(Number(askingPriceUpper)) || Number(askingPriceUpper) < 0) {
+      Alert.alert('Validation Error', 'Please enter a valid asking price upper bound');
+      return false;
+    }
+    if (Number(askingPriceUpper) < Number(askingPriceLower)) {
+      Alert.alert('Validation Error', 'Asking price upper bound cannot be less than lower bound');
+      return false;
+    }
+
+    // Financials and timeline
+    if (!annualRevenue.trim() || isNaN(Number(annualRevenue)) || Number(annualRevenue) < 0) {
+      Alert.alert('Validation Error', 'Please enter a valid annual revenue number');
+      return false;
+    }
+    if (!monthlyRevenue.trim() || isNaN(Number(monthlyRevenue)) || Number(monthlyRevenue) < 0) {
+      Alert.alert('Validation Error', 'Please enter a valid monthly revenue number');
+      return false;
+    }
+    if (!profitMargin.trim() || isNaN(Number(profitMargin))) {
+      Alert.alert('Validation Error', 'Please enter a valid profit margin number');
+      return false;
+    }
+    if (!timeline.trim() || isNaN(Number(timeline)) || Number(timeline) < 0) {
+      Alert.alert('Validation Error', 'Please enter a valid timeline number');
       return false;
     }
 
@@ -97,23 +227,6 @@ export default function AddBusinessScreen() {
     }
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
-
-    // Here you would typically send the data to your backend
-    console.log('Submitting business listing:', formData);
-    
-    Alert.alert(
-      'Success',
-      'Your business listing has been submitted and will be reviewed shortly.',
-      [
-        {
-          text: 'OK',
-          onPress: () => router.back()
-        }
-      ]
-    );
-  };
 
   return (
     <KeyboardAvoidingView 
@@ -168,7 +281,7 @@ export default function AddBusinessScreen() {
             </TouchableOpacity>
             
             {showIndustryPicker && (
-              <View style={styles.pickerOptions}>
+              <ScrollView style={styles.pickerOptions} nestedScrollEnabled keyboardShouldPersistTaps="handled">
                 {industries.map((industry) => (
                   <TouchableOpacity
                     key={industry}
@@ -178,30 +291,133 @@ export default function AddBusinessScreen() {
                     <Text style={styles.pickerOptionText}>{industry}</Text>
                   </TouchableOpacity>
                 ))}
+              </ScrollView>
+            )}
+            {formData.industry === 'Other' && (
+              <View style={[styles.inputGroup, { marginTop: 8, marginBottom: 0 }]}>
+                <Text style={styles.label}>Please specify *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.industryOther}
+                  onChangeText={(value) => handleInputChange('industryOther' as any, value)}
+                  placeholder="Enter industry"
+                  placeholderTextColor="#999"
+                />
               </View>
             )}
           </View>
 
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={styles.label}>City *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.city}
+                onChangeText={(value) => handleInputChange('city', value)}
+                placeholder="e.g., Los Angeles"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={styles.label}>State</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.state}
+                onChangeText={(value) => handleInputChange('state', value)}
+                placeholder="e.g., California"
+                placeholderTextColor="#999"
+              />
+            </View>
+          </View>
+
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Location *</Text>
+            <Text style={styles.label}>Country *</Text>
             <TextInput
               style={styles.input}
-              value={formData.location}
-              onChangeText={(value) => handleInputChange('location', value)}
-              placeholder="e.g., San Francisco, CA"
+              value={formData.country}
+              onChangeText={(value) => handleInputChange('country', value)}
+              placeholder="e.g., USA"
               placeholderTextColor="#999"
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Asking Price</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.askingPrice}
-              onChangeText={(value) => handleInputChange('askingPrice', value)}
-              placeholder="e.g., $250,000 - $300,000"
-              placeholderTextColor="#999"
-            />
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={styles.label}>Asking Price Lower *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.askingPriceLower}
+                onChangeText={(value) => handleInputChange('askingPriceLower', value)}
+                placeholder="e.g., 250000"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={styles.label}>Asking Price Upper *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.askingPriceUpper}
+                onChangeText={(value) => handleInputChange('askingPriceUpper', value)}
+                placeholder="e.g., 300000"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={styles.label}>Annual Revenue *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.annualRevenue}
+                onChangeText={(value) => handleInputChange('annualRevenue', value)}
+                placeholder="e.g., 1200000"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={styles.label}>Monthly Revenue *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.monthlyRevenue}
+                onChangeText={(value) => handleInputChange('monthlyRevenue', value)}
+                placeholder="e.g., 100000"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={styles.label}>Profit Margin *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.profitMargin}
+                onChangeText={(value) => handleInputChange('profitMargin', value)}
+                placeholder="e.g., 12.5"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={styles.label}>Timeline (months) *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.timeline}
+                onChangeText={(value) => handleInputChange('timeline', value)}
+                placeholder="e.g., 6"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+              />
+            </View>
           </View>
 
           <View style={styles.row}>
@@ -241,6 +457,30 @@ export default function AddBusinessScreen() {
               multiline
               numberOfLines={4}
               textAlignVertical="top"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Image URL</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.imageUrl}
+              onChangeText={(value) => handleInputChange('imageUrl', value)}
+              placeholder="https://example.com/image.jpg"
+              placeholderTextColor="#999"
+              keyboardType="url"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Website</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.website}
+              onChangeText={(value) => handleInputChange('website', value)}
+              placeholder="https://yourbusiness.com"
+              placeholderTextColor="#999"
+              keyboardType="url"
             />
           </View>
 
