@@ -2,7 +2,7 @@ import { API_BASE_URL } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
 import { Buyer } from '../../types/buyer';
@@ -23,6 +23,7 @@ export default function BusinessListingsScreen() {
   const [listings, setListings] = useState<Listing[]>([]); // State for listings 
   const [buyers, setBuyers] = useState<Buyer[]>([]); // State for buyers
   const [loading, setLoading] = useState(false); // loading state for listings
+  const [refreshing, setRefreshing] = useState(false);
   const [buyersLoading, setBuyersLoading] = useState(true); // loading state for buyers
 
   
@@ -123,6 +124,19 @@ export default function BusinessListingsScreen() {
     fetchBuyers();
   }, []);
 
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      const data = await fetchBusinessListings();
+      setListings(data);
+    } catch (err) {
+      console.error('Refresh failed:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   // ADD LISTING BUTTON
   const handleAddBusiness = () => {
     if (isAuthenticated) {
@@ -200,7 +214,13 @@ export default function BusinessListingsScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.listingsContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#5A7A8C"]} />
+        }
+      >
       <View style={{ marginTop: 20 }} />
         <Text style={[styles.resultsCount, { marginBottom: 8 }]}>
           My Business Listings ({ownedListings.length})

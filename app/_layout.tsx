@@ -13,7 +13,7 @@ import { AuthProvider } from '../context/AuthContext';
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  anchor: 'business-listings',
+  anchor: '(tabs)',
 };
 
 const { width, height } = Dimensions.get('window');
@@ -39,7 +39,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (appReady && !showVideoSplash) {
-      router.replace('/business-listings');
+      router.replace('/(tabs)/business-listings');
     }
   }, [appReady, showVideoSplash, router]);
 

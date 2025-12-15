@@ -3,14 +3,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { Buyer } from '../../types/buyer';
 import { Listing } from '../../types/listing';
 
-const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView }:
-  { name: string, id: string, type: 'business' | 'buyer', industryOrTitle?: string, onEdit: (id: string) => void, onView: (id: string, type: 'business' | 'buyer') => void }
+const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView, onDelete }:
+  { name: string, id: string, type: 'business' | 'buyer', industryOrTitle?: string, onEdit: (id: string) => void, onView: (id: string, type: 'business' | 'buyer') => void, onDelete?: (id: string) => void }
 ) => (
   <View style={styles.itemCard}>
     <View style={styles.itemCardHeader}>
@@ -26,6 +26,12 @@ const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView }:
         <Ionicons name="create-outline" size={20} color="#5A7A8C" />
         <Text style={styles.actionButtonText}>Edit</Text>
       </TouchableOpacity>
+      {type === 'business' && onDelete && (
+        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => onDelete(id)}>
+          <Ionicons name="trash-outline" size={20} color="#fff" />
+          <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
+        </TouchableOpacity>
+      )}
     </View>
   </View>
 );
@@ -92,6 +98,35 @@ export default function ProfileScreen() {
     router.push(`/edit-business?id=${id}`);
   };
 
+  const handleDeleteBusiness = (id: string) => {
+    Alert.alert(
+      'Delete Listing',
+      'Are you sure you want to delete this listing? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/listings/${id}`, { method: 'DELETE' });
+              if (!res.ok) {
+                const err = await res.text();
+                console.error('Failed to delete listing:', err);
+                Alert.alert('Error', 'Failed to delete listing. Please try again.');
+                return;
+              }
+              setUserBusinesses(prev => prev.filter(b => b.business_id.toString() !== id));
+            } catch (error) {
+              console.error('Error deleting listing:', error);
+              Alert.alert('Error', 'Network error while deleting listing. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleEditBuyer = (id: string) => {
     router.push(`/edit-buyer?id=${id}`);
   };
@@ -146,12 +181,13 @@ export default function ProfileScreen() {
             userBusinesses.map((b) => (
               <ItemCard
                 key={b.business_id}
-                id={b.owner_id.toString()}
+                id={b.business_id.toString()}
                 name={b.name}
                 type="business"
                 industryOrTitle={b.industry}
                 onView={handleViewDetails}
                 onEdit={handleEditBusiness}
+                onDelete={handleDeleteBusiness}
               />
             ))
           ) : (
@@ -467,7 +503,7 @@ const styles = StyleSheet.create({
   },
   itemCardActions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     borderTopWidth: 1,
     borderTopColor: '#f7f7f7',
     paddingTop: 8,
@@ -479,8 +515,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
-    marginLeft: 10,
+    marginHorizontal: 6,
     backgroundColor: '#E8E3DC',
+  },
+  deleteButton: {
+    backgroundColor: '#ff3b30',
+  },
+  deleteButtonText: {
+    color: '#fff',
   },
   actionButtonText: {
     marginLeft: 5,
