@@ -252,7 +252,7 @@ export default function InboxScreen() {
                 style={[styles.authModalButton, styles.authModalPrimary]}
                 onPress={() => {
                   setAuthPromptVisible(false);
-                  router.push('/sign-in');
+                  router.push('/sign-in-form');
                 }}
               >
                 <Text style={styles.authModalButtonText}>Returning user login</Text>
