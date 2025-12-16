@@ -1,3 +1,4 @@
+import type { BuyerInput } from '@/types/buyer';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -14,36 +15,28 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../context/AuthContext';
 
-// Simplified buyer profile data matching the domain model
+// Form data aligned with backend `Buyer` model
 interface BuyerFormData {
-  // Profile fields (minimal, important only)
-  title: string;                 // one- or two-word title e.g. 'Investor'
-  description: string;           // buyer profile description
-  location: string;              // preferred location
-  industryPreferences: string[]; // array of preferred industry preferences
-  budget: string;                // budget, free text (e.g. 500000)
-  experience: string;            // short experience summary
-  timeline: string;              // acquisition timeline
+  title: string;                 // e.g. 'Investor'
+  about: string;                 // buyer profile description (maps to `about`)
+  city: string;                  // required
+  state?: string;                // optional
+  country: string;               // required
+  industryPreferences: string[]; // array of preferred industry preferences (maps to `industries`)
+  budgetLower: string;           // numeric string
+  budgetHigher: string;          // numeric string
+  experience: string;            // years (numeric string)
+  timeline: string;              // months (numeric string)
   sizePreference: string;        // chosen company size category
-  linkedin?: string;             // linkedin profile url (optional)
+  linkedin?: string;             // linkedin profile url (maps to `linkedin_url`)
 }
 
 
 const INDUSTRY_PREFERENCES = [
-  'Technology',
-  'Healthcare',
-  'Retail',
-  'Manufacturing',
-  'Food & Beverage',
-  'Professional Services',
-  'E-commerce',
-  'Real Estate',
-  'Construction',
-  'Transportation',
-  'Education',
-  'Entertainment',
-  'Other'
+  'Tech', 'Retail', 'Service', 'Food & Beverage', 'Healthcare', 
+  'Manufacturing', 'Construction', 'Finance', 'Education', 'Other'
 ];
 
 const SIZE_PREFERENCES = [
@@ -57,18 +50,26 @@ const SIZE_PREFERENCES = [
 
 export default function AddBuyerScreen() {
   const router = useRouter();
-  // Single-page simplified form matching the UML: only essential fields
+  const { isAuthenticated, user } = useAuth();
+
+  // Single-page form matching buyer.ts fields
   const [formData, setFormData] = useState<BuyerFormData>({
     title: '',
-    description: '',
-    location: '',
+    about: '',
+    city: '',
+    state: '',
+    country: '',
     industryPreferences: [],
-    budget: '',
+    budgetLower: '',
+    budgetHigher: '',
     experience: '',
     timeline: '',
     sizePreference: '',
     linkedin: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const API_BASE_URL = 'https://tradehands-bpgwcja7g5eqf2dp.canadacentral-01.azurewebsites.net';
+
 
   const updateFormData = (field: keyof BuyerFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -82,14 +83,21 @@ export default function AddBuyerScreen() {
     updateFormData(field, newArray);
   };
 
-  const handleSubmit = () => {
-    // Validation: require title, description, at least one industry preference, and budget
+  const handleSubmit = async () => {
+    // Ensure user is signed in
+    if (!isAuthenticated || !user?.user_id) {
+      Alert.alert('Not signed in', 'Please sign in to create a buyer profile.');
+      router.push('/sign-in-form');
+      return;
+    }
+
+    // Validation
     if (!formData.title.trim()) {
       Alert.alert('Missing required field', 'Please enter a Title (e.g. "Investor").');
       return;
     }
 
-    if (!formData.description.trim()) {
+    if (!formData.about.trim()) {
       Alert.alert('Missing required field', 'Please enter a short Profile Description.');
       return;
     }
@@ -99,15 +107,73 @@ export default function AddBuyerScreen() {
       return;
     }
 
-    if (!formData.budget.trim()) {
-      Alert.alert('Missing required field', 'Please enter an approximate Budget.');
+    if (!formData.budgetLower.trim() || !formData.budgetHigher.trim()) {
+      Alert.alert('Missing required field', 'Please enter a budget range (lower and higher).');
       return;
     }
 
-    // Normally send to API here. For now show success and return to buyers list
-    Alert.alert('Profile Created', 'Your buyer profile has been saved.', [
-      { text: 'OK', onPress: () => router.push('/(tabs)/buyers') }
-    ]);
+    if (!formData.city.trim() || !formData.country.trim()) {
+      Alert.alert('Missing required field', 'Please enter City and Country.');
+      return;
+    }
+
+    // parse numeric fields
+    const experience = Number(formData.experience || 0);
+    const timeline = Number(formData.timeline || 0);
+    const budgetLower = Number(formData.budgetLower.replace(/[^0-9.-]+/g, ''));
+    const budgetHigher = Number(formData.budgetHigher.replace(/[^0-9.-]+/g, ''));
+
+    if (Number.isNaN(experience)) {
+      Alert.alert('Invalid field', 'Please enter a valid number for Experience (years).');
+      return;
+    }
+
+    if (Number.isNaN(budgetLower) || Number.isNaN(budgetHigher)) {
+      Alert.alert('Invalid field', 'Please enter valid numeric values for budget range.');
+      return;
+    }
+
+    // Build payload matching BuyerInput
+    const payload: BuyerInput = {
+      user_id: user.user_id,
+      title: formData.title,
+      about: formData.about,
+      experience: experience,
+      budget_range_lower: budgetLower,
+      budget_range_higher: budgetHigher,
+      city: formData.city,
+      state: formData.state || '',
+      country: formData.country,
+      industries: formData.industryPreferences,
+      size_preference: formData.sizePreference,
+      timeline: timeline,
+      linkedin_url: formData.linkedin || '',
+    };
+
+    setIsSubmitting(true);
+    try {
+      const resp = await fetch(`${API_BASE_URL}/buyers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        const errBody = await resp.text();
+        console.error('Create buyer failed:', resp.status, errBody);
+        Alert.alert('Error', 'Failed to create buyer profile. Please try again.');
+        return;
+      }
+
+      Alert.alert('Profile Created', 'Your buyer profile has been saved.', [
+        { text: 'OK', onPress: () => router.push('/(tabs)/buyers') }
+      ]);
+    } catch (err) {
+      console.error('Error creating buyer:', err);
+      Alert.alert('Error', 'Failed to create buyer profile. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // (single-page form — no step indicators)
@@ -162,8 +228,8 @@ export default function AddBuyerScreen() {
           style={styles.textArea}
           placeholder="Briefly describe your buying interests and background..."
           placeholderTextColor="#999"
-          value={formData.description}
-          onChangeText={(text) => updateFormData('description', text)}
+          value={formData.about}
+          onChangeText={(text) => updateFormData('about', text)}
           multiline
           numberOfLines={4}
         />
@@ -171,12 +237,29 @@ export default function AddBuyerScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Location *</Text>
+        <View style={styles.inlineRow}>
+          <TextInput
+            style={[styles.input, styles.halfInput]}
+            placeholder="City"
+            placeholderTextColor="#999"
+            value={formData.city}
+            onChangeText={(text) => updateFormData('city', text)}
+          />
+          <TextInput
+            style={[styles.input, styles.halfInput]}
+            placeholder="State (optional)"
+            placeholderTextColor="#999"
+            value={formData.state}
+            onChangeText={(text) => updateFormData('state', text)}
+          />
+        </View>
+        <View style={{ marginTop: 8 }} />
         <TextInput
           style={styles.input}
-          placeholder="City, region, or 'National'"
+          placeholder="Country"
           placeholderTextColor="#999"
-          value={formData.location}
-          onChangeText={(text) => updateFormData('location', text)}
+          value={formData.country}
+          onChangeText={(text) => updateFormData('country', text)}
         />
       </View>
 
@@ -199,37 +282,47 @@ export default function AddBuyerScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Budget (approx.) *</Text>
+        <View style={styles.inlineRow}>
+          <TextInput
+            style={[styles.input, styles.halfInput]}
+            placeholder="Lower"
+            placeholderTextColor="#999"
+            value={formData.budgetLower}
+            onChangeText={(text) => updateFormData('budgetLower', text)}
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={[styles.input, styles.halfInput]}
+            placeholder="Higher"
+            placeholderTextColor="#999"
+            value={formData.budgetHigher}
+            onChangeText={(text) => updateFormData('budgetHigher', text)}
+            keyboardType="numeric"
+          />
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Experience (years) *</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., 500000"
+          placeholder="e.g., 5"
           placeholderTextColor="#999"
-          value={formData.budget}
-          onChangeText={(text) => updateFormData('budget', text)}
+          value={formData.experience}
+          onChangeText={(text) => updateFormData('experience', text)}
           keyboardType="numeric"
         />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Experience Summary</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Years in industry, relevant roles, etc."
-          placeholderTextColor="#999"
-          value={formData.experience}
-          onChangeText={(text) => updateFormData('experience', text)}
-          multiline
-          numberOfLines={3}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Acquisition Timeline</Text>
+        <Text style={styles.sectionTitle}>Acquisition Timeline (months)</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., 3-6 months, flexible"
+          placeholder="e.g., 6"
           placeholderTextColor="#999"
           value={formData.timeline}
           onChangeText={(text) => updateFormData('timeline', text)}
+          keyboardType="numeric"
         />
       </View>
 
@@ -277,10 +370,11 @@ export default function AddBuyerScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.navButton, styles.navButtonPrimary]}
+            style={[styles.navButton, styles.navButtonPrimary, isSubmitting && { opacity: 0.7 }]}
             onPress={handleSubmit}
+            disabled={isSubmitting}
           >
-            <Text style={styles.navButtonText}>Save Profile</Text>
+            <Text style={styles.navButtonText}>{isSubmitting ? 'Saving...' : 'Save Profile'}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -376,6 +470,13 @@ const styles = StyleSheet.create({
   },
   radioGroup: {
     gap: 8,
+  },
+  inlineRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  halfInput: {
+    flex: 1,
   },
   radioOption: {
     borderWidth: 1,

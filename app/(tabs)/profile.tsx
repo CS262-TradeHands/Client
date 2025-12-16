@@ -25,7 +25,7 @@ const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView, onDelete }:
         <Ionicons name="create-outline" size={20} color="#5A7A8C" />
         <Text style={styles.actionButtonText}>Edit</Text>
       </TouchableOpacity>
-      {type === 'business' && onDelete && (
+          {onDelete && (
         <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => onDelete(id)}>
           <Ionicons name="trash-outline" size={20} color="#fff" />
           <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
@@ -130,6 +130,35 @@ export default function ProfileScreen() {
     router.push(`/edit-buyer?id=${id}`);
   };
 
+  const handleDeleteBuyer = (id: string) => {
+    Alert.alert(
+      'Delete Buyer Profile',
+      'Are you sure you want to delete your buyer profile? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/buyers/${id}`, { method: 'DELETE' });
+              if (!res.ok) {
+                const err = await res.text();
+                console.error('Failed to delete buyer profile:', err);
+                Alert.alert('Error', 'Failed to delete buyer profile. Please try again.');
+                return;
+              }
+              setUserBuyer(undefined);
+            } catch (error) {
+              console.error('Error deleting buyer profile:', error);
+              Alert.alert('Error', 'Network error while deleting buyer profile. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleViewDetails = (id: string, type: 'business' | 'buyer') => {
     if (type === 'business') {
       router.push(`/business-detail?id=${id}`);
@@ -209,12 +238,13 @@ export default function ProfileScreen() {
           {userBuyer ? (
               <ItemCard
                 key={userBuyer.buyer_id}
-                id={userBuyer.user_id.toString()}
+                id={userBuyer.buyer_id.toString()}
                 name={userBuyer.title}
                 type="buyer"
-                industryOrTitle={userBuyer.title}
+                industryOrTitle={userBuyer.industries[0]}
                 onView={handleViewDetails}
                 onEdit={handleEditBuyer}
+                onDelete={handleDeleteBuyer}
               />
             ) : (
             <View style={styles.placeholderCard}>
