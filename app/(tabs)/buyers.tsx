@@ -4,7 +4,7 @@ import { User } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
 import { Listing } from '../../types/listing';
@@ -23,6 +23,7 @@ export default function BuyerScreen() {
   const [buyersLoading, setBuyersLoading] = useState(true); // Loading state for buyers
   const [usersLoading, setUsersLoading] = useState(true); // Loading state for users
   const [listingsLoading, setListingsLoading] = useState(true); // Loading state for listings
+  const [refreshing, setRefreshing] = useState(false); // Pull-to-refresh state
 
   
 
@@ -95,33 +96,40 @@ export default function BuyerScreen() {
   }, [filteredBuyers, currentUserId, myBuyers]);
 
   // FETCH LISTINGS FOR MATCHING
-  async function fetchListings() {
+  async function fetchListings(): Promise<Listing[] | undefined> {
+    setListingsLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/listings`);
       const data = await response.json();
       setListings(data);
+      return data;
     } catch (error) {
       console.error('Error fetching listings:', error);
+      return undefined;
     } finally {
       setListingsLoading(false);
     }
   }
 
   // FETCH BUYERS FOR DISPLAY
-  async function fetchBuyerData() {
+  async function fetchBuyerData(): Promise<Buyer[] | undefined> {
+    setBuyersLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/buyers`);
       const buyerData = await response.json();
       setBuyers(buyerData);
+      return buyerData;
     } catch (error) {
       console.error('Error fetching buyers:', error);
+      return undefined;
     } finally {
       setBuyersLoading(false);
     }
   }
 
   // FETCH USER DATA ASSOCIATED WITH EACH BUYER
-  async function fetchUserData(buyers: Buyer[]) {
+  async function fetchUserData(buyers: Buyer[]): Promise<User[] | undefined> {
+    setUsersLoading(true);
     try {
       const userDetails = await Promise.all(
         buyers.map(async (buyer) => {
@@ -131,8 +139,10 @@ export default function BuyerScreen() {
         })
       );
       setUsers(userDetails);
+      return userDetails;
     } catch (error) {
       console.error('Error fetching user data:', error);
+      return undefined;
     } finally {
       setUsersLoading(false);
     }
@@ -149,6 +159,18 @@ export default function BuyerScreen() {
       fetchUserData(buyers);
     }
   }, [buyers]);
+
+  // Pull-to-refresh handler: refresh buyers and listings (users will be fetched via the buyers effect)
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([fetchBuyerData(), fetchListings()]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }; 
 
   // ADD BUYER PROFILE BUTTON
   const handleAddBuyerProfile = () => {
@@ -214,7 +236,18 @@ export default function BuyerScreen() {
         {/* Removed stray closing View here */}
       </View>
 
-      <ScrollView contentContainerStyle={styles.listingsContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.listingsContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#5A7A8C"]}
+            tintColor="#5A7A8C"
+          />
+        }
+      >
         <View style={{ marginTop: 20 }} />
         <Text style={[styles.resultsCount, { marginBottom: 8 }]}>
           My Buyer Profile
