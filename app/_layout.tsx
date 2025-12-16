@@ -1,11 +1,11 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Dimensions, Platform, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import 'react-native-reanimated';
 import { AuthProvider } from '../context/AuthContext';
 
@@ -73,6 +73,8 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
   const [videoFinished, setVideoFinished] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const videoRef = useRef<Video>(null);
+  const isWeb = Platform.OS === 'web';
 
   useEffect(() => {
     // Fade in and scale animation for text
@@ -81,17 +83,17 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
         toValue: 1,
         duration: 1200,
         delay: 300,
-        useNativeDriver: true,
+        useNativeDriver: !isWeb,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
         delay: 300,
         tension: 50,
         friction: 7,
-        useNativeDriver: true,
+        useNativeDriver: !isWeb,
       }),
     ]).start();
-  }, [fadeAnim, scaleAnim]);
+  }, [fadeAnim, scaleAnim, isWeb]);
 
   useEffect(() => {
     if (videoFinished) {
@@ -99,45 +101,32 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 300,
-        useNativeDriver: true,
+        useNativeDriver: !isWeb,
       }).start(() => {
         setTimeout(onFinish, 200);
       });
     }
-  }, [videoFinished, onFinish, fadeAnim]);
-
-  const handleSkip = () => {
-    onFinish();
-  };
-
-  // Prepare expo-video player at top-level (hooks must be called unconditionally)
-  const videoSource = require('../assets/images/simple.mp4');
-  const player = useVideoPlayer(videoSource, (p) => {
-    try {
-      p.muted = true; // Mute the video to avoid interrupting background audio
-      p.audioMixingMode = 'mixWithOthers'; // Allow background audio to continue
-      (p as any)?.play?.();
-      if ((p as any)?.onPlaybackStatusUpdate) {
-        (p as any).onPlaybackStatusUpdate((status: any) => {
-          if (status?.didJustFinish) {
-            setVideoFinished(true);
-          }
-        });
-      }
-    } catch {
-      // ignore; API may differ across platforms
-    }
-  });
+  }, [videoFinished, onFinish, fadeAnim, isWeb]);
 
   // ensure splash finishes even if player events aren't reported.
   useEffect(() => {
     if (videoFinished) return;
-    const FALLBACK_MS = 5000; // fallback after 5s to avoid stalling startup
+    const FALLBACK_MS = 5000; // fallback after 5s
     const id = setTimeout(() => {
       setVideoFinished(true);
     }, FALLBACK_MS);
     return () => clearTimeout(id);
   }, [videoFinished]);
+
+  const handleSkip = () => {
+    onFinish();
+  };
+
+  const handlePlaybackStatusUpdate = (status: any) => {
+    if (status.isLoaded && status.didJustFinish) {
+      setVideoFinished(true);
+    }
+  };
 
   return (
     <TouchableWithoutFeedback onPress={handleSkip}>
@@ -157,10 +146,15 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
           style={StyleSheet.absoluteFillObject}
         />
         <View style={styles.videoWrapper} pointerEvents="none">
-          <VideoView
+          <Video
+            ref={videoRef}
+            source={require('../assets/images/simple.mp4')}
             style={styles.video}
-            player={player}
-            contentFit="contain"
+            resizeMode={ResizeMode.CONTAIN}
+            shouldPlay
+            isLooping={false}
+            isMuted={true}
+            onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
           />
           <LinearGradient
             colors={['transparent', 'rgba(10, 25, 41, 0.2)', 'rgba(10, 25, 41, 0.5)', 'rgba(10, 25, 41, 0.8)']}
@@ -187,7 +181,7 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
           ]} 
           pointerEvents="none"
         >
-          Tap to continue
+          {isWeb ? 'Click' : 'Tap'} to continue
         </Animated.Text>
       </View>
     </TouchableWithoutFeedback>
