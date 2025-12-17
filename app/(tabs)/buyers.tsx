@@ -9,6 +9,7 @@ import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
 import { Listing } from '../../types/listing';
 import { findMatchedBuyersForListing } from '../../utils/matchingAlgorithm';
+import BuyerDetailModal from '../../components/BuyerDetailModal';
 
 export default function BuyerScreen() {
   const router = useRouter();
@@ -404,98 +405,17 @@ export default function BuyerScreen() {
 
         </ScrollView>
 
-      {/* Buyer Detail Modal */}
-      {selectedBuyer && (
-        <Modal visible={!!selectedBuyer} transparent animationType="slide">
-          <View style={styles.buyerModalOverlay}>
-            <View style={styles.buyerModalContent}>
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Header */}
-                <View style={styles.buyerModalHeader}>
-                  <TouchableOpacity
-                    onPress={() => setSelectedBuyer(null)}
-                    style={styles.closeButton}
-                  >
-                    <Ionicons name="close" size={24} color="#333" />
-                  </TouchableOpacity>
-                  <Text style={styles.buyerModalTitle}>Buyer Profile</Text>
-                </View>
-
-                {/* Buyer Info */}
-                <View style={styles.buyerModalBody}>
-                  {users.find(user => user.user_id === selectedBuyer.user_id)!.profile_image_url ? 
-                  <Image source={{uri: users.find(user => user.user_id === selectedBuyer.user_id)!.profile_image_url }} style={styles.buyerModalAvatar} />
-                  :
-                  <Image source={require('../../assets/images/handshake-logo.png')} style={styles.buyerModalAvatar} />
-                  }
-                  <Text style={styles.buyerModalName}>{users.find(user => user.user_id === selectedBuyer.user_id)!.first_name} {users.find(user => user.user_id === selectedBuyer.user_id)!.last_name}</Text>
-                  <Text style={styles.buyerModalTitle}>{selectedBuyer.title}</Text>
-                  <View style={styles.buyerModalLocation}>
-                    <Ionicons name="location-outline" size={16} color="#666" />
-                    <Text style={styles.buyerModalLocationText}>{selectedBuyer.city}</Text>
-                  </View>
-
-                  {/* Bio */}
-                  <View style={styles.buyerModalSection}>
-                    <Text style={styles.buyerModalSectionTitle}>About</Text>
-                    <Text style={styles.buyerModalBio}>{selectedBuyer.about}</Text>
-                  </View>
-
-                  {/* Looking For */}
-                  <View style={styles.buyerModalSection}>
-                    <Text style={styles.buyerModalSectionTitle}>Looking For</Text>
-                    <View style={styles.buyerModalTags}>
-                      {selectedBuyer.industries?.map((item, index) => (
-                        <View key={index} style={styles.buyerModalTag}>
-                          <Text style={styles.buyerModalTagText}>{item}</Text>
-                        </View>
-                      ))}
-                      <View style={styles.buyerModalTag}>
-                        <Text style={styles.buyerModalTagText}>{SIZE_PREFERENCES.find(s => s.includes(selectedBuyer.size_preference)) || selectedBuyer.size_preference}</Text>
-                      </View>
-                    </View>
-                  </View>
-                    {/* Investment Details */}
-                    <View style={styles.buyerModalSection}>
-                    <Text style={styles.buyerModalSectionTitle}>Investment Details</Text>
-                    <View style={styles.buyerModalDetails}>
-                      <View style={styles.buyerModalDetailRow}>
-                      <Ionicons name="cash-outline" size={20} color="#5A7A8C" />
-                      <View style={styles.buyerModalDetailContent}>
-                        <Text style={styles.buyerModalDetailLabel}>Budget Range</Text>
-                        <Text style={styles.buyerModalDetailValue}>
-                        ${Number(selectedBuyer.budget_range_lower).toLocaleString()} - ${Number(selectedBuyer.budget_range_higher).toLocaleString()}
-                        </Text>
-                      </View>
-                      </View>
-                      <View style={styles.buyerModalDetailRow}>
-                      <Ionicons name="briefcase-outline" size={20} color="#5A7A8C" />
-                      <View style={styles.buyerModalDetailContent}>
-                        <Text style={styles.buyerModalDetailLabel}>Experience</Text>
-                        <Text style={styles.buyerModalDetailValue}>{selectedBuyer.experience} Years</Text>
-                      </View>
-                      </View>
-                      <View style={styles.buyerModalDetailRow}>
-                      <Ionicons name="time-outline" size={20} color="#5A7A8C" />
-                      <View style={styles.buyerModalDetailContent}>
-                        <Text style={styles.buyerModalDetailLabel}>Timeline</Text>
-                        <Text style={styles.buyerModalDetailValue}>{selectedBuyer.timeline} Months</Text>
-                      </View>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Contact Button */}
-                  <TouchableOpacity style={styles.buyerModalContactButton}>
-                    <Ionicons name="mail-outline" size={20} color="#fff" />
-                    <Text style={styles.buyerModalContactText}>Contact Buyer</Text>
-                  </TouchableOpacity>
-                </View>
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-      )}
+      {/* Replace the inline modal with the component */}
+      <BuyerDetailModal
+        buyer={selectedBuyer}
+        userInfo={selectedBuyer ? users.find(u => u.user_id === selectedBuyer.user_id) || null : null}
+        visible={!!selectedBuyer}
+        onClose={() => setSelectedBuyer(null)}
+        onContact={() => {
+          // Handle contact action
+          console.log('Contact buyer:', selectedBuyer);
+        }}
+      />
 
       {authPromptVisible && (
         <Modal transparent animationType="fade" visible={authPromptVisible} onRequestClose={() => setAuthPromptVisible(false)}>
@@ -762,139 +682,6 @@ const styles = StyleSheet.create({
   modalButtonText: { color: '#fff', fontWeight: '700' },
   modalSecondaryText: { color: '#5A7A8C', fontWeight: '700' },
 
-  // Buyer Detail Modal Styles
-  buyerModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  buyerModalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-    paddingBottom: 20,
-  },
-  buyerModalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    position: 'relative',
-  },
-  closeButton: {
-    position: 'absolute',
-    left: 20,
-    top: 20,
-    padding: 5,
-  },
-  buyerModalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-  },
-  buyerModalBody: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  buyerModalAvatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 15,
-  },
-  buyerModalName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 5,
-  },
-  buyerModalLocation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  buyerModalLocationText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 5,
-  },
-  buyerModalSection: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  buyerModalSectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 10,
-  },
-  buyerModalBio: {
-    fontSize: 16,
-    lineHeight: 22,
-    color: '#666',
-  },
-  buyerModalTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  buyerModalTag: {
-    backgroundColor: '#e7f3ff',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: '#5A7A8C',
-  },
-  buyerModalTagText: {
-    color: '#5A7A8C',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  buyerModalDetails: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 15,
-  },
-  buyerModalDetailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  buyerModalDetailContent: {
-    marginLeft: 15,
-    flex: 1,
-  },
-  buyerModalDetailLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
-  },
-  buyerModalDetailValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  buyerModalContactButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#5A7A8C',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 25,
-    gap: 8,
-    marginTop: 10,
-  },
-  buyerModalContactText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   noResults: {
     alignItems: 'center',
     paddingVertical: 40,
