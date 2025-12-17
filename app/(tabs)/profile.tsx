@@ -26,7 +26,7 @@ const ItemCard = ({ name, id, type, industryOrTitle, onEdit, onView, onDelete }:
         <Ionicons name="create-outline" size={20} color="#5A7A8C" />
         <Text style={styles.actionButtonText}>Edit</Text>
       </TouchableOpacity>
-          {onDelete && (
+      {onDelete && (
         <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => onDelete(id)}>
           <Ionicons name="trash-outline" size={20} color="#fff" />
           <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
@@ -62,13 +62,13 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const [userBusinesses, setUserBusinesses] = useState<Listing[]>([]);
   const [userBuyer, setUserBuyer] = useState<Buyer>();
-  
+
 
   async function fetchBuyerData() {
     try {
       const response = await fetch(`${API_BASE_URL}/buyers`);
       const buyerData: Buyer[] = await response.json();
-      const buyer = buyerData.find(b => b.user_id === user?.user_id );
+      const buyer = buyerData.find(b => b.user_id === user?.user_id);
 
       if (buyer) {
         setUserBuyer(buyer);
@@ -83,7 +83,7 @@ export default function ProfileScreen() {
     try {
       const response = await fetch(`${API_BASE_URL}/listings`);
       const listingData: Listing[] = await response.json();
-      const listings = listingData.filter(b => b.owner_id === user?.user_id );
+      const listings = listingData.filter(b => b.owner_id === user?.user_id);
 
       if (listings) {
         setUserBusinesses(listings);
@@ -237,17 +237,17 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your Buyer Profile</Text>
           {userBuyer ? (
-              <ItemCard
-                key={userBuyer.buyer_id}
-                id={userBuyer.buyer_id.toString()}
-                name={userBuyer.title}
-                type="buyer"
-                industryOrTitle={userBuyer.industries[0]}
-                onView={handleViewDetails}
-                onEdit={handleEditBuyer}
-                onDelete={handleDeleteBuyer}
-              />
-            ) : (
+            <ItemCard
+              key={userBuyer.buyer_id}
+              id={userBuyer.buyer_id.toString()}
+              name={userBuyer.title}
+              type="buyer"
+              industryOrTitle={userBuyer.industries[0]}
+              onView={handleViewDetails}
+              onEdit={handleEditBuyer}
+              onDelete={handleDeleteBuyer}
+            />
+          ) : (
             <View style={styles.placeholderCard}>
               <Text style={styles.placeholderText}>No buyer profile created.</Text>
               <TouchableOpacity
@@ -296,10 +296,10 @@ export default function ProfileScreen() {
             <View style={styles.infoDivider} />
             <FAQAccordionItem question="How do I view my matches?">
               <Text style={styles.faqAnswer}>
-                You can view your business matches in the settings. This can be done through the following steps:
-                {'\n'}• Navigate to the profile page
-                {'\n'}• Look for the &quot;Settings&quot; section
-                {'\n'}• Click on &quot;View Matches&quot; to see your compatible listings.
+                You can view your matches on the Business Dashboard or in your Inbox. Steps:
+                {'\n'}• Navigate to the "Businesses" tab (bottom left).
+                {'\n'}• Toggle the view from "Public" to "Matches" to see listings compatible with your profile.
+                {'\n'}• Alternatively, tap the "Inbox" icon (mail) in the top right to view match notifications.
               </Text>
             </FAQAccordionItem>
           </View>
