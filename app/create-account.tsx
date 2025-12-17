@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 
@@ -40,108 +40,121 @@ export default function SignInScreen() {
       setConfirmEmailError('');
     }
   };
-  
+
   const handleCreateAccount = () => {
     if (emailError || confirmEmailError) return;
     // Mock user data - replace with actual API call
     const userData = {
-      id: '1',
+      user_id: 1,
       email: email,
-      firstName: firstName,
-      lastName: lastName,
+      first_name: firstName,
+      last_name: lastName,
       phone: phone,
+      password_hash: 'mock_hash',
+      verified: false,
+      private: false,
+      created_at: new Date().toISOString(),
     };
-    
+
     signIn(userData);
     router.replace('/(tabs)/profile');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButtonAbsolute}>
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButtonAbsolute}>
+              <Text style={styles.backButtonText}>Back</Text>
+            </TouchableOpacity>
 
-      <Image
-        source={require('../assets/images/handshake-logo.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+            <Image
+              source={require('../assets/images/handshake-logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
 
-      <Text style={styles.title}>Create a new account</Text>
+            <Text style={styles.title}>Create a new account</Text>
 
-      <View style={styles.formContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="First Name"
-          placeholderTextColor="#777"
-          value={firstName}
-          onChangeText={setFirstName}
-          autoCapitalize="words"
-        />
+            <View style={styles.formContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="First Name"
+                placeholderTextColor="#777"
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+              />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Last Name"
-          placeholderTextColor="#777"
-          value={lastName}
-          onChangeText={setLastName}
-          autoCapitalize="words"
-        />
+              <TextInput
+                style={styles.input}
+                placeholder="Last Name"
+                placeholderTextColor="#777"
+                value={lastName}
+                onChangeText={setLastName}
+                autoCapitalize="words"
+              />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#777"
-          value={email}
-          onChangeText={handleEmailChange}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#777"
+                value={email}
+                onChangeText={handleEmailChange}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Email"
-          placeholderTextColor="#777"
-          value={confirmEmail}
-          onChangeText={handleConfirmEmailChange}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        {confirmEmailError ? <Text style={styles.errorText}>{confirmEmailError}</Text> : null}
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Email"
+                placeholderTextColor="#777"
+                value={confirmEmail}
+                onChangeText={handleConfirmEmailChange}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              {confirmEmailError ? <Text style={styles.errorText}>{confirmEmailError}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#777"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#777"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          placeholderTextColor="#777"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-        />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor="#777"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+              />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Phone"
-          placeholderTextColor="#777"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
+              <TextInput
+                style={styles.input}
+                placeholder="Phone"
+                placeholderTextColor="#777"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+              />
 
-        <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
-          <Text style={styles.buttonText}>Create account</Text>
-        </TouchableOpacity>
-      </View>
+              <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
+                <Text style={styles.buttonText}>Create account</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -149,9 +162,12 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
     backgroundColor: '#fff',
+  },
+  scrollContent: {
+    padding: 20,
+    justifyContent: 'center',
+    minHeight: '100%',
   },
   title: {
     fontSize: 24,
@@ -213,7 +229,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   inputError: {
-  borderColor: 'red',
+    borderColor: 'red',
   },
   errorText: {
     width: '75%',
