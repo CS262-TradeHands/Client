@@ -73,9 +73,6 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
   const isWeb = Platform.OS === 'web';
   const { width = 360, height = 640 } = useWindowDimensions();
   const videoSource = require('../assets/images/simple.mp4');
-  const webVideoUri = isWeb
-    ? new URL('../assets/images/simple.mp4', import.meta.url).href
-    : undefined;
 
   useEffect(() => {
     // Fade in and scale animation for text
@@ -199,7 +196,7 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
         <View style={[styles.videoWrapper, { width, height }]}>
           {isWeb ? (
             <video
-              src={webVideoUri}
+              src={videoSource}
               style={[styles.video, { width: '100%', height: '100%' }] as any}
               autoPlay
               muted
