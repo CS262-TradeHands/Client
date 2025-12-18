@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -41,19 +42,52 @@ export default function SignInScreen() {
     }
   };
   
-  const handleCreateAccount = () => {
+  const handleCreateAccount = async () => {
     if (emailError || confirmEmailError) return;
-    // Mock user data - replace with actual API call
-    const userData = {
-      id: '1',
-      email: email,
-      firstName: firstName,
-      lastName: lastName,
-      phone: phone,
-    };
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
     
-    signIn(userData);
-    router.replace('/(tabs)/profile');
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          phone: phone,
+          password: password, // Send plain password - server will hash it
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Now log in the user
+        const loginResponse = await fetch(`${API_BASE_URL}/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        if (loginResponse.ok) {
+          const userData = await loginResponse.json();
+          signIn(userData);
+          router.replace('/(tabs)/profile');
+        }
+      } else {
+        const error = await response.json();
+        alert(`Error creating account: ${error.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Error creating account:', err);
+      alert('An error occurred. Please try again.');
+    }
   };
 
   return (
