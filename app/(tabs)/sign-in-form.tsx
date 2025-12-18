@@ -3,9 +3,9 @@ import { User } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 
 export default function SignInFormScreen() {
@@ -19,18 +19,27 @@ export default function SignInFormScreen() {
 
     const handleSignIn = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/users`);
-            const userData: User[] = await response.json();
+            const response = await fetch(`${API_BASE_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    password
+                })
+            });
 
-            const potentialUser = userData.find(u => u.email === email && u.password_hash === password);
-            if (potentialUser) {
-                signIn(potentialUser);
+            if (response.ok) {
+                const userData = await response.json();
+                signIn(userData);
                 router.replace('/(tabs)/profile');
             } else {
                 setError("Email or password does not match. Please try again.")
             }
         } catch (err) {
-            console.error('Error fetching user data:', err);
+            console.error('Error logging in:', err);
+            setError("An error occurred. Please try again.");
         }
     };
 
@@ -44,15 +53,20 @@ export default function SignInFormScreen() {
                 style={styles.keyboardAvoidingView}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <Image
-                    source={require('../assets/images/handshake-logo.png')}
-                    style={styles.logo}
-                    resizeMode="contain"
-                />
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <ScrollView 
+                        contentContainerStyle={styles.scrollContent}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <Image
+                            source={require('../../assets/images/handshake-logo.png')}
+                            style={styles.logo}
+                            resizeMode="contain"
+                        />
 
-                <Text style={styles.title}>Sign into TradeHands</Text>
+                        <Text style={styles.title}>Sign into TradeHands</Text>
 
-                <View style={styles.formContainer}>
+                        <View style={styles.formContainer}>
 
                 <TextInput
                     style={styles.input}
@@ -96,7 +110,9 @@ export default function SignInFormScreen() {
                 <TouchableOpacity style={styles.createAccountButton} onPress={() => router.push('/create-account')}>
                     <Text style={styles.createAccountText}>Create account</Text>
                 </TouchableOpacity>
-            </View>
+                        </View>
+                    </ScrollView>
+                </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -109,6 +125,9 @@ const styles = StyleSheet.create({
     },
     keyboardAvoidingView: {
         flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,

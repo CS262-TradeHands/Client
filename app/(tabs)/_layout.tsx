@@ -53,10 +53,17 @@ export default function TabLayout() {
           tabPress: (e) => {
             if (!isAuthenticated) {
               e.preventDefault();
-              router.push('/sign-in-form');
+              router.push('/(tabs)/sign-in-form');
             }
           },
         }}
+      />
+      <Tabs.Screen 
+        name="sign-in-form" 
+        options={{ 
+          href: null,
+          headerShown: false,
+        }} 
       />
     </Tabs>
   );
