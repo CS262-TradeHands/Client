@@ -297,9 +297,9 @@ export default function ProfileScreen() {
             <FAQAccordionItem question="How do I view my matches?">
               <Text style={styles.faqAnswer}>
                 You can view your matches on the Business Dashboard or in your Inbox. Steps:
-                {'\n'}• Navigate to the "Businesses" tab (bottom left).
-                {'\n'}• Toggle the view from "Public" to "Matches" to see listings compatible with your profile.
-                {'\n'}• Alternatively, tap the "Inbox" icon (mail) in the top right to view match notifications.
+                {'\n'}• Navigate to the &quot;Businesses&quot; tab (bottom left).
+                {'\n'}• Toggle the view from &quot;Public&quot; to &quot;Matches&quot; to see listings compatible with your profile.
+                {'\n'}• Alternatively, tap the &quot;Inbox&quot; icon (mail) in the top right to view match notifications.
               </Text>
             </FAQAccordionItem>
           </View>
