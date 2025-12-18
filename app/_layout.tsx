@@ -1,11 +1,11 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Dimensions, Platform, Pressable, StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 import { AuthProvider } from '../context/AuthContext';
 
@@ -62,7 +62,6 @@ export default function RootLayout() {
           <Stack.Screen name="inbox" options={{ headerShown: false }} />
           <Stack.Screen name="edit-buyer" options={{ headerShown: false }} />
           <Stack.Screen name="edit-business" options={{ headerShown: false }} />
-          <Stack.Screen name="sign-in-form" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </AuthProvider>
@@ -73,7 +72,6 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
   const [videoFinished, setVideoFinished] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
-  const videoRef = useRef<Video>(null);
   const isWeb = Platform.OS === 'web';
 
   useEffect(() => {
@@ -108,6 +106,66 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
     }
   }, [videoFinished, onFinish, fadeAnim, isWeb]);
 
+  const handleSkip = () => {
+    onFinish();
+  };
+
+  // Prepare expo-video player at top-level (hooks must be called unconditionally)
+  const videoSource = require('../assets/images/simple.mp4');
+  const player = useVideoPlayer(videoSource, (p) => {
+    try {
+      p.muted = true; // Mute the video to avoid interrupting background audio
+      p.loop = false; // Don't loop the video
+      if (isWeb) {
+        p.showNowPlayingNotification = false;
+      }
+    } catch {
+      // ignore; API may differ across platforms
+    }
+  });
+
+  // Auto-play video on mount
+  useEffect(() => {
+    if (!player) return;
+
+    const playVideo = async () => {
+      try {
+        await player.play();
+      } catch (err) {
+        console.log('Video autoplay failed:', err);
+      }
+    };
+
+    // Small delay to ensure player is ready
+    const timeout = setTimeout(() => {
+      playVideo();
+    }, 100);
+
+    return () => clearTimeout(timeout);
+  }, [player]);
+
+  // Listen for playback end
+  useEffect(() => {
+    if (!player) return;
+    
+    const checkStatus = setInterval(() => {
+      try {
+        // Check if video has ended (status is idle and has played)
+        if (player.status === 'idle' && player.currentTime > 0) {
+          setVideoFinished(true);
+        }
+        // Also check if we're near the end of duration
+        if (player.duration && player.currentTime >= player.duration - 0.1) {
+          setVideoFinished(true);
+        }
+      } catch {
+        // ignore
+      }
+    }, 500);
+
+    return () => clearInterval(checkStatus);
+  }, [player]);
+
   // ensure splash finishes even if player events aren't reported.
   useEffect(() => {
     if (videoFinished) return;
@@ -118,18 +176,9 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
     return () => clearTimeout(id);
   }, [videoFinished]);
 
-  const handleSkip = () => {
-    onFinish();
-  };
-
-  const handlePlaybackStatusUpdate = (status: any) => {
-    if (status.isLoaded && status.didJustFinish) {
-      setVideoFinished(true);
-    }
-  };
 
   return (
-    <TouchableWithoutFeedback onPress={handleSkip}>
+    <Pressable onPress={handleSkip} style={{ flex: 1 }}>
       <View style={styles.container}>
         <LinearGradient
           colors={['#000000', '#0A1929', '#000000']}
@@ -145,16 +194,13 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
           locations={[0, 0.5, 1]}
           style={StyleSheet.absoluteFillObject}
         />
-        <View style={styles.videoWrapper} pointerEvents="none">
-          <Video
-            ref={videoRef}
-            source={require('../assets/images/simple.mp4')}
+        <View style={styles.videoWrapper}>
+          <VideoView
             style={styles.video}
-            resizeMode={ResizeMode.CONTAIN}
-            shouldPlay
-            isLooping={false}
-            isMuted={true}
-            onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+            player={player}
+            contentFit="contain"
+            nativeControls={false}
+            allowsFullscreen={false}
           />
           <LinearGradient
             colors={['transparent', 'rgba(10, 25, 41, 0.2)', 'rgba(10, 25, 41, 0.5)', 'rgba(10, 25, 41, 0.8)']}
@@ -169,8 +215,7 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
               opacity: fadeAnim,
               transform: [{ scale: scaleAnim }],
             }
-          ]} 
-          pointerEvents="none"
+          ]}
         >
           Welcome to TradeHands!
         </Animated.Text>
@@ -178,13 +223,12 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
           style={[
             styles.tapText,
             { opacity: fadeAnim }
-          ]} 
-          pointerEvents="none"
+          ]}
         >
-          {isWeb ? 'Click' : 'Tap'} to continue
+          Tap to continue
         </Animated.Text>
       </View>
-    </TouchableWithoutFeedback>
+    </Pressable>
   );
 }
 
@@ -202,6 +246,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     backgroundColor: '#000000',
+    pointerEvents: 'none',
   },
   video: {
     width: '100%',
@@ -226,9 +271,7 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     zIndex: 10,
-    textShadowColor: 'rgba(255, 255, 255, 0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 30,
+    pointerEvents: 'none',
   },
   tapText: {
     fontSize: 14,
@@ -242,5 +285,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
+    pointerEvents: 'none',
   },
 });

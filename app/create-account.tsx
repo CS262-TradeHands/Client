@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../constants/api';
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -41,23 +42,70 @@ export default function SignInScreen() {
     }
   };
 
-  const handleCreateAccount = () => {
-    if (emailError || confirmEmailError) return;
-    // Mock user data - replace with actual API call
-    const userData = {
-      user_id: 1,
-      email: email,
-      first_name: firstName,
-      last_name: lastName,
-      phone: phone,
-      password_hash: 'mock_hash',
-      verified: false,
-      private: false,
-      created_at: new Date().toISOString(),
-    };
+  const handleCreateAccount = async () => {
+    // Validate all fields
+    if (emailError || confirmEmailError) {
+      alert('Please fix email errors');
+      return;
+    }
+    
+    if (!firstName || !lastName || !email || !password) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    
+    if (password.length < 8) {
+      alert('Password must be at least 8 characters');
+      return;
+    }
 
-    signIn(userData);
-    router.replace('/(tabs)/profile');
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          phone: phone || null,
+          password: password,
+          profile_image_url: null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create account');
+      }
+
+      const data = await response.json();
+      
+      // Create user object for AuthContext
+      const userData = {
+        user_id: data.user_id,
+        email: email,
+        first_name: firstName,
+        last_name: lastName,
+        phone: phone,
+        password_hash: '',
+        verified: false,
+        private: false,
+        created_at: new Date().toISOString(),
+      };
+
+      signIn(userData);
+      router.replace('/(tabs)/profile');
+    } catch (error) {
+      console.error('Error creating account:', error);
+      alert(error instanceof Error ? error.message : 'Failed to create account. Please try again.');
+    }
   };
 
   return (

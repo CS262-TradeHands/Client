@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
 import FAQPopup from '../../components/FAQPopup';
+import { useAuth } from '../../context/AuthContext';
 
 export default function TabLayout() {
   const { isAuthenticated } = useAuth();
@@ -57,9 +57,16 @@ export default function TabLayout() {
             tabPress: (e) => {
               if (!isAuthenticated) {
                 e.preventDefault();
-                router.push('/sign-in-form');
+                router.push('/(tabs)/sign-in-form');
               }
             },
+          }}
+        />
+        <Tabs.Screen
+          name="sign-in-form"
+          options={{
+            href: null,
+            headerShown: false,
           }}
         />
       </Tabs>

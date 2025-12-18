@@ -91,8 +91,6 @@ export default function BusinessListingsScreen() {
     try {
       const response = await fetch(`${API_BASE_URL}/listings`);
       const data = await response.json();
-      console.log("LISTINGS status:", response.status);
-      console.log("LISTINGS body:", data);
       return data;
     } catch (error) {
       console.error('Error fetching business listings:', error);
