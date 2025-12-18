@@ -2,9 +2,12 @@ import { API_BASE_URL } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, StatusBar as RNStatusBar, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, StatusBar as RNStatusBar, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../context/AuthContext';
+import { Buyer } from '../types/buyer';
 import { Listing } from '../types/listing';
+import { MatchInput } from '../types/match';
 import { User } from '../types/user';
 
 
@@ -28,6 +31,13 @@ export default function BusinessDetailScreen() {
   const [imageLoading, setImageLoading] = useState(true); // Added image loading state
   const [ownerDetails, setOwnerDetails] = useState<User | null>(null); // State for owner details
   const [ownerLoading, setOwnerLoading] = useState(true); // State for loading owner details
+
+  // Current user / buyer profile
+  const { user } = useAuth();
+  const [buyerProfile, setBuyerProfile] = useState<Buyer | null>(null);
+  const [buyerLoading, setBuyerLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
 
   const fetchedRef = useRef(false);
 
@@ -65,19 +75,117 @@ export default function BusinessDetailScreen() {
     }
   }
 
+  // Fetch owner details only when owner_id changes (and avoid refetching if already loaded)
   useEffect(() => {
-    if (business?.owner_id) {
-      (async () => {
-        setOwnerLoading(true); // Start loading
-        const details = await fetchOwnerDetails(business.owner_id);
-        setOwnerDetails(details);
-        setOwnerLoading(false); // End loading
-      })();
-    }
-  }, [business?.owner_id]);
+    if (!business?.owner_id) return;
+    // If we already have details for this owner id, skip fetching
+    if (ownerDetails && String(ownerDetails.user_id) === String(business.owner_id)) return;
 
-  const contactOwner = () => {
-    alert('A request has been sent to the owner.');
+    let mounted = true;
+    (async () => {
+      try {
+        setOwnerLoading(true);
+        const details = await fetchOwnerDetails(business.owner_id);
+        if (!mounted) return;
+        setOwnerDetails(details);
+      } catch (err) {
+        console.error('Error fetching owner details:', err);
+      } finally {
+        if (mounted) setOwnerLoading(false);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [business?.owner_id, ownerDetails]);
+
+  // Load current user's buyer profile once per page load when a signed-in user exists
+  const buyerFetchedRef = useRef(false);
+  useEffect(() => {
+    if (buyerFetchedRef.current) return;
+    if (!user) return; // wait until user is available
+    buyerFetchedRef.current = true;
+
+    let mounted = true;
+    (async () => {
+      setBuyerLoading(true);
+      try {
+        const resp = await fetch(`${API_BASE_URL}/buyers`);
+        if (!resp.ok) return;
+        const buyers: Buyer[] = await resp.json();
+        if (!mounted) return;
+        const mine = buyers.find(b => String(b.user_id) === String(user.user_id));
+        if (mine) setBuyerProfile(mine);
+      } catch (err) {
+        console.error('Error fetching buyer profile:', err);
+      } finally {
+        if (mounted) setBuyerLoading(false);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [user]);
+
+  const contactOwner = async () => {
+    // guard: must be signed in
+    if (!user || !user.user_id) {
+      Alert.alert('Sign in required', 'Please sign in to send a contact request.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign in', onPress: () => router.push('/sign-in-form') }
+      ]);
+      return;
+    }
+
+    // guard: if we've already sent a request, do nothing
+    if (requestSent) {
+      Alert.alert('Request already sent', 'You have already sent a contact request for this business.');
+      return;
+    }
+
+    // guard: owner cannot contact self
+    if (business?.owner_id && String(business.owner_id) === String(user.user_id)) {
+      Alert.alert('Owner', 'You are the owner of this business.');
+      return;
+    }
+
+    // guard: must have buyer profile
+    if (!buyerProfile || buyerLoading) {
+      Alert.alert('Buyer profile required', 'You need to create a buyer profile before sending a contact request.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Create profile', onPress: () => router.push('/add-buyer' as any) }
+      ]);
+      return;
+    }
+
+    // send match request: buyer -> business (sentFromBusToBuy = false)
+    setIsSubmitting(true);
+    try {
+      const payload: MatchInput = {
+        buyer_id: buyerProfile.buyer_id,
+        business_id: business!.business_id,
+        sent_from_bus_to_buy: false,
+      };
+
+      const res = await fetch(`${API_BASE_URL}/matches`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Failed to send contact request:', res.status, text);
+        Alert.alert('Error', 'Failed to send contact request. Please try again.');
+        return;
+      }
+
+      setRequestSent(true);
+      Alert.alert('Request sent', 'Your contact request has been sent to the owner.');
+    } catch (err) {
+      console.error('Error sending contact request:', err);
+      Alert.alert('Error', 'Network error while sending contact request.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -149,9 +257,26 @@ export default function BusinessDetailScreen() {
               <Text style={styles.ownerLabel}>Owner</Text>
               <Text style={styles.ownerName}>{ownerLoading ? 'Loading...' : `${ownerDetails?.first_name} ${ownerDetails?.last_name}` || 'N/A'}</Text>
             </View>
-            <TouchableOpacity style={styles.contactButton} onPress={contactOwner}>
-              <Ionicons name="send" size={18} color="#333" />
-              <Text style={styles.contactButtonText}>Request Contact</Text>
+            <TouchableOpacity
+              style={[
+                styles.contactButton,
+                (isSubmitting || requestSent || (business?.owner_id && String(business.owner_id) === String(user?.user_id))) ? styles.contactButtonDisabled : null,
+                isSubmitting && { opacity: 0.6 }
+              ]}
+              onPress={contactOwner}
+              disabled={isSubmitting || requestSent || String(business?.owner_id) === String(user?.user_id)}
+            >
+              {!isSubmitting && !requestSent && <Ionicons name="send" size={18} color="#333" />}
+              <Text style={styles.contactButtonText}>
+                {business?.owner_id && String(business.owner_id) === String(user?.user_id)
+                  ? 'You are the owner'
+                  : requestSent
+                    ? 'Request Sent'
+                    : isSubmitting
+                      ? 'Sending...'
+                      : 'Request Contact'
+                }
+              </Text>
             </TouchableOpacity>
           </View>
           <View style={styles.detailSection}>
@@ -468,6 +593,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  contactButtonDisabled: {
+    backgroundColor: '#e6e6e6',
   },
   closeButton: {
     position: 'absolute',

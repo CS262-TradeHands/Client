@@ -1,8 +1,8 @@
 import { Buyer } from '@/types/buyer';
 import { User } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const SIZE_PREFERENCES = [
   'Small — up to 20 employees (~$15k/month)',
@@ -104,10 +104,7 @@ export default function BuyerDetailModal({ buyer, userInfo, visible, onClose, on
 
               {/* Contact Button */}
               {onContact && (
-                <TouchableOpacity style={styles.buyerModalContactButton} onPress={onContact}>
-                  <Ionicons name="mail-outline" size={20} color="#fff" />
-                  <Text style={styles.buyerModalContactText}>Contact Buyer</Text>
-                </TouchableOpacity>
+                <RequestContactButton onContact={onContact} />
               )}
             </View>
           </ScrollView>
@@ -116,6 +113,40 @@ export default function BuyerDetailModal({ buyer, userInfo, visible, onClose, on
     </Modal>
   );
 }
+
+const RequestContactButton = ({ onContact }: { onContact: () => void | Promise<void> }) => {
+  const [requestSent, setRequestSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const handlePress = async () => {
+    if (requestSent || sending) return;
+    setSending(true);
+    try {
+      const result = onContact();
+      if (result && typeof (result as any).then === 'function') {
+        await result;
+      }
+      setRequestSent(true);
+      Alert.alert('Request sent', 'Your contact request has been sent.');
+    } catch (err) {
+      console.error('Error sending contact request from modal:', err);
+      Alert.alert('Error', 'Failed to send contact request. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      style={[styles.buyerModalContactButton, (requestSent || sending) && { opacity: 0.6 }]}
+      onPress={handlePress}
+      disabled={requestSent || sending}
+    >
+      <Ionicons name="mail-outline" size={20} color="#fff" />
+      <Text style={styles.buyerModalContactText}>{requestSent ? 'Request Sent' : (sending ? 'Sending...' : 'Request Contact')}</Text>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   buyerModalOverlay: {

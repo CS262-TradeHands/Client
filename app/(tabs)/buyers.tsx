@@ -5,11 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import BuyerDetailModal from '../../components/BuyerDetailModal';
 import ProtectedInfo from '../../components/protected-info';
 import { useAuth } from '../../context/AuthContext';
 import { Listing } from '../../types/listing';
 import { findMatchedBuyersForListing } from '../../utils/matchingAlgorithm';
-import BuyerDetailModal from '../../components/BuyerDetailModal';
 
 export default function BuyerScreen() {
   const router = useRouter();
@@ -25,15 +25,6 @@ export default function BuyerScreen() {
   const [usersLoading, setUsersLoading] = useState(true); // Loading state for users
   const [listingsLoading, setListingsLoading] = useState(true); // Loading state for listings
   const [refreshing, setRefreshing] = useState(false); // Pull-to-refresh state
-
-  
-
-  const SIZE_PREFERENCES = [
-    'Small — up to 20 employees (~$15k/month)',
-    'Small-Medium — 20-50 employees (~$40k/month)',
-    'Medium — 50-200 employees (~$150k/month)',
-    'Large — 200+ employees (~$500k/month)'
-  ];
 
   // SEARCH FILTER
   const filteredBuyers = useMemo(() => {
