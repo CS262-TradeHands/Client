@@ -5,7 +5,7 @@ import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import 'react-native-reanimated';
 import { AuthProvider } from '../context/AuthContext';
 
@@ -15,8 +15,6 @@ SplashScreen.preventAutoHideAsync();
 export const unstable_settings = {
   anchor: '(tabs)',
 };
-
-const { width, height } = Dimensions.get('window');
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -73,6 +71,11 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const isWeb = Platform.OS === 'web';
+  const { width = 360, height = 640 } = useWindowDimensions();
+  const videoSource = require('../assets/images/simple.mp4');
+  const webVideoUri = isWeb
+    ? new URL('../assets/images/simple.mp4', import.meta.url).href
+    : undefined;
 
   useEffect(() => {
     // Fade in and scale animation for text
@@ -111,7 +114,6 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
   };
 
   // Prepare expo-video player at top-level (hooks must be called unconditionally)
-  const videoSource = require('../assets/images/simple.mp4');
   const player = useVideoPlayer(videoSource, (p) => {
     try {
       p.muted = true; // Mute the video to avoid interrupting background audio
@@ -147,7 +149,7 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
   // Listen for playback end
   useEffect(() => {
     if (!player) return;
-    
+
     const checkStatus = setInterval(() => {
       try {
         // Check if video has ended (status is idle and has played)
@@ -194,14 +196,30 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
           locations={[0, 0.5, 1]}
           style={StyleSheet.absoluteFillObject}
         />
-        <View style={styles.videoWrapper}>
-          <VideoView
-            style={styles.video}
-            player={player}
-            contentFit="contain"
-            nativeControls={false}
-            allowsFullscreen={false}
-          />
+        <View style={[styles.videoWrapper, { width, height }]}>
+          {isWeb ? (
+            <video
+              src={webVideoUri}
+              style={[styles.video, { width: '100%', height: '100%' }] as any}
+              autoPlay
+              muted
+              playsInline
+              controls={false}
+              onEnded={() => setVideoFinished(true)}
+              onError={(e) => {
+                console.log('Web video error', e);
+                setVideoFinished(true);
+              }}
+            />
+          ) : (
+            <VideoView
+              style={[styles.video, { width: '100%', height: '100%' }]}
+              player={player}
+              contentFit="contain"
+              nativeControls={false}
+              allowsFullscreen={false}
+            />
+          )}
           <LinearGradient
             colors={['transparent', 'rgba(10, 25, 41, 0.2)', 'rgba(10, 25, 41, 0.5)', 'rgba(10, 25, 41, 0.8)']}
             locations={[0, 0.4, 0.7, 1]}
@@ -212,6 +230,7 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
           style={[
             styles.welcomeText,
             {
+              bottom: height * 0.25,
               opacity: fadeAnim,
               transform: [{ scale: scaleAnim }],
             }
@@ -222,7 +241,7 @@ export function VideoSplashScreen({ onFinish }: { onFinish: () => void }) {
         <Animated.Text 
           style={[
             styles.tapText,
-            { opacity: fadeAnim }
+            { bottom: height * 0.15, opacity: fadeAnim }
           ]}
         >
           Tap to continue
@@ -240,8 +259,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   videoWrapper: {
-    width: width,
-    height: height,
     position: 'absolute',
     top: 0,
     left: 0,
@@ -267,7 +284,6 @@ const styles = StyleSheet.create({
     fontFamily: 'System',
     textAlign: 'center',
     position: 'absolute',
-    bottom: height * 0.25,
     left: 20,
     right: 20,
     zIndex: 10,
@@ -281,7 +297,6 @@ const styles = StyleSheet.create({
     fontFamily: 'System',
     textAlign: 'center',
     position: 'absolute',
-    bottom: height * 0.15,
     left: 0,
     right: 0,
     zIndex: 10,

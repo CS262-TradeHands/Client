@@ -3,7 +3,7 @@ import { User } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 
@@ -47,8 +47,15 @@ export default function SignInFormScreen() {
         }
     };
 
+    const dismissKeyboard = () => {
+        // On web, dismissing immediately blurs the input; only do this on native.
+        if (Platform.OS !== 'web') {
+            Keyboard.dismiss();
+        }
+    };
+
     return (
-        <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+        <TouchableWithoutFeedback style={{ flex: 1 }} onPress={dismissKeyboard} accessible={false}>
             <SafeAreaView style={styles.container}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButtonAbsolute}>
                     <Text style={styles.backButtonText}>{'<'} Back</Text>
@@ -113,7 +120,7 @@ export default function SignInFormScreen() {
                 </View>
                 </KeyboardAvoidingView>
             </SafeAreaView>
-        </Pressable>
+        </TouchableWithoutFeedback>
     );
 }
 
