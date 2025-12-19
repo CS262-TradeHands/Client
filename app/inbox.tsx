@@ -36,7 +36,7 @@ export default function InboxScreen() {
   const [contactInfo, setContactInfo] = useState<{ name?: string; email?: string; phone?: string } | null>(null);
 
   // Default to 'sent' per request
-  const [activeSection, setActiveSection] = useState<'received' | 'sent'>('sent');
+  const [activeSection, setActiveSection] = useState<'received' | 'sent'>('received');
 
   // Lists populated from API /matches
   const [receivedItems, setReceivedItems] = useState<Notification[]>([]);
@@ -92,31 +92,13 @@ export default function InboxScreen() {
       if (!res.ok) throw new Error('Failed to fetch matches');
       const matches: Match[] = await res.json();
 
-      // Hard-coded 'Lukas accepted' notification to always appear in Received
-      const lukasAccepted: Notification = {
-        id: 'special-lukas-accepted',
-        title: 'approved',
-        name: 'Lukas Mueller',
-        message: 'accepted your contact request',
-        primaryAction: 'View contact',
-        avatar: 'https://cdn.miiwiki.org/a/ad/WS_Guest_B.png',
-        route: undefined,
-        email: 'lukas.mueller@example.com',
-        phone: '+1 (555) 000-1111',
-        senderId: 'user_lukas',
-        recipientId: String(currentUserId ?? ''),
-        simpleContact: true,
-      };
 
       const rItems: Notification[] = [];
       const sItems: Notification[] = [];
 
       await Promise.all(matches.map(async (m) => {
         try {
-          // tolerate both naming conventions for direction
-          const sentFromBusToBuy = Object.prototype.hasOwnProperty.call(m, 'sentFromBusToBuy')
-            ? Boolean((m as any).sentFromBusToBuy)
-            : Boolean((m as any).sent_from_bus_to_buy);
+          const sentFromBusToBuy = m.sent_from_bus_to_buy;
 
           const [buyerResp, listingResp] = await Promise.all([
             fetch(`${API_BASE_URL}/buyers/${m.buyer_id}`),
@@ -213,8 +195,7 @@ export default function InboxScreen() {
       if (!cancelledRef.current) {
         const unique = (arr: Notification[]) => Array.from(new Map(arr.map(i => [i.route, i])).values());
         const uniqReceived = unique(rItems);
-        // Ensure Lukas accepted notification appears first (avoid duplicate)
-        setReceivedItems([lukasAccepted, ...uniqReceived.filter(i => i.id !== lukasAccepted.id)]);
+        setReceivedItems(uniqReceived);
         setSentItems(unique(sItems));
       }
     } catch (err) {

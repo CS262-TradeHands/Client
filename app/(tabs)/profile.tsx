@@ -296,10 +296,10 @@ export default function ProfileScreen() {
             <View style={styles.infoDivider} />
             <FAQAccordionItem question="How do I view my matches?">
               <Text style={styles.faqAnswer}>
-                You can view your business matches in the settings. This can be done through the following steps:
-                {'\n'}• Navigate to the profile page
-                {'\n'}• Look for the &quot;Settings&quot; section
-                {'\n'}• Click on &quot;View Matches&quot; to see your compatible listings.
+                You can view your business or buyer matches for existing profiles from their corresponding pages. This can be done through the following steps:
+                {'\n'}• Navigate to the buyer or business tab
+                {'\n'}• Locate the browse tabs underneath your current listings or buyer profile
+                {'\n'}• Click on the &quot;Matches&quot; tab to see your compatible listings or buyers.
               </Text>
             </FAQAccordionItem>
           </View>
