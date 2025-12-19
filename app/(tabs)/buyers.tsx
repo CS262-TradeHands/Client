@@ -204,7 +204,7 @@ export default function BuyerScreen() {
             <Ionicons name="mail-outline" size={20} color="#333" />
             {isAuthenticated && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>2</Text>
+                <Text style={styles.badgeText}>1</Text>
               </View>
             )}
           </Pressable>

@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { Buyer } from '../types/buyer';
 import { Listing } from '../types/listing';
-import { MatchInput } from '../types/match';
+import { Match, MatchInput } from '../types/match';
 import { User } from '../types/user';
 
 
@@ -125,6 +125,36 @@ export default function BusinessDetailScreen() {
     return () => { mounted = false; };
   }, [user]);
 
+  // Check whether current buyer already sent a request to this business.
+  useEffect(() => {
+    if (!buyerProfile || !business) return;
+    let mounted = true;
+    (async () => {
+      try {
+        // Try server-side filtered query first
+        const resp = await fetch(`${API_BASE_URL}/matches?buyer_id=${encodeURIComponent(String(buyerProfile.buyer_id))}&business_id=${encodeURIComponent(String(business.business_id))}`);
+        if (!resp.ok) {
+          // Fallback: fetch all matches and filter client-side
+          const allResp = await fetch(`${API_BASE_URL}/matches`);
+          if (!allResp.ok) return;
+          const matches: Match[] = await allResp.json();
+          if (!mounted) return;
+          const found = matches.some(m => String(m.buyer_id) === String(buyerProfile.buyer_id) && String(m.business_id) === String(business.business_id) && Boolean((m as any).sent_from_bus_to_buy) === false);
+          if (found) setRequestSent(true);
+          return;
+        }
+
+        const matches: Match[] = await resp.json();
+        if (!mounted) return;
+        const found = (Array.isArray(matches) ? matches : [matches]).some((m: any) => String(m.buyer_id) === String(buyerProfile.buyer_id) && String(m.business_id) === String(business.business_id) && Boolean(m.sent_from_bus_to_buy) === false);
+        if (found) setRequestSent(true);
+      } catch (err) {
+        console.error('Error checking existing match:', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [buyerProfile, business]);
+
   const contactOwner = async () => {
     // guard: must be signed in
     if (!user || !user.user_id) {
@@ -172,6 +202,12 @@ export default function BusinessDetailScreen() {
       });
 
       if (!res.ok) {
+        if (res.status === 500) {
+          // Already exists - treat as sent
+          setRequestSent(true);
+          Alert.alert('Request already sent', 'You have already sent a contact request for this business.');
+          return;
+        }
         const text = await res.text();
         console.error('Failed to send contact request:', res.status, text);
         Alert.alert('Error', 'Failed to send contact request. Please try again.');
