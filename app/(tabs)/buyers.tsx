@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   headerAuthenticated: {
-    backgroundColor: '#5A7A8C', // primary
+    backgroundColor: '#2B4450',
   },
   titleAuthenticated: {
     color: '#F5F1ED', // warm-neutral
@@ -476,6 +476,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: '#fff',
+    backgroundColor: 'transparent',
     marginBottom: 6,
   },
   subtitle: {

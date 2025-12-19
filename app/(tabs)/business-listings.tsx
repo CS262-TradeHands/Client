@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   headerAuthenticated: {
-    backgroundColor: '#5A7A8C',
+    backgroundColor: '#2B4450',
   },
   titleAuthenticated: {
     color: '#F5F1ED', // warm-neutral

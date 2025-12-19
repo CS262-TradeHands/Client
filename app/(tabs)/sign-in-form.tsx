@@ -1,5 +1,4 @@
 import { API_BASE_URL } from '@/constants/api';
-import { User } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -53,7 +52,7 @@ export default function SignInFormScreen() {
                 style={styles.keyboardAvoidingView}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <TouchableWithoutFeedback onPress={Platform.OS === 'web' ? undefined : Keyboard.dismiss} accessible={false}>
                     <ScrollView 
                         contentContainerStyle={styles.scrollContent}
                         keyboardShouldPersistTaps="handled"
