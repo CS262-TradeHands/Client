@@ -1,6 +1,6 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Video, ResizeMode } from 'expo-av';
+import { ResizeMode, Video } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -23,6 +23,18 @@ export default function RootLayout() {
   const [showVideoSplash, setShowVideoSplash] = useState(true);
   const [appReady, setAppReady] = useState(false);
   const router = useRouter();
+
+  const lightTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: '#ffffff',
+      card: '#ffffff',
+      primary: '#5A7A8C',
+      border: '#e9ecef',
+      text: '#1f1f1f',
+    },
+  };
 
   useEffect(() => {
     async function prepare() {
@@ -49,7 +61,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : lightTheme}>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
